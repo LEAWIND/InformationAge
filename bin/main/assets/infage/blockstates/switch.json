@@ -1,0 +1,19 @@
+{
+	"variants": {
+		"facing=south": {
+			"model": "infage:block/switch",
+			"y": 180
+		},
+		"facing=west": {
+			"model": "infage:block/switch",
+			"y": 270
+		},
+		"facing=north": {
+			"model": "infage:block/switch"
+		},
+		"facing=east": {
+			"model": "infage:block/switch",
+			"y": 90
+		}
+	}
+}

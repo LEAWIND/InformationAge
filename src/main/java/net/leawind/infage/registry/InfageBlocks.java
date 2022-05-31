@@ -1,4 +1,3 @@
-
 package net.leawind.infage.registry;
 
 import net.leawind.infage.Infage;
@@ -32,7 +31,5 @@ public class InfageBlocks {
 		Registry.register(Registry.BLOCK, new Identifier(Infage.NAMESPACE, ItemRegester.BLOCK_ID), ITEM_REGESTER);
 		Registry.register(Registry.BLOCK, new Identifier(Infage.NAMESPACE, PowerControler.BLOCK_ID), POWER_CONTROLER);
 		Registry.register(Registry.BLOCK, new Identifier(Infage.NAMESPACE, PowerSensor.BLOCK_ID), POWER_SENSOR);
-
-		System.out.println("Registering Blocks!");
 	}
 }

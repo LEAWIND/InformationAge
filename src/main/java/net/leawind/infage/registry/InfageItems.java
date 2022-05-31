@@ -10,6 +10,7 @@ import net.minecraft.util.registry.Registry;
 public class InfageItems {
 	// 创建各个方块对应的物品
 	// 以及一些其他的物品（暂无）
+	// BlockItem 继承自 Item
 	public static final BlockItem COMPUTER = new BlockItem(InfageBlocks.COMPUTER,
 			Computer.DEFAULT_BLOCKITEM_SETTINGS);
 	public static final BlockItem DISK = new BlockItem(InfageBlocks.DISK,

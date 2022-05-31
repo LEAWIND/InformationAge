@@ -20,31 +20,32 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 
-// 设备方块:全都是有水平方向的
+// 设备方块:全都是有水平方向的 (东西南北), 所以继承 HorizontalFacingBlock
+// 因为设备方块一定有对应的 方块实体, 所以要实现 BlockEntityProvider 接口
 public abstract class DeviceBlock extends HorizontalFacingBlock implements BlockEntityProvider {
-	// 用于命名空间的 方块ID (infage:defaultid)
-	public static final String BLOCK_ID = "i_forgot_to_set_this_id";
-	// 默认值: 不同方向下的 shape
+	public static final String BLOCK_ID = "i_forgot_to_set_this_id"; // 用于命名的方块ID (infage:block_id)
+	// 默认值: 方块不同方向下的 碰撞箱
+	// 北南东西 的顺序是我在 getOutlineShape 方法中自定义的
 	public static final VoxelShape[] DEFAULT_SHAPES = {
-			Block.createCuboidShape(0F, 0F, 0F, 16F, 16F, 16F), // North
-			Block.createCuboidShape(0F, 0F, 0F, 16F, 16F, 16F), // South
-			Block.createCuboidShape(0F, 0F, 0F, 16F, 16F, 16F), // East
-			Block.createCuboidShape(0F, 0F, 0F, 16F, 16F, 16F), // West
+			Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 北
+			Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 南
+			Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 东
+			Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 西
 	};
-	// 默认值: 方块属性设置
+	// 默认值: 方块 的属性设置
 	// 参考
 	// [https://maven.fabricmc.net/docs/fabric-api-0.32.5+1.16/net/fabricmc/fabric/api/object/builder/v1/block/FabricBlockSettings.html]
-	public static final FabricBlockSettings DEFAULT_BLOCK_SETTINGS = FabricBlockSettings.of(Material.METAL)
+	public static final FabricBlockSettings DEFAULT_BLOCK_SETTINGS = FabricBlockSettings.of(Material.METAL) // 金属材料
 			.sounds(BlockSoundGroup.METAL) // 金属声音
 			.hardness(0.5F) // 硬度
 			.resistance(8.0F) // 抗性
 			.luminance(4) // 亮度
-			.breakByHand(true) // 可以用手撸掉
-			.collidable(true)// 与实体碰撞
+			.breakByHand(true) // 可用手撸掉
+			.collidable(true)// 可与实体碰撞
 			.nonOpaque() // 透明
 	;
 
-	// 默认值: 方块物品设置
+	// 默认值: 方块对应物品 的属性设置
 	public static final FabricItemSettings DEFAULT_BLOCKITEM_SETTINGS = new FabricItemSettings()
 			.maxCount(1) // 最大堆叠数量
 			.fireproof(); // 是否防火

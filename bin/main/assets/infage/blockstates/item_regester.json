@@ -1,0 +1,19 @@
+{
+	"variants": {
+		"facing=south": {
+			"model": "infage:block/item_regester",
+			"y": 180
+		},
+		"facing=west": {
+			"model": "infage:block/item_regester",
+			"y": 270
+		},
+		"facing=north": {
+			"model": "infage:block/item_regester"
+		},
+		"facing=east": {
+			"model": "infage:block/item_regester",
+			"y": 90
+		}
+	}
+}

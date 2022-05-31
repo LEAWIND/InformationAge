@@ -1,3 +1,4 @@
+// 方块：计算机
 package net.leawind.infage.block;
 
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
@@ -16,10 +17,10 @@ public class Computer extends DeviceBlock {
 	public Computer() {
 		super(BLOCK_SETTINGS);
 		this.shapes = new VoxelShape[] {
-				Block.createCuboidShape(1F, 0.4F, 2.18F, 15F, 9F, 15F), // North
-				Block.createCuboidShape(1F, 0.4F, 1F, 15F, 9F, 13.82F), // South
-				Block.createCuboidShape(1F, 0.4F, 1F, 13.82F, 9F, 15F), // East
-				Block.createCuboidShape(2.18F, 0.4F, 1F, 15F, 9F, 15F) // West
+				Block.createCuboidShape(1, 0.4, 2.18, 15, 9, 15), // 北
+				Block.createCuboidShape(1, 0.4, 1, 15, 9, 13.82), // 南
+				Block.createCuboidShape(1, 0.4, 1, 13.82, 9, 15), // 东
+				Block.createCuboidShape(2.18, 0.4, 1, 15, 9, 15) // 西
 		};
 	}
 

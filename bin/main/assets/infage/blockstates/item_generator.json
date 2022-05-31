@@ -1,0 +1,19 @@
+{
+	"variants": {
+		"facing=south": {
+			"model": "infage:block/item_generator",
+			"y": 180
+		},
+		"facing=west": {
+			"model": "infage:block/item_generator",
+			"y": 270
+		},
+		"facing=north": {
+			"model": "infage:block/item_generator"
+		},
+		"facing=east": {
+			"model": "infage:block/item_generator",
+			"y": 90
+		}
+	}
+}

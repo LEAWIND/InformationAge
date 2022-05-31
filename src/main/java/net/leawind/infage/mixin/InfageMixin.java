@@ -11,7 +11,7 @@ public class InfageMixin {
 	@Inject(at = @At("HEAD"), method = "init()V")
 	private void init(CallbackInfo info) {
 		System.out.println("================================================");
-		System.out.println("InfageMixin: LEAWIND HERE!!!");
+		System.out.println("InfageMixin: I'm here!!!");
 		System.out.println("================================================");
 	}
 }
