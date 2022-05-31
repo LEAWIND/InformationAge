@@ -17,13 +17,19 @@ public class Computer extends DeviceBlock {
 	public Computer() {
 		super(BLOCK_SETTINGS);
 		this.shapes = new VoxelShape[] {
+				// 这里的形状现在是一个简单的立方体，但实际上这样并不真实。
+				// 其实可以实现把它设置为像楼梯 stair 那样，由多个立方体组合起来的形状。
+				// 但是我还没有找到方法 :(
 				Block.createCuboidShape(1, 0.4, 2.18, 15, 9, 15), // 北
 				Block.createCuboidShape(1, 0.4, 1, 15, 9, 13.82), // 南
 				Block.createCuboidShape(1, 0.4, 1, 13.82, 9, 15), // 东
-				Block.createCuboidShape(2.18, 0.4, 1, 15, 9, 15) // 西
+				Block.createCuboidShape(2.18, 0.4, 1, 15, 9, 15), // 西
 		};
 	}
 
+	// 要想 "在方块中存储数据", 就要能够通过方块获取方块对应的方块实体(根据方块坐标来获取)
+	// 当没有对应的方块实体时要能够创建一个方块实体
+	// 所以要覆写这个创建对应方块实体的方法
 	@Override
 	public BlockEntity createBlockEntity(BlockView blockView) {
 		return new ComputerEntity();

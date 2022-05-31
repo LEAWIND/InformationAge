@@ -1,9 +1,12 @@
 package net.leawind.infage.block;
 
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
+import net.leawind.infage.blockentity.DiskEntity;
 import net.minecraft.block.Block;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.item.Item;
 import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.world.BlockView;
 
 public class Disk extends DeviceBlock {
 	public static final String BLOCK_ID = "disk";
@@ -18,5 +21,10 @@ public class Disk extends DeviceBlock {
 				Block.createCuboidShape(2, 0, 0, 14, 14, 16), // 东
 				Block.createCuboidShape(2, 0, 0, 14, 14, 16), // 西
 		};
+	}
+
+	@Override
+	public BlockEntity createBlockEntity(BlockView blockView) {
+		return new DiskEntity();
 	}
 }

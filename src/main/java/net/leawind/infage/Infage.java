@@ -1,6 +1,6 @@
 /*
-I'm sorry that 
-all code comments in this project are in Chinese,
+I'm sorry that
+ all code comments in this project are in Chinese,
 except this one.
 */
 // 参考 
@@ -14,11 +14,14 @@ import net.leawind.infage.registry.InfageBlocks;
 import net.leawind.infage.registry.InfageItemGroups;
 import net.leawind.infage.registry.InfageItems;
 
+// 在 fabric.mod.json 中定义的 main 入口(类)
+
 public class Infage implements ModInitializer {
 	// 命名空间
 	public static final String NAMESPACE = "infage";
 
 	@Override
+	// 这会在初始化时运行
 	public void onInitialize() {
 		System.out.println("================================================");
 		System.out.println("Infage: I'm here!!!");

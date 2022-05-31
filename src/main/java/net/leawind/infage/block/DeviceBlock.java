@@ -58,7 +58,7 @@ public abstract class DeviceBlock extends HorizontalFacingBlock implements Block
 		this.shapes = DEFAULT_SHAPES;
 	}
 
-	// 带水平方向
+	// 加上水平方向
 	@Override
 	protected void appendProperties(StateManager.Builder<Block, BlockState> stateManager) {
 		stateManager.add(Properties.HORIZONTAL_FACING);
