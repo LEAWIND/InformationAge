@@ -45,7 +45,7 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 			.sounds(BlockSoundGroup.METAL) // 金属声音
 			.hardness(0.5F) // 硬度
 			.resistance(8.0F) // 抗性
-			.luminance(4) // 亮度
+			.luminance(2) // 亮度
 			.breakByHand(true) // 可用手撸掉
 			.collidable(true)// 可与实体碰撞
 			.nonOpaque() // 透明
@@ -118,6 +118,7 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 				System.out.printf("\tBlockEntity:\n\t\t%s\n", blockEntity);
 
 				// 判断是不是 客户端
+
 				return ActionResult.SUCCESS; // 返回了 SUCCESS 就不会处理后续的事件了 (例如放置方块)
 			}
 		} catch (Exception e) {

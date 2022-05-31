@@ -15,7 +15,9 @@ public class Computer extends DeviceBlock {
 	public static final FabricItemSettings BLOCKITEM_SETTINGS = DeviceBlock.DEFAULT_BLOCKITEM_SETTINGS;
 
 	public Computer() {
-		super(BLOCK_SETTINGS);
+		super(BLOCK_SETTINGS
+				.luminance(6) // 亮度
+		);
 		this.shapes = new VoxelShape[] {
 				// 这里的形状现在是一个简单的立方体，但实际上这样并不真实。
 				// 其实可以实现把它设置为像楼梯 stair 那样，由多个立方体组合起来的形状。
