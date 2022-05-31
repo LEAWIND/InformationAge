@@ -11,14 +11,20 @@ import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.block.Material;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Properties;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldAccess;
 
 // 设备方块:全都是有水平方向的 (东西南北), 所以继承 HorizontalFacingBlock
 // 因为设备方块一定有对应的 方块实体, 所以要实现 BlockEntityProvider 接口
@@ -93,26 +99,64 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 		return null;
 	}
 
-	// // 开机
-	// public void device_boot() {
-	// // 检查设备状态
-	// // 设置状态为 开机
-	// // 执行开机脚本
-	// }
+	@Override
+	public ActionResult onUse(BlockState state, World world, BlockPos blockPos, PlayerEntity player, Hand hand,
+			BlockHitResult hitResult) {
+		try {
+			// 如果任意参数为 null 或玩家啊在旁观者模式，则不处理
+			if (player == null || player.isSpectator() || world == null || hitResult == null)
+				return ActionResult.PASS;
+			BlockState blockstate = world.getBlockState(blockPos); // 根据坐标获取 blockState
+			Block block = blockstate.getBlock(); // 由 blockState 获取方块对象
+			if (block instanceof DeviceBlock) { // 检查这个方块是不是这个模组里定义的 设备
+				// 根据坐标获取这个方块的方块实体
+				BlockEntity blockEntity = world.getBlockEntity(blockPos);
+				System.out.printf("\nEvent UseBlockCallback:\n\tPlayer:\n");
+				System.out.printf("\t\t%s\n", player);
+				System.out.printf("\tused block:\n");
+				System.out.printf("\t\t%s\n", block);
+				System.out.printf("\tBlockEntity:\n\t\t%s\n", blockEntity);
 
-	// // 关机
-	// public void device_shutdown() {
-	// // 检查设备状态
-	// // 设置状态为关机
-	// }
+				// 判断是不是 客户端
+				return ActionResult.SUCCESS; // 返回了 SUCCESS 就不会处理后续的事件了 (例如放置方块)
+			}
+		} catch (Exception e) {
+		}
+		return ActionResult.PASS;
+	}
 
-	// // 重启
-	// public void device_reboot() {
-	// this.device_shutdown();
-	// this.device_boot();
-	// }
+	// 破坏事件
+	@Override
+	public void onBroken(WorldAccess world, BlockPos blockPos, BlockState blockstate) {
+		try {
+			BlockEntity blockEntity = world.getBlockEntity(blockPos);
+			if (blockEntity != null) {
+				System.out.println(blockEntity);
+				// CompoundTag tag = WorldChunk.getBlockEntityTag(blockPos);
+			}
+		} catch (Exception e) {
+		}
+	}
+
+	// 开机
+	public void device_boot() {
+		// 检查设备状态
+		// 设置状态为 开机
+		// 执行开机脚本
+	}
+
+	// 关机
+	public void device_shutdown() {
+		// 检查设备状态
+		// 设置状态为关机
+	}
+
+	// 重启
+	public void device_reboot() {
+		this.device_shutdown();
+		this.device_boot();
+	}
 
 	// 放置事件
-	// 破坏事件
 
 }

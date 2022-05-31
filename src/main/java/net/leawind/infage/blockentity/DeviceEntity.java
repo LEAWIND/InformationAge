@@ -5,9 +5,10 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Tickable;
 
 // 这是一个方块实体，要继承于 BlockEntity
-public class DeviceEntity extends BlockEntity {
+public class DeviceEntity extends BlockEntity implements Tickable {
 	public DeviceEntity(BlockEntityType<?> type) {
 		super(type);
 	}
@@ -50,5 +51,16 @@ public class DeviceEntity extends BlockEntity {
 	@Override
 	public void fromTag(BlockState state, CompoundTag tag) {
 		super.fromTag(state, tag);
+	}
+
+	// 这个在加载了方块实体之后才会有用
+	// 刚进入世界时，并不是所有的方块实体都已加载，大部分方块实体都还没有加载。
+	// public int tickCounter = 0;
+	@Override
+	public void tick() {
+		// TODO Tick
+		// this.tickCounter++;
+		// if (this.tickCounter % 4 == 0)
+		// System.out.printf("Tick count is [%d]\n", this.tickCounter);
 	}
 }

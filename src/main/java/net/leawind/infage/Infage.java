@@ -4,29 +4,32 @@ I'm sorry that
 except this one.
 */
 // 参考 
+// [基于fabric和mc1.15的我的世界mod制作教程13-GUI1[1.5x]](https://www.bilibili.com/video/BV1oh411R7of)
+
 // https://www.bilibili.com/read/readlist/rl433929?spm_id_from=333.999.0.0
 // https://fabricmc.net/wiki/zh_cn:start
 package net.leawind.infage;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import net.fabricmc.api.ModInitializer;
 import net.leawind.infage.registry.InfageBlockEntities;
 import net.leawind.infage.registry.InfageBlocks;
-import net.leawind.infage.registry.InfageEvents;
 import net.leawind.infage.registry.InfageItemGroups;
 import net.leawind.infage.registry.InfageItems;
 
 // 在 fabric.mod.json 中定义的 main 入口(类)
 
 public class Infage implements ModInitializer {
+	private static final Logger LOGGER = LogManager.getLogger("Infage");
 	// 命名空间
 	public static final String NAMESPACE = "infage";
 
 	@Override
 	// 这会在初始化时运行
 	public void onInitialize() {
-		System.out.println("================================================");
-		System.out.println("Infage: I'm here!!!");
-		System.out.println("================================================");
+		LOGGER.debug("Infage.java: I'm here!!!");
 
 		// 实例化并注册方块
 		// 注册了的方块才能在世界中被放置
@@ -45,6 +48,7 @@ public class Infage implements ModInitializer {
 		new InfageBlockEntities();
 
 		// 注册事件
-		InfageEvents.register();
+		// InfageEvents.register();
+
 	}
 }
