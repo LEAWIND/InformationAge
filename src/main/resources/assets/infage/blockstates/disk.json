@@ -1,0 +1,19 @@
+{
+	"variants": {
+		"facing=south": {
+			"model": "infage:block/disk",
+			"y": 180
+		},
+		"facing=west": {
+			"model": "infage:block/disk",
+			"y": 270
+		},
+		"facing=north": {
+			"model": "infage:block/disk"
+		},
+		"facing=east": {
+			"model": "infage:block/disk",
+			"y": 90
+		}
+	}
+}

@@ -1,0 +1,19 @@
+{
+	"variants": {
+		"facing=south": {
+			"model": "infage:block/power_sensor",
+			"y": 180
+		},
+		"facing=west": {
+			"model": "infage:block/power_sensor",
+			"y": 270
+		},
+		"facing=north": {
+			"model": "infage:block/power_sensor"
+		},
+		"facing=east": {
+			"model": "infage:block/power_sensor",
+			"y": 90
+		}
+	}
+}

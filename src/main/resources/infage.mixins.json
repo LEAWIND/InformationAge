@@ -1,0 +1,13 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "net.leawind.infage.mixin",
+	"compatibilityLevel": "JAVA_8",
+	"mixins": [],
+	"client": [
+		"InfageMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
