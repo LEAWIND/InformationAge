@@ -1,5 +1,6 @@
 package net.leawind.infage.blockentity;
 
+import net.leawind.infage.block.DeviceBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
@@ -27,7 +28,7 @@ public class DeviceEntity extends BlockEntity {
 		// 所以必须要先调用一下父类的这个方法
 		super.toTag(tag);
 		// 在这定义了设备的一些共同属性. 可以在子类的这个方法中更详细地定义
-		tag.putString("deviceType", "noneType"); // 设备类型
+		tag.putString("deviceType", DeviceBlock.BLOCK_ID); // 设备类型
 		tag.putBoolean("isRunning", false); // 是否正在运行
 		tag.putInt("portsCount", 1); // 接口数量 (最多同时有多少个设备和它相连接)
 		tag.putInt("cycleLength", -1); // 周期长度 (每隔一个周期触发一次 clock 事件), 小于 0 代表永远不触发

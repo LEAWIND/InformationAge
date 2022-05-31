@@ -1,5 +1,6 @@
 package net.leawind.infage.blockentity;
 
+import net.leawind.infage.block.PowerControler;
 import net.leawind.infage.registry.InfageBlockEntities;
 import net.minecraft.nbt.CompoundTag;
 
@@ -12,7 +13,7 @@ public class PowerControlerEntity extends DeviceEntity {
 	@Override
 	public CompoundTag toTag(CompoundTag tag) {
 		super.toTag(tag);
-		tag.putString("deviceType", "power_controler");
+		tag.putString("deviceType", PowerControler.BLOCK_ID);
 		return tag;
 	}
 }

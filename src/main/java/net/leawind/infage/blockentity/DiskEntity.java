@@ -1,5 +1,6 @@
 package net.leawind.infage.blockentity;
 
+import net.leawind.infage.block.Disk;
 import net.leawind.infage.registry.InfageBlockEntities;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundTag;
@@ -13,7 +14,7 @@ public class DiskEntity extends DeviceEntity {
 	@Override
 	public CompoundTag toTag(CompoundTag tag) {
 		super.toTag(tag);
-		tag.putString("deviceType", "disk");
+		tag.putString("deviceType", Disk.BLOCK_ID);
 		tag.putInt("storageSize", 65536);
 		tag.putByteArray("portsStatus", new byte[] { 0 });
 		return tag;

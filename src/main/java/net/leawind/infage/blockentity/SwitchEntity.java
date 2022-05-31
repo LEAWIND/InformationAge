@@ -1,5 +1,6 @@
 package net.leawind.infage.blockentity;
 
+import net.leawind.infage.block.Switch;
 import net.leawind.infage.registry.InfageBlockEntities;
 import net.minecraft.nbt.CompoundTag;
 
@@ -12,7 +13,7 @@ public class SwitchEntity extends DeviceEntity {
 	@Override
 	public CompoundTag toTag(CompoundTag tag) {
 		super.toTag(tag);
-		tag.putString("deviceType", "switch");
+		tag.putString("deviceType", Switch.BLOCK_ID);
 
 		tag.putInt("portsCount", 16);
 		tag.putByteArray("portsStatus", new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });

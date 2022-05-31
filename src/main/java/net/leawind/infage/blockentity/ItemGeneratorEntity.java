@@ -1,5 +1,6 @@
 package net.leawind.infage.blockentity;
 
+import net.leawind.infage.block.ItemGenerator;
 import net.leawind.infage.registry.InfageBlockEntities;
 import net.minecraft.nbt.CompoundTag;
 
@@ -12,7 +13,7 @@ public class ItemGeneratorEntity extends DeviceEntity {
 	@Override
 	public CompoundTag toTag(CompoundTag tag) {
 		super.toTag(tag);
-		tag.putString("deviceType", "item_generator");
+		tag.putString("deviceType", ItemGenerator.BLOCK_ID);
 		tag.putInt("storageSize", 256);
 		return tag;
 	}
