@@ -22,7 +22,7 @@ import net.minecraft.world.BlockView;
 
 // 设备方块:全都是有水平方向的 (东西南北), 所以继承 HorizontalFacingBlock
 // 因为设备方块一定有对应的 方块实体, 所以要实现 BlockEntityProvider 接口
-public abstract class DeviceBlock extends HorizontalFacingBlock implements BlockEntityProvider {
+public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityProvider {
 	public static final String BLOCK_ID = "i_forgot_to_set_this_id"; // 用于命名的方块ID (infage:block_id)
 	// 默认值: 方块不同方向下的 碰撞箱
 	// 北南东西 的顺序是我在 getOutlineShape 方法中自定义的
@@ -85,12 +85,33 @@ public abstract class DeviceBlock extends HorizontalFacingBlock implements Block
 		return null;
 	}
 
+	// 要想 "在方块中存储数据", 就要能够通过方块获取方块对应的方块实体(根据方块坐标来获取)
+	// 当没有对应的方块实体时要能够创建一个方块实体
+	// 所以要覆写这个创建对应方块实体的方法
 	@Override
 	public BlockEntity createBlockEntity(BlockView blockView) {
 		return null;
 	}
 
-	// 使用事件
+	// // 开机
+	// public void device_boot() {
+	// // 检查设备状态
+	// // 设置状态为 开机
+	// // 执行开机脚本
+	// }
+
+	// // 关机
+	// public void device_shutdown() {
+	// // 检查设备状态
+	// // 设置状态为关机
+	// }
+
+	// // 重启
+	// public void device_reboot() {
+	// this.device_shutdown();
+	// this.device_boot();
+	// }
+
 	// 放置事件
 	// 破坏事件
 

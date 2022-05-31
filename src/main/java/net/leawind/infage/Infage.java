@@ -11,6 +11,7 @@ package net.leawind.infage;
 import net.fabricmc.api.ModInitializer;
 import net.leawind.infage.registry.InfageBlockEntities;
 import net.leawind.infage.registry.InfageBlocks;
+import net.leawind.infage.registry.InfageEvents;
 import net.leawind.infage.registry.InfageItemGroups;
 import net.leawind.infage.registry.InfageItems;
 
@@ -42,5 +43,8 @@ public class Infage implements ModInitializer {
 		// 注册方块实体
 		// 方块有了对应的方块实体才能储存数据
 		new InfageBlockEntities();
+
+		// 注册事件
+		InfageEvents.register();
 	}
 }

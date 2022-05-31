@@ -15,7 +15,7 @@ public class ItemGenerator extends DeviceBlock {
 
 	public ItemGenerator() {
 		super(BLOCK_SETTINGS);
-		this.shapes = new VoxelShape[] { // TODO
+		this.shapes = new VoxelShape[] {
 				Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 北
 				Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 南
 				Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 东
