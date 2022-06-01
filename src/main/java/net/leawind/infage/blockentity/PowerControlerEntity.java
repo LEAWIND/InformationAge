@@ -14,6 +14,7 @@ public class PowerControlerEntity extends DeviceEntity {
 	public CompoundTag toTag(CompoundTag tag) {
 		super.toTag(tag);
 		tag.putString("deviceType", PowerControler.BLOCK_ID);
+		tag.putBoolean("isPowerd", false); // 是否处于充能状态。如果是，则可以用比较器输出信号
 		return tag;
 	}
 }

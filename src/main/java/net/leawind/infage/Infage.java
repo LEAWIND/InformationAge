@@ -4,10 +4,11 @@ I'm sorry that
 except this one.
 */
 // 参考 
-// [基于fabric和mc1.15的我的世界mod制作教程13-GUI1[1.5x]](https://www.bilibili.com/video/BV1oh411R7of)
 
+// [耗子大佬的博客](https://mouse0w0.github.io/archives/page/2/)
 // https://www.bilibili.com/read/readlist/rl433929?spm_id_from=333.999.0.0
 // https://fabricmc.net/wiki/zh_cn:start
+
 package net.leawind.infage;
 
 import org.apache.logging.log4j.LogManager;
@@ -46,9 +47,5 @@ public class Infage implements ModInitializer {
 		// 注册方块实体
 		// 方块有了对应的方块实体才能储存数据
 		new InfageBlockEntities();
-
-		// 注册事件
-		// InfageEvents.register();
-
 	}
 }

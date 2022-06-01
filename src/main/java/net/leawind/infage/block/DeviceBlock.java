@@ -4,6 +4,8 @@ package net.leawind.infage.block;
 
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
+import net.leawind.infage.blockentity.DeviceEntity;
+import net.leawind.infage.screen.InfageDeviceScreen;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
@@ -11,6 +13,7 @@ import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.block.Material;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.sound.BlockSoundGroup;
@@ -110,14 +113,29 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 			Block block = blockstate.getBlock(); // 由 blockState 获取方块对象
 			if (block instanceof DeviceBlock) { // 检查这个方块是不是这个模组里定义的 设备
 				// 根据坐标获取这个方块的方块实体
-				BlockEntity blockEntity = world.getBlockEntity(blockPos);
+				DeviceEntity deviceEntity = (DeviceEntity) world.getBlockEntity(blockPos);
 				System.out.printf("\nEvent UseBlockCallback:\n\tPlayer:\n");
 				System.out.printf("\t\t%s\n", player);
 				System.out.printf("\tused block:\n");
 				System.out.printf("\t\t%s\n", block);
-				System.out.printf("\tBlockEntity:\n\t\t%s\n", blockEntity);
+				System.out.printf("\tBlockEntity:\n\t\t%s\n", deviceEntity);
 
 				// 判断是不是 客户端
+				// 还得看源码
+				if (world.isClient) {
+					// 客户端
+					// player.openCommandBlockScreen(commandBlock);
+					System.out.println("================================");
+					System.out.println("Open Device Block Screen At Client !!!");
+					System.out.println("BlockEntity is");
+					System.out.println(deviceEntity);
+					// 在客户端显示屏幕
+					MinecraftClient.getInstance().openScreen(new InfageDeviceScreen(deviceEntity));
+
+				} else {
+					// 服务端
+					return ActionResult.SUCCESS;
+				}
 
 				return ActionResult.SUCCESS; // 返回了 SUCCESS 就不会处理后续的事件了 (例如放置方块)
 			}
@@ -133,6 +151,7 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 			BlockEntity blockEntity = world.getBlockEntity(blockPos);
 			if (blockEntity != null) {
 				System.out.println(blockEntity);
+				// TODO 获取方块实体，获取nbt，修改状态为 off
 				// CompoundTag tag = WorldChunk.getBlockEntityTag(blockPos);
 			}
 		} catch (Exception e) {
@@ -157,7 +176,5 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 		this.device_shutdown();
 		this.device_boot();
 	}
-
-	// 放置事件
 
 }
