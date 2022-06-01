@@ -20,8 +20,6 @@ import net.leawind.infage.registry.InfageBlocks;
 import net.leawind.infage.registry.InfageItemGroups;
 import net.leawind.infage.registry.InfageItems;
 
-// 在 fabric.mod.json 中定义的 main 入口(类)
-
 public class Infage implements ModInitializer {
 	private static final Logger LOGGER = LogManager.getLogger("Infage");
 	// 命名空间
@@ -30,14 +28,14 @@ public class Infage implements ModInitializer {
 	@Override
 	// 这会在初始化时运行
 	public void onInitialize() {
-		LOGGER.debug("Infage.java: I'm here!!!");
+		LOGGER.info("Infage.java: I'm here!!!");
 
 		// 实例化并注册方块
 		// 注册了的方块才能在世界中被放置
 		InfageBlocks.register();
 
 		// 实例化并注册物品
-		// 注册了的物品才能出现在玩家物品栏中
+		// 注册了的物品才可能出现在玩家物品栏中
 		InfageItems.register();
 
 		// 创建新的物品组并加入那些物品

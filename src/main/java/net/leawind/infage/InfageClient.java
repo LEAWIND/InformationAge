@@ -9,6 +9,6 @@ public class InfageClient implements ClientModInitializer {
 	private static final Logger LOGGER = LogManager.getLogger("InfageClient");
 	@Override
 	public void onInitializeClient() {
-		LOGGER.debug("InfageClient: I'm here!!!");
+		LOGGER.info("InfageClient: I'm here!!!");
 	}
 }

@@ -12,19 +12,19 @@ public class InfageItems {
 	// 以及一些其他的物品（暂无）
 	// BlockItem 继承自 Item
 	public static final BlockItem COMPUTER = new BlockItem(InfageBlocks.COMPUTER,
-			Computer.DEFAULT_BLOCKITEM_SETTINGS);
+			Computer.getDefaultBlockItemSettings());
 	public static final BlockItem DISK = new BlockItem(InfageBlocks.DISK,
-			Disk.DEFAULT_BLOCKITEM_SETTINGS);
+			Disk.getDefaultBlockItemSettings());
 	public static final BlockItem ITEM_GENERATOR = new BlockItem(InfageBlocks.ITEM_GENERATOR,
-			ItemGenerator.DEFAULT_BLOCKITEM_SETTINGS);
+			ItemGenerator.getDefaultBlockItemSettings());
 	public static final BlockItem ITEM_REGESTER = new BlockItem(InfageBlocks.ITEM_REGESTER,
-			ItemRegester.DEFAULT_BLOCKITEM_SETTINGS);
+			ItemRegester.getDefaultBlockItemSettings());
 	public static final BlockItem POWER_CONTROLER = new BlockItem(InfageBlocks.POWER_CONTROLER,
-			PowerControler.DEFAULT_BLOCKITEM_SETTINGS);
+			PowerControler.getDefaultBlockItemSettings());
 	public static final BlockItem POWER_SENSOR = new BlockItem(InfageBlocks.POWER_SENSOR,
-			PowerSensor.DEFAULT_BLOCKITEM_SETTINGS);
+			PowerSensor.getDefaultBlockItemSettings());
 	public static final BlockItem SWITCH = new BlockItem(InfageBlocks.SWITCH,
-			Switch.DEFAULT_BLOCKITEM_SETTINGS);
+			Switch.getDefaultBlockItemSettings());
 
 	public static final void register() {
 		// 注册这些物品

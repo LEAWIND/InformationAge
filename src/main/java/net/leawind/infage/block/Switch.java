@@ -10,8 +10,8 @@ import net.minecraft.world.BlockView;
 
 public class Switch extends DeviceBlock {
 	public static final String BLOCK_ID = "switch";
-	public static final FabricBlockSettings BLOCK_SETTINGS = DeviceBlock.DEFAULT_BLOCK_SETTINGS;
-	public static final Item.Settings BLOCKITEM_SETTINGS = DeviceBlock.DEFAULT_BLOCKITEM_SETTINGS;
+	public static final FabricBlockSettings BLOCK_SETTINGS = DeviceBlock.getDefaultBlockSettings();
+	public static final Item.Settings BLOCKITEM_SETTINGS = DeviceBlock.getDefaultBlockItemSettings();
 
 	public Switch() {
 		super(BLOCK_SETTINGS);

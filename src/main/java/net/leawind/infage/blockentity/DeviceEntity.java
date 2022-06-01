@@ -27,21 +27,19 @@ public class DeviceEntity extends BlockEntity implements Tickable {
 
 	/*
 	 * 要实现在方块实体中储存数据，就要能够加载和保存数据。
-	 * 在 1.18 中只需要覆写 writeNbt() 和 readNbt() 即可
+	 * 在 1.16.5 中是 toTag() 和 fromTag()
+	 * 1.16.5 参考 [https://fabricmc.net/wiki/tutorial:blockentity?rev=1563817083]
+	 * 
+	 * 在 1.18 中标识符变成了 writeNbt() 和 readNbt()
 	 * 1.18 参考 [https://fabricmc.net/wiki/tutorial:blockentity]
 	 * 
-	 * 但是在 1.16.5 中不一样，是 totag 和 fromTag
-	 * 1.16.5 参考 [https://fabricmc.net/wiki/tutorial:blockentity?rev=1563817083]
 	 */
-
 	@Override
 	public CompoundTag toTag(CompoundTag tag) {
 		// 父类的 toTag() 会将方块的 id 和坐标保存到方块实体中。
-		// 如果没有 id 和坐标信息, 这个方块实体的数据就会丢失
-		// 所以必须要先调用一下父类的这个方法
 		super.toTag(tag);
-		// 将本实例的属性保存到 tag
 
+		// 将本实例的属性保存到 tag
 		tag.putBoolean("isRunning", this.isRunning);
 		tag.putInt("portsCount", this.portsCount);
 		tag.putInt("cycleLength", this.cycleLength);
@@ -87,5 +85,27 @@ public class DeviceEntity extends BlockEntity implements Tickable {
 		// this.tickCounter++;
 		// if (this.tickCounter % 4 == 0)
 		// System.out.printf("Tick count is [%d]\n", this.tickCounter);
+	}
+
+	// 开机
+	public void device_boot() {
+		if (this.isRunning) // 检查设备状态
+			return;
+		this.isRunning = true; // 设置状态为 开机
+		// TODO 执行开机脚本
+	}
+
+	// 关机
+	public void device_shutdown() {
+		// 检查设备状态
+		if (!this.isRunning)
+			return;
+		this.isRunning = false;
+	}
+
+	// 重启
+	public void device_reboot() {
+		this.device_shutdown();
+		this.device_boot();
 	}
 }
