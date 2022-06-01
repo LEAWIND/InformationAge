@@ -25,6 +25,7 @@ public class Switch extends DeviceBlock {
 
 	@Override
 	public BlockEntity createBlockEntity(BlockView blockView) {
-		return new SwitchEntity();
+		this.deviceEntity = new SwitchEntity();
+		return this.deviceEntity;
 	}
 }

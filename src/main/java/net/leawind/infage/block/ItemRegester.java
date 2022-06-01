@@ -25,6 +25,7 @@ public class ItemRegester extends DeviceBlock {
 
 	@Override
 	public BlockEntity createBlockEntity(BlockView blockView) {
-		return new ItemRegesterEntity();
+		this.deviceEntity = new ItemRegesterEntity();
+		return this.deviceEntity;
 	}
 }

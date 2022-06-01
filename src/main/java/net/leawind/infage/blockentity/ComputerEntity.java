@@ -1,33 +1,14 @@
 package net.leawind.infage.blockentity;
 
-import net.leawind.infage.block.Computer;
 import net.leawind.infage.registry.InfageBlockEntities;
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.CompoundTag;
 
 public class ComputerEntity extends DeviceEntity {
+	public int portsCount = 2;
+	public byte portsStatus[] = new byte[] { 0, 0 };
+	public int cycleLength = 4;
+	public int storageSize = 2048;
+
 	public ComputerEntity() {
 		super(InfageBlockEntities.COMPUTER);
 	}
-
-	// 有关这个方法的详细说明见父类
-	@Override
-	public CompoundTag toTag(CompoundTag tag) {
-		super.toTag(tag);
-		tag.putString("deviceType", Computer.BLOCK_ID);
-
-		tag.putInt("portsCount", 2);
-		tag.putByteArray("portsStatus", new byte[] { 0, 0 });
-
-		tag.putInt("cycleLength", 4);
-		tag.putInt("storageSize", 2048);
-		tag.putString("storage", "");
-		return tag;
-	}
-
-	@Override
-	public void fromTag(BlockState state, CompoundTag tag) {
-		super.fromTag(state, tag);
-	}
-
 }

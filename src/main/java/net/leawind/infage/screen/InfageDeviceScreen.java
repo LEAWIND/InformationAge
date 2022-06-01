@@ -18,12 +18,16 @@ import net.minecraft.text.TranslatableText;
 public class InfageDeviceScreen extends Screen {
 	// TODO Style 设置
 	public static final class Style {
-		public static final double codeFieldPos[] = { 0.2, 0.08, 1, 1 };
-		public static final double outputsFieldPos[] = {};
-		public static final double powerButtonPos[] = {};
-		public static final double doneButtonPos[] = {};
-		public static final double eventButtonsShape[] = { 0.1, 0.04 };
-		public static final double portsButtonsShape[] = { 0.1, 0.04 };
+		public static final double tilePos[] = { 0.10, 0.00, 0.50, 0.03 }; // 标题文本位置
+		public static final double codeFieldPos[] = { 0.10, 0.03, 0.50, 0.97 }; // 代码文本域位置
+		public static final double outputsFieldPos[] = { 0.60, 0.40, 0.40, 0.60 }; // 输出文本域位置
+		public static double doneButtonPos[] = { 0.80, 0.00, 0.20, 0.05 }; // 完成按钮位置
+		public static double powerButtonPos[] = { 0.60, 0.00, 0.20, 0.05 }; // 电源按钮位置
+
+		public static final double eventButtonsShape[] = { 0.10, 0.06 }; // 事件按钮宽高
+		public static final double portsButtonsShape[] = { 0.85, 0.04 }; // 端口按钮宽高
+		public static final double portsButtonsPos[] = { 0.1, 0.2 }; // 端口按钮起始位置
+		public static final int portsCountPerLine = 4; // 每行多少个端口按钮
 	};
 
 	public BlockEntity deviceBlockEntity; // 对应的设备方块

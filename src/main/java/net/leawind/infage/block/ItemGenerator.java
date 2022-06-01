@@ -25,6 +25,7 @@ public class ItemGenerator extends DeviceBlock {
 
 	@Override
 	public BlockEntity createBlockEntity(BlockView blockView) {
-		return new ItemGeneratorEntity();
+		this.deviceEntity = new ItemGeneratorEntity();
+		return this.deviceEntity;
 	}
 }

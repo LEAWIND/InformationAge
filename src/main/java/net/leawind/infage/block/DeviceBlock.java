@@ -33,6 +33,9 @@ import net.minecraft.world.WorldAccess;
 // 因为设备方块一定有对应的 方块实体, 所以要实现 BlockEntityProvider 接口
 public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityProvider {
 	public static final String BLOCK_ID = "i_forgot_to_set_this_id"; // 用于命名的方块ID (infage:block_id)
+	// 实例属性
+	public DeviceEntity deviceEntity = null;
+
 	// 默认值: 方块不同方向下的 碰撞箱
 	// 北南东西 的顺序是我在 getOutlineShape 方法中自定义的
 	public static final VoxelShape[] DEFAULT_SHAPES = {
@@ -57,7 +60,7 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 	// 默认值: 方块对应物品 的属性设置
 	public static final FabricItemSettings DEFAULT_BLOCKITEM_SETTINGS = new FabricItemSettings()
 			.maxCount(1) // 最大堆叠数量
-			.fireproof(); // 是否防火
+			.fireproof(); // 防火
 
 	// 形状
 	public VoxelShape[] shapes;
@@ -103,8 +106,8 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 	}
 
 	@Override
-	public ActionResult onUse(BlockState state, World world, BlockPos blockPos, PlayerEntity player, Hand hand,
-			BlockHitResult hitResult) {
+	public ActionResult onUse(BlockState state, World world, BlockPos blockPos,
+			PlayerEntity player, Hand hand, BlockHitResult hitResult) {
 		try {
 			// 如果任意参数为 null 或玩家啊在旁观者模式，则不处理
 			if (player == null || player.isSpectator() || world == null || hitResult == null)
@@ -161,14 +164,20 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 	// 开机
 	public void device_boot() {
 		// 检查设备状态
+		if (this.deviceEntity.isRunning)
+			return;
 		// 设置状态为 开机
-		// 执行开机脚本
+		this.deviceEntity.isRunning = true;
+		// TODO 执行开机脚本
 	}
 
 	// 关机
 	public void device_shutdown() {
 		// 检查设备状态
-		// 设置状态为关机
+		if (!this.deviceEntity.isRunning)
+			return;
+		// TODO 设置状态为关机
+		this.deviceEntity.isRunning = false;
 	}
 
 	// 重启

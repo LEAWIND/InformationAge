@@ -25,6 +25,7 @@ public class Disk extends DeviceBlock {
 
 	@Override
 	public BlockEntity createBlockEntity(BlockView blockView) {
-		return new DiskEntity();
+		this.deviceEntity = new DiskEntity();
+		return this.deviceEntity;
 	}
 }
