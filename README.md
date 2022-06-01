@@ -1,3 +1,3 @@
-# Imformation Age
+# Information Age
 
 
