@@ -14,8 +14,10 @@ import net.minecraft.block.Material;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.item.ItemStack;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Properties;
@@ -27,7 +29,6 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldAccess;
 
 // 设备方块:全都是有水平方向的 (东西南北), 所以继承 HorizontalFacingBlock
 // 因为设备方块一定有对应的 方块实体, 所以要实现 BlockEntityProvider 接口
@@ -147,18 +148,11 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 		return ActionResult.PASS;
 	}
 
-	// 破坏事件
+	// 事件：放置
 	@Override
-	public void onBroken(WorldAccess world, BlockPos blockPos, BlockState blockstate) {
-		try {
-			BlockEntity blockEntity = world.getBlockEntity(blockPos);
-			if (blockEntity != null) {
-				System.out.println(blockEntity);
-				// TODO 获取方块实体，获取nbt，修改状态为 off
-				// CompoundTag tag = WorldChunk.getBlockEntityTag(blockPos);
-			}
-		} catch (Exception e) {
-		}
+	public void onPlaced(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
+		// 将状态设置为已关机
+		this.device_shutdown();
 	}
 
 	// 开机
