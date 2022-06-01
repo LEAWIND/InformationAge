@@ -1,4 +1,4 @@
-package net.leawind.infage.screen;
+package net.leawind.infage.gui;
 
 import java.util.List;
 
@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 
 import net.leawind.infage.blockentity.DeviceEntity;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.CommandSuggestor;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
@@ -16,6 +17,8 @@ import net.minecraft.text.TranslatableText;
 
 // Screen extends DrawableHelper
 public class InfageDeviceScreen extends Screen {
+	public static final boolean ENABLE_COMMAND_SUGGESTOR = false; // 是否启用代码提示
+
 	// TODO Style 设置
 	public static final class Style {
 		public static final double tilePos[] = { 0.10, 0.00, 0.50, 0.03 }; // 标题文本位置
@@ -30,7 +33,7 @@ public class InfageDeviceScreen extends Screen {
 		public static final int portsCountPerLine = 4; // 每行多少个端口按钮
 	};
 
-	public BlockEntity deviceBlockEntity; // 对应的设备方块
+	public BlockEntity deviceEntity; // 对应的设备方块
 
 	// 针对每一个事件脚本，都有历史记录栈。每输入一个非字母，就添加一次记录
 	// public List<List<String>> ScriptHistory = Lists.newArrayList();
@@ -45,11 +48,9 @@ public class InfageDeviceScreen extends Screen {
 	public List<ButtonWidget> eventButtons = Lists.newArrayList(); // 针对每个事件都有一个脚本
 	public CommandSuggestor commandSuggestor;
 
-	public static final boolean ENABLE_COMMAND_SUGGESTOR = false; // 是否启用代码提示
-
 	public InfageDeviceScreen(DeviceEntity deviceEntity) {
 		super(NarratorManager.EMPTY);
-		this.deviceBlockEntity = deviceEntity;
+		this.deviceEntity = deviceEntity;
 	}
 
 	// TODO 在初始化方法中绘制界面
@@ -135,5 +136,28 @@ public class InfageDeviceScreen extends Screen {
 	// TODO 自定义事件：切换设备开关
 	public void onTogglePower(ButtonWidget buttonWidget) {
 		// 如果当前设备处于关闭状态，则打开，否则关闭
+		if (((DeviceEntity) this.deviceEntity).isRunning) {
+
+		} else {
+
+		}
 	}
+
+	// 永远返回 true 表示这个界面占满整个屏幕，无论光标在哪都在屏幕上
+	@Override
+	public boolean isMouseOver(double mouseX, double mouseY) {
+		return true;
+	}
+
+	// 重置尺寸
+	@Override
+	public void resize(MinecraftClient client, int width, int height) {
+		super.resize(client, width, height);
+		this.doneButton.active = true;
+		this.powerButton.active = true;
+
+		// this.portsButtons.active = true;
+		// this.eventButtons.active = true;
+	}
+
 }

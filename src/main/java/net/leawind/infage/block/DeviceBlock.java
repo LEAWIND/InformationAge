@@ -5,7 +5,7 @@ package net.leawind.infage.block;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.leawind.infage.blockentity.DeviceEntity;
-import net.leawind.infage.screen.InfageDeviceScreen;
+import net.leawind.infage.gui.InfageDeviceScreen;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
@@ -170,7 +170,6 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 		// 检查设备状态
 		if (!this.deviceEntity.isRunning)
 			return;
-		// TODO 设置状态为关机
 		this.deviceEntity.isRunning = false;
 	}
 

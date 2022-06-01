@@ -81,7 +81,9 @@ public class DeviceEntity extends BlockEntity implements Tickable {
 	// public int tickCounter = 0;
 	@Override
 	public void tick() {
-		// TODO Tick
+		// TODO Device on Tick
+		if (!this.isRunning)
+			return;
 		// this.tickCounter++;
 		// if (this.tickCounter % 4 == 0)
 		// System.out.printf("Tick count is [%d]\n", this.tickCounter);
