@@ -21,11 +21,11 @@ public class Switch extends DeviceBlock {
 				Block.createCuboidShape(3, 0, 0, 13, 8, 16), // 东
 				Block.createCuboidShape(3, 0, 0, 13, 8, 16), // 西
 		};
+
 	}
 
 	@Override
 	public BlockEntity createBlockEntity(BlockView blockView) {
-		this.deviceEntity = new SwitchEntity();
-		return this.deviceEntity;
+		return new SwitchEntity();
 	}
 }

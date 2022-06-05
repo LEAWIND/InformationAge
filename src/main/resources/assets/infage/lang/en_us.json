@@ -6,5 +6,15 @@
 	"block.infage.item_regester": "Item Regester",
 	"block.infage.power_controler": "Power Controler",
 	"block.infage.power_sensor": "Power Sensor",
-	"block.infage.switch": "Switch"
+	"block.infage.switch": "Switch",
+	"infage.devicegui.events.init": "init",
+	"infage.devicegui.events.boot": "boot",
+	"infage.devicegui.events.port_connect": "connect",
+	"infage.devicegui.events.port_disconnect": "disconnect",
+	"infage.devicegui.events.receive_data": "receiveData",
+	"infage.devicegui.events.power_change": "powerChange",
+	"infage.devicegui.console": "console",
+	"infage.devicegui.port": "port",
+	"infage.devicegui.shutdown": "shutdown",
+	"infage.devicegui.boot": "boot"
 }

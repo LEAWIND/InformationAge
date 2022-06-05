@@ -25,7 +25,6 @@ public class PowerSensor extends DeviceBlock {
 
 	@Override
 	public BlockEntity createBlockEntity(BlockView blockView) {
-		this.deviceEntity = new PowerSensorEntity();
-		return this.deviceEntity;
+		return new PowerSensorEntity();
 	}
 }

@@ -5,7 +5,6 @@ package net.leawind.infage.block;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.leawind.infage.blockentity.DeviceEntity;
-import net.leawind.infage.gui.InfageDeviceScreen;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
@@ -13,7 +12,6 @@ import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.block.Material;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
@@ -45,6 +43,7 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 			Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 东
 			Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 西
 	};
+
 	// 默认值: 方块 的属性设置
 	// 参考
 	// [https://maven.fabricmc.net/docs/fabric-api-0.32.5+1.16/net/fabricmc/fabric/api/object/builder/v1/block/FabricBlockSettings.html]
@@ -67,6 +66,7 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 				.fireproof() // 防火
 		;
 	}
+
 	// 形状
 	public VoxelShape[] shapes;
 
@@ -115,7 +115,7 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 	public ActionResult onUse(BlockState state, World world, BlockPos blockPos,
 			PlayerEntity player, Hand hand, BlockHitResult hitResult) {
 		try {
-			// 如果任意参数为 null 或玩家啊在旁观者模式，则不处理
+			// 如果任意参数为 null 或玩家处于旁观者模式，则不处理
 			if (player == null || player.isSpectator() || world == null || hitResult == null)
 				return ActionResult.PASS;
 			BlockState blockstate = world.getBlockState(blockPos); // 根据坐标获取 blockState
@@ -129,8 +129,8 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 				System.out.printf("\t\t%s\n", block);
 				System.out.printf("\tBlockEntity:\n\t\t%s\n", deviceEntity);
 
-				// 判断是不是 客户端
 				// 还得看源码
+				// 判断是不是 客户端
 				if (world.isClient) {
 					// 客户端
 					// player.openCommandBlockScreen(commandBlock);
@@ -139,7 +139,15 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 					System.out.println("BlockEntity is");
 					System.out.println(deviceEntity);
 					// 在客户端显示屏幕
-					MinecraftClient.getInstance().openScreen(new InfageDeviceScreen(deviceEntity));
+
+					System.out.printf("\nSendCaches[%d]\n", deviceEntity.receiveCaches.length);
+					for (int i = 0; i < deviceEntity.receiveCaches.length; i++) {
+						String str = deviceEntity.receiveCaches[i];
+						System.out.printf("Cache[%d] %s\n", i, str);
+					}
+					deviceEntity.togglePower();
+					// MinecraftClient.getInstance().openScreen(new InfageDeviceScreen(world,
+					// blockPos));
 				} else {
 					// 服务端
 					return ActionResult.SUCCESS;

@@ -13,16 +13,26 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 
 public class InfageBlocks {
-	// 在这实例化各种方块
-	public static final DeviceBlock COMPUTER = new Computer();
-	public static final DeviceBlock SWITCH = new Switch();
-	public static final DeviceBlock DISK = new Disk();
-	public static final DeviceBlock ITEM_GENERATOR = new ItemGenerator();
-	public static final DeviceBlock ITEM_REGESTER = new ItemRegester();
-	public static final DeviceBlock POWER_CONTROLER = new PowerControler();
-	public static final DeviceBlock POWER_SENSOR = new PowerSensor();
+	public static final DeviceBlock COMPUTER;
+	public static final DeviceBlock SWITCH;
+	public static final DeviceBlock DISK;
+	public static final DeviceBlock ITEM_GENERATOR;
+	public static final DeviceBlock ITEM_REGESTER;
+	public static final DeviceBlock POWER_CONTROLER;
+	public static final DeviceBlock POWER_SENSOR;
 
-	public static final void register() {
+	static {
+		// 在这实例化各种方块
+		COMPUTER = new Computer();
+		SWITCH = new Switch();
+		DISK = new Disk();
+		ITEM_GENERATOR = new ItemGenerator();
+		ITEM_REGESTER = new ItemRegester();
+		POWER_CONTROLER = new PowerControler();
+		POWER_SENSOR = new PowerSensor();
+	}
+
+	public InfageBlocks() {
 		// 注册这些方块
 		Registry.register(Registry.BLOCK, new Identifier(Infage.NAMESPACE, Computer.BLOCK_ID), COMPUTER);
 		Registry.register(Registry.BLOCK, new Identifier(Infage.NAMESPACE, Switch.BLOCK_ID), SWITCH);

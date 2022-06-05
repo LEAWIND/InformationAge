@@ -28,8 +28,7 @@ public class PowerControler extends DeviceBlock {
 
 	@Override
 	public BlockEntity createBlockEntity(BlockView blockView) {
-		this.deviceEntity = new PowerControlerEntity();
-		return this.deviceEntity;
+		return new PowerControlerEntity();
 	}
 
 	// 获取比较器输出

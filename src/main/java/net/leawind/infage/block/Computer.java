@@ -34,7 +34,6 @@ public class Computer extends DeviceBlock {
 	// 所以要覆写这个创建对应方块实体的方法
 	@Override
 	public BlockEntity createBlockEntity(BlockView blockView) {
-		this.deviceEntity = new ComputerEntity();
-		return this.deviceEntity;
+		return new ComputerEntity();
 	}
 }
