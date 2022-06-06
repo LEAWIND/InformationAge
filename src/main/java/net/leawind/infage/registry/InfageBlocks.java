@@ -1,4 +1,6 @@
 package net.leawind.infage.registry;
+// https://fmltutor.ustc-zzzz.net/3.2.1-BlockState%E5%92%8CMetadata.html
+
 
 import net.leawind.infage.Infage;
 import net.leawind.infage.block.Computer;

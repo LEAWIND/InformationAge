@@ -13,7 +13,7 @@ import net.leawind.infage.registry.InfageBlockEntities;
 import net.leawind.infage.registry.InfageBlocks;
 import net.leawind.infage.registry.InfageItemGroups;
 import net.leawind.infage.registry.InfageItems;
-import net.leawind.infage.util.DataEncoding;
+import net.leawind.infage.script.ScriptHandler;
 
 public class Infage implements ModInitializer {
 	public static final Logger LOGGER;
@@ -26,7 +26,8 @@ public class Infage implements ModInitializer {
 		NAMESPACE = "infage";
 		MAX_TRANSMISSION_UNIT = 750;
 
-		DataEncoding.test();
+		// DataEncoding.test();
+		ScriptHandler.test();
 	}
 
 	@Override

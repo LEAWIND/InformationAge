@@ -1,4 +1,3 @@
-
 package net.leawind.infage.registry;
 
 import net.leawind.infage.Infage;

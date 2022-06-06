@@ -1,7 +1,10 @@
 package net.leawind.infage.blockentity;
 
 import java.util.Arrays;
-import net.leawind.infage.Infage;
+import javax.script.CompiledScript;
+import javax.script.ScriptException;
+import net.leawind.infage.script.DeviceObj;
+import net.leawind.infage.script.ScriptHandler;
 import net.leawind.infage.util.DataEncoding;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -27,10 +30,12 @@ public class DeviceEntity extends BlockEntity implements Tickable {
 	public long portsZ[];
 
 	// 各接口接收缓存 每 tick 只能发送一个传输单元 Infage.MAX_TRANSMISSION_UNIT
+	public String sendCaches[];
 	public String receiveCaches[];
-	public String receiveCaches_pub[];
 
-	public String script_tick = ""; // 周期性执行
+	public String script_tick = ""; // tick 脚本
+	public CompiledScript compiledScript_tick = null; // 编译后的 tick 脚本
+	public boolean isCompiling = false;
 
 	// 初始化 端口相关属性
 	public void initPorts() {
@@ -41,11 +46,11 @@ public class DeviceEntity extends BlockEntity implements Tickable {
 		this.portsStatus = new byte[this.portsCount];
 		Arrays.fill(this.portsStatus, (byte) -1);
 
+		this.sendCaches = new String[this.portsCount];
+		Arrays.fill(this.sendCaches, "");
+
 		this.receiveCaches = new String[this.portsCount];
 		Arrays.fill(this.receiveCaches, "");
-
-		this.receiveCaches_pub = new String[this.portsCount];
-		Arrays.fill(this.receiveCaches_pub, "");
 	}
 
 	public DeviceEntity(BlockEntityType<?> type) {
@@ -62,8 +67,9 @@ public class DeviceEntity extends BlockEntity implements Tickable {
 	 */
 	@Override
 	public CompoundTag toTag(CompoundTag tag) {
-		Infage.LOGGER.info("To Tag ()");
+		// Infage.LOGGER.info("To Tag ()");
 		// 父类的 toTag() 会将方块的 id 和坐标保存到方块实体中。
+		// 如果没有这个步骤，以后就无法通过坐标查找到这个方块实体，这些数据就相当于丢失了。
 		super.toTag(tag);
 
 		// // 将本实例的属性保存到 tag
@@ -81,15 +87,15 @@ public class DeviceEntity extends BlockEntity implements Tickable {
 		tag.putString("script_tick", this.script_tick);
 
 		// 字符串数组
+		tag.putString("sendCaches", DataEncoding.encode(this.sendCaches));
 		tag.putString("receiveCaches", DataEncoding.encode(this.receiveCaches));
-		tag.putString("receiveCaches_pub", DataEncoding.encode(this.receiveCaches_pub));
 
 		return tag;
 	}
 
 	@Override
 	public void fromTag(BlockState state, CompoundTag tag) {
-		Infage.LOGGER.info("From Tag ()");
+		// Infage.LOGGER.info("From Tag ()");
 		// 从tag中读取数据并保存到实例属性中
 		super.fromTag(state, tag);
 		this.pos = new BlockPos(tag.getInt("x"), tag.getInt("y"), tag.getInt("z"));
@@ -108,46 +114,67 @@ public class DeviceEntity extends BlockEntity implements Tickable {
 		this.script_tick = tag.getString("script_tick"); // tick 脚本
 
 		// 字符串数组
+		this.sendCaches = DataEncoding.decode(tag.getString("sendCaches"));
 		this.receiveCaches = DataEncoding.decode(tag.getString("receiveCaches"));
-		this.receiveCaches_pub = DataEncoding.decode(tag.getString("receiveCaches_pub"));
 	}
 
 	@Override
 	public void tick() {
 		if (this.isRunning) {
-			if (this.tickInterval > 0 && (this.tickCounter % this.tickInterval == 0)) {
+			if (this.compiledScript_tick == null) {
+				// 如果脚本未编译SGSC
+				if (!this.isCompiling) {
+					this.isCompiling = false;
+					this.compiledScript_tick = net.leawind.infage.script.ScriptHandler.compile(this.script_tick);
+				}
+			} else if (this.tickInterval > 0 && (this.tickCounter % this.tickInterval == 0)) {
 				// 定义一个发送缓存
 				String[] sendCaches = new String[this.portsCount];
 				for (int i = 0; i < this.portsCount; i++)
 					sendCaches[i] = "";
 				// 将 对外接收缓存 覆盖到 本机接收缓存。
-				String[] tp = this.receiveCaches;
-				this.receiveCaches = this.receiveCaches_pub;
-				this.receiveCaches_pub = tp;
+				String[] tp = this.sendCaches;
+				this.sendCaches = this.receiveCaches;
+				this.receiveCaches = tp;
 				// *检查充能状态
 				// *检查库存
 				// if(this instanceof In)
 
-				// TODO 执行 tick 脚本
+				// 执行 tick 脚本
+				DeviceObj deviceObj = new DeviceObj(this); // 获取当前设备实体的`DeviceObj`实例
+				ScriptHandler.BINDINGS.put("Device", deviceObj); // 设置变量绑定
 
-				// 清空对外接收缓存
-				for (int i = 0; i < this.portsCount; i++) {
-					this.receiveCaches_pub[i] = "";
-				}
-				// 将 发送缓存 中的内容覆盖到目标的 对外接收缓存中。
-				for (int i = 0; i < this.portsCount; i++) {
-					if (this.portsStatus[i] >= 0 && sendCaches[i] != "") {
-						// 如果接口已连接，而且发送缓存中有数据
-						// 目标位置
-						BlockPos targetPos = new BlockPos(this.portsX[i], this.portsY[i], this.portsZ[i]);
-						// 获取 目标方块实体
-						BlockEntity targetBlockEntity = world.getBlockEntity(targetPos);
-						if (targetBlockEntity != null && targetBlockEntity instanceof DeviceEntity) {
-							// 如果获取到了方块实体
-							// targetBlockEntity
+				if (true)
+					try {
+						this.compiledScript_tick.eval(ScriptHandler.BINDINGS);
+
+						// 如果过长 storage, 则将 js 中的 storage 截取 StorageSize 长度，并覆盖到本方块实体的 storage 属性。
+						if (deviceObj.storage.length() > this.storageSize)
+							this.storage = deviceObj.storage.substring(0, this.storageSize);
+
+						// 将 deviceObj 的发送缓存 覆盖到 this 的发送缓存
+						sendCaches = deviceObj.dataToSend;
+
+						// 将 发送缓存 中的内容覆盖到目标的 对外接收缓存中。
+						for (int i = 0; i < this.portsCount; i++) {
+							if (this.portsStatus[i] >= 0 && sendCaches[i] != "") {
+								// 如果接口已连接，而且发送缓存中有数据
+								// 目标位置
+								BlockPos targetPos = new BlockPos(this.portsX[i], this.portsY[i], this.portsZ[i]);
+								// 获取 目标方块实体
+								BlockEntity targetBlockEntity = world.getBlockEntity(targetPos);
+								if (targetBlockEntity != null && targetBlockEntity instanceof DeviceEntity) {
+									// 如果获取到了方块实体
+									// 将要发送的数据填到目标的接收缓存里
+									((DeviceEntity) targetBlockEntity).receiveCaches[i] = sendCaches[i];
+								}
+							}
 						}
+
+					} catch (ScriptException e) {
 					}
-				}
+				// 清空对外接收缓存
+				Arrays.fill(this.sendCaches, "");
 			}
 		}
 		this.tickCounter++;

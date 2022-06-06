@@ -73,6 +73,9 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 	public DeviceBlock(FabricBlockSettings settings) {
 		super(settings);
 		this.shapes = DEFAULT_SHAPES;
+
+		// this.getWorldChunk(pos).setBlockEntity(pos, blockEntity);
+		// this.addBlockEntity(blockEntity);
 	}
 
 	// 加上水平方向
@@ -112,8 +115,7 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 	}
 
 	@Override
-	public ActionResult onUse(BlockState state, World world, BlockPos blockPos,
-			PlayerEntity player, Hand hand, BlockHitResult hitResult) {
+	public ActionResult onUse(BlockState state, World world, BlockPos blockPos, PlayerEntity player, Hand hand, BlockHitResult hitResult) {
 		try {
 			// 如果任意参数为 null 或玩家处于旁观者模式，则不处理
 			if (player == null || player.isSpectator() || world == null || hitResult == null)
@@ -140,9 +142,9 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 					System.out.println(deviceEntity);
 					// 在客户端显示屏幕
 
-					System.out.printf("\nSendCaches[%d]\n", deviceEntity.receiveCaches.length);
-					for (int i = 0; i < deviceEntity.receiveCaches.length; i++) {
-						String str = deviceEntity.receiveCaches[i];
+					System.out.printf("\nSendCaches[%d]\n", deviceEntity.sendCaches.length);
+					for (int i = 0; i < deviceEntity.sendCaches.length; i++) {
+						String str = deviceEntity.sendCaches[i];
 						System.out.printf("Cache[%d] %s\n", i, str);
 					}
 					deviceEntity.togglePower();
