@@ -1,6 +1,7 @@
 package net.leawind.infage.block;
 
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
+import net.leawind.infage.blockentity.DeviceEntity;
 import net.leawind.infage.blockentity.PowerControlerEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -18,7 +19,7 @@ public class PowerControler extends DeviceBlock {
 
 	public PowerControler() {
 		super(BLOCK_SETTINGS);
-		this.shapes = new VoxelShape[] {
+		this.shapes = new VoxelShape[] {//
 				Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 北
 				Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 南
 				Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 东
@@ -32,16 +33,18 @@ public class PowerControler extends DeviceBlock {
 	}
 
 	// 获取比较器输出
-	// 应该是用比较器的输入端对准这个方块，比较器输出的信号强度就是这个函数的返回值
-	// 但是似乎没有用
+	// 用比较器的输入端对准这个方块，比较器输出的信号强度就是这个函数的返回值
 	@Override
 	public int getComparatorOutput(BlockState state, World world, BlockPos pos) {
-		BlockEntity blockEntity = world.getBlockEntity(pos);
-		// return blockEntity instanceof PowerControlerEntity ? 4 : 0;
-		if (blockEntity instanceof PowerControlerEntity) {
-			return 3;
-		} else {
-			return 0;
-		}
+		BlockEntity blockEntity = world.getBlockEntity(pos); // 根据坐标获取对应的方块实体
+		return (blockEntity instanceof PowerControlerEntity) && ((DeviceEntity) blockEntity).isRunning ? //
+				((PowerControlerEntity) blockEntity).powerLevel : //
+				0;
+	}
+
+	// 是否有比较器输出
+	@Override
+	public boolean hasComparatorOutput(BlockState state) {
+		return true;
 	}
 }

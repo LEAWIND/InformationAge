@@ -32,13 +32,10 @@ import net.minecraft.world.World;
 // 因为设备方块一定有对应的 方块实体, 所以要实现 BlockEntityProvider 接口
 public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityProvider {
 	public static final String BLOCK_ID = "i_forgot_to_set_this_id"; // 用于命名的方块ID (infage:block_id)
-	// 实例属性
-	public DeviceEntity deviceEntity = null;
 
 	// 默认值: 方块不同方向下的 碰撞箱
-	// 北南东西 的顺序是我在 getOutlineShape 方法中自定义的
-	public static final VoxelShape[] DEFAULT_SHAPES = {
-			Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 北
+	// 北南东西 的顺序是在 getOutlineShape 方法中自定义的
+	public static final VoxelShape[] DEFAULT_SHAPES = {Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 北
 			Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 南
 			Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 东
 			Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 西
@@ -61,8 +58,7 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 
 	// 默认值: 方块对应物品 的属性设置
 	public static final FabricItemSettings getDefaultBlockItemSettings() {
-		return new FabricItemSettings()
-				.maxCount(1) // 最大堆叠数量
+		return new FabricItemSettings().maxCount(1) // 最大堆叠数量
 				.fireproof() // 防火
 		;
 	}
@@ -123,15 +119,14 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 			BlockState blockstate = world.getBlockState(blockPos); // 根据坐标获取 blockState
 			Block block = blockstate.getBlock(); // 由 blockState 获取方块对象
 			if (block instanceof DeviceBlock) { // 检查这个方块是不是设备
-				// 根据坐标获取这个方块的方块实体
-				DeviceEntity deviceEntity = (DeviceEntity) world.getBlockEntity(blockPos);
-				System.out.printf("\nEvent UseBlockCallback:\n\tPlayer:\n");
-				System.out.printf("\t\t%s\n", player);
-				System.out.printf("\tused block:\n");
-				System.out.printf("\t\t%s\n", block);
-				System.out.printf("\tBlockEntity:\n\t\t%s\n", deviceEntity);
 
-				// 还得看源码
+				DeviceEntity deviceEntity = (DeviceEntity) world.getBlockEntity(blockPos); // 根据坐标获取这个方块的方块实体
+				// System.out.printf("\nEvent UseBlockCallback:\n\tPlayer:\n");
+				// System.out.printf("\t\t%s\n", player);
+				// System.out.printf("\tused block:\n");
+				// System.out.printf("\t\t%s\n", block);
+				// System.out.printf("\tBlockEntity:\n\t\t%s\n", deviceEntity);
+
 				// 判断是不是 客户端
 				if (world.isClient) {
 					// 客户端
@@ -165,8 +160,17 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 	// 事件：放置
 	@Override
 	public void onPlaced(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
-		// 将状态设置为已关机
-		if (this.deviceEntity != null)
-			this.deviceEntity.device_shutdown();
+		BlockEntity blockEntity = world.getBlockEntity(pos);
+		if (blockEntity != null && blockEntity instanceof DeviceEntity) {
+			DeviceEntity deviceEntity = ((DeviceEntity) blockEntity);
+			// 将状态设置为已关机
+			deviceEntity.device_shutdown();
+		}
+	}
+
+	// 当方块在服务端上被加入时
+	@Override
+	public void onBlockAdded(BlockState state, World world, BlockPos pos, BlockState oldState, boolean notify) {
+		world.getBlockEntity(pos); // 加载实体
 	}
 }

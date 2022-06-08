@@ -1,11 +1,13 @@
 package net.leawind.infage.blockentity;
 
 import net.leawind.infage.registry.InfageBlockEntities;
+import net.leawind.infage.script.DeviceObj;
+import net.leawind.infage.script.PowerControlerObj;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundTag;
 
 public class PowerControlerEntity extends DeviceEntity {
-	public boolean isPowered = false; // 是否被充能
+	public int powerLevel = 1; //
 
 	public PowerControlerEntity() {
 		super(InfageBlockEntities.POWER_CONTROLER);
@@ -14,14 +16,19 @@ public class PowerControlerEntity extends DeviceEntity {
 	@Override
 	public CompoundTag toTag(CompoundTag tag) {
 		super.toTag(tag);
-		tag.putBoolean("isPowered", this.isPowered);
+		tag.putInt("powerLevel", this.powerLevel);
 		return tag;
 	}
 
 	@Override
 	public void fromTag(BlockState state, CompoundTag tag) {
 		super.fromTag(state, tag);
-		this.isPowered = tag.getBoolean("isPowered");
+		this.powerLevel = tag.getInt("powerLevel");
+	}
+
+	@Override
+	public DeviceObj getDeviceObj() {
+		return new PowerControlerObj(this);
 	}
 
 }

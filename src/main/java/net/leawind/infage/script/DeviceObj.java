@@ -4,6 +4,7 @@ import java.util.Arrays;
 import net.leawind.infage.blockentity.DeviceEntity;
 
 public class DeviceObj {
+	public static final String type = "device";
 	public int storageSize;
 	public String storage;
 	public boolean[] portsStatus;

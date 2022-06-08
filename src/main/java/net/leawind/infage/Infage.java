@@ -1,6 +1,6 @@
-// 参考 
+// 参考
 
-// [耗子大佬的博客](https://mouse0w0.github.io/archives/page/2/)
+// [耗子的博客](https://mouse0w0.github.io/archives/page/2/)
 // https://www.bilibili.com/read/readlist/rl433929?spm_id_from=333.999.0.0
 // https://fabricmc.net/wiki/zh_cn:start
 
@@ -13,25 +13,27 @@ import net.leawind.infage.registry.InfageBlockEntities;
 import net.leawind.infage.registry.InfageBlocks;
 import net.leawind.infage.registry.InfageItemGroups;
 import net.leawind.infage.registry.InfageItems;
-import net.leawind.infage.script.ScriptHandler;
+import net.leawind.infage.script.ScriptHelper;
 
 public class Infage implements ModInitializer {
 	public static final Logger LOGGER;
 	// 命名空间
 	public static final String NAMESPACE;
 	public static final int MAX_TRANSMISSION_UNIT; // 发送缓存大小 = 最大传输单元
-	public static final int NASHORN_TIME_LIMIT = 8; // 脚本事件执行时长上限
+	public static final int NASHORN_TIME_LIMIT; // 脚本事件执行时长上限
+	public static final int OUTPUTS_SIZE; // 输出缓冲区最大字符数
 	static {
 		LOGGER = LogManager.getLogger("Infage");
 		NAMESPACE = "infage";
 		MAX_TRANSMISSION_UNIT = 750;
-
+		NASHORN_TIME_LIMIT = 8;
+		OUTPUTS_SIZE = 2000;
 		// DataEncoding.test();
-		ScriptHandler.test();
 	}
 
 	@Override
 	public void onInitialize() {
+		new ScriptHelper();
 		LOGGER.info("Infage.java: I'm here!!!");
 
 		// 实例化并注册方块

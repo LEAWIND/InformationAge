@@ -9,45 +9,46 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.google.common.collect.Lists;
 import net.leawind.infage.blockentity.DeviceEntity;
+import net.leawind.infage.script.ScriptHelper;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+// TODO Mult
 @Mixin(World.class)
 public class MixinWorld {
 	@Shadow
-	public final List<BlockEntity> tickingBlockEntities = Lists.newArrayList();;
+	public final List<BlockEntity> tickingBlockEntities = Lists.newArrayList();
 
-	@Inject(at = @At("RETURN"), method = "tickBlockEntities()V")
-	private void onTickBlockEntities(CallbackInfo info) {
+	@Inject(at = @At("HEAD"), method = "tickBlockEntities()V")
+	private void onTickBlockEntities_head(CallbackInfo info) {
+		// System.out.println("BlockEntities count = " + tickingBlockEntities.size()); // 打印当前方块实体数量
 		// 遍历方块实体并更新
-		Iterator<BlockEntity> iterator = tickingBlockEntities.iterator(); // 获取世界中 方块实体的迭代器
+		Iterator<BlockEntity> iterator = tickingBlockEntities.iterator(); // 获取世界中方块实体的迭代器
 		while (iterator.hasNext()) {
 			BlockEntity blockEntity = (BlockEntity) iterator.next(); // 向迭代器获取下一个 方块实体
 			if (blockEntity instanceof DeviceEntity && !blockEntity.isRemoved() && blockEntity.hasWorld()) {
+				// 如果 这个实体是设备方块 且 没有被移除 且 存在于世界中
 				DeviceEntity deviceEntity = (DeviceEntity) blockEntity;
-				World world = deviceEntity.getWorld();
-				// 实测可以成功找到实体
 				for (int i = 0; i < deviceEntity.portsCount; i++) {
-					if (deviceEntity.portsStatus[i] >= 0 && deviceEntity.sendCaches[i] != null) {
-						// 如果端口已启用 且 输出缓存里有内容
-						// 那么将设备 的输出缓存 中的内容写入到 它对应的那个设备 的 输入缓存 中。
-						BlockPos targetPos = new BlockPos(deviceEntity.portsX[i], deviceEntity.portsY[i], deviceEntity.portsZ[i]);
-						BlockEntity targetEntity = world.getBlockEntity(targetPos);
+					if (deviceEntity.portsStatus[i] >= 0 && deviceEntity.sendCaches[i] != null && deviceEntity.sendCaches[i] != "") {
+						// 如果 该端口已启用 且 输出缓存里有内容
+						// 那么将 设备该端口中的输出缓存 中的内容写入到 与它相连的那个设备 的 输入缓存 中
+						BlockEntity targetEntity = deviceEntity.getConnectedDevice(i);
 						if (targetEntity != null && targetEntity instanceof DeviceEntity) {
-							// 如果目标存在且是设备方块实体
-							((DeviceEntity) targetEntity).receiveCaches[deviceEntity.portsStatus[i]] = deviceEntity.sendCaches[i];
-							deviceEntity.sendCaches[i] = ""; // 清空发送缓存
-						} else {
+							// 如果 目标存在 且 是设备方块实体
+							((DeviceEntity) targetEntity).receiveCaches[deviceEntity.portsStatus[i]] = deviceEntity.sendCaches[i]; // 写入
+							// 在这不应该清空 接收或发送缓存，缓存应该由设备自己 在 tick 中决定何时清空
+						} else { // 目标不存在 或者 不是设备方块
 							// 断开连接
 							deviceEntity.portsStatus[i] = -1;
 						}
-
 					}
 				}
 			}
 		}
+		// 清空所有 execute 任务
+		int kills = ScriptHelper.MTMANGER.clearByWeight((byte) 10, (byte) 11, true); // execute 任务权重是 10
+		System.out.println("Kills = " + kills);
 	}
-
 }
 

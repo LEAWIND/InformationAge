@@ -2,6 +2,8 @@
 package net.leawind.infage.blockentity;
 
 import net.leawind.infage.registry.InfageBlockEntities;
+import net.leawind.infage.script.DeviceObj;
+import net.leawind.infage.script.ItemGeneratorObj;
 import net.minecraft.nbt.CompoundTag;
 
 // implements ImplementedInventory
@@ -25,4 +27,9 @@ public class ItemGeneratorEntity extends DeviceEntity {
 	// public DefaultedList<ItemStack> getItems() {
 	// 	return this.items;
 	// }
+
+	@Override
+	public DeviceObj getDeviceObj() {
+		return new ItemGeneratorObj(this);
+	}
 }
