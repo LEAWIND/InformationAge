@@ -1,36 +1,35 @@
 package net.leawind.universe.mttv1;
 
-import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
-// 多线程任务管理器
 public class MTManager {
-	protected List<MTThread> threads = new ArrayList<MTThread>(); // 执行任务的线程
-	public LinkedList<MTTask> tasks = new LinkedList<MTTask>(); // 待处理的任务
-	// 链表
-	// pop 弹出第一个元素
-	// add 在末尾加入 1 个元素
+	protected ArrayDeque<MTThread> threads = new ArrayDeque<MTThread>(); // 执行任务的线程
+	public ArrayDeque<MTTask> tasks = new ArrayDeque<MTTask>(); // 待处理的任务
+
+	protected int threadCount;
 
 	public MTManager() {
-		this.setThreadCount(1);
+		this.threadCount = 1;
+		this.checkThreadCount();
 	}
 
 	public MTManager(int threadCount) {
-		this.setThreadCount(threadCount);
+		this.threadCount = threadCount;
+		this.checkThreadCount();
 	}
 
 	public int getThreadCount() {
-		return this.threads.size();
+		return this.threadCount;
 	}
 
 	public int getTaskCount() {
 		return this.tasks.size();
 	}
 
-	public void setThreadCount(int n) {
-		int leng = this.threads.size() - n;
+	// 确保实际线程数量与预期数量一致
+	public synchronized void checkThreadCount() {
+		int leng = this.threads.size() - this.threadCount;
 		if (leng > 0) {
 			Iterator<MTThread> iterator = this.threads.iterator(); // 获取线程迭代器
 			while (leng > 0 && iterator.hasNext()) {
@@ -50,48 +49,33 @@ public class MTManager {
 		}
 	}
 
-	public void addTask(MTTask task) {
+	// 添加任务
+	public synchronized void addTask(MTTask task) {
 		task.init();
-		int i = 0;
-		Iterator<MTTask> iterator = this.tasks.iterator();
-		while (iterator.hasNext()) {
-			MTTask task1 = iterator.next();
-			if (task1.weight <= task.weight) {
-				this.tasks.add(i, task);
-				break;
-			}
-			i++;
-		}
+		this.tasks.add(task);
 	}
 
-	public void clearTask() {
+	public synchronized MTTask getTask() {
+		if (this.tasks.size() > 0)
+			return this.tasks.pop();
+		else
+			return null;
+	}
+
+	// 清除所有待处理任务
+	public synchronized int clearTasks() {
+		int i = this.tasks.size();
 		this.tasks.clear();
+		return i;
 	}
 
-	public void clearByWeight(byte w0, byte w1) {
-		Iterator<MTTask> iterator = this.tasks.iterator();
+	// 中断所有线程
+	public synchronized void interruptAll() {
+		Iterator<MTThread> iterator = this.threads.iterator(); // 获取线程迭代器
 		while (iterator.hasNext()) {
-			MTTask task = iterator.next();
-			if (task.weight >= w0 && task.weight < w1)
-				iterator.remove();
+			MTThread thread = (MTThread) iterator.next();
+			thread.interrupt();
 		}
-	}
-
-	public int clearByWeight(byte w0, byte w1, boolean getKills) {
-		if (!getKills) {
-			this.clearByWeight(w0, w1);
-			return 0;
-		}
-		int k = 0;
-		Iterator<MTTask> iterator = this.tasks.iterator();
-		while (iterator.hasNext()) {
-			MTTask task = iterator.next();
-			if (task.weight >= w0 && task.weight < w1) {
-				k++;
-				iterator.remove();
-			}
-		}
-		return k;
 	}
 
 	public long getTotalAdder() {

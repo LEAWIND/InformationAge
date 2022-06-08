@@ -1,17 +1,14 @@
 package net.leawind.universe.mttv1;
 
 public abstract class MTTask {
-	public byte weight = 0;
 	public boolean isDistributed = false; // 是否已经被领取
 	public boolean isFinished = false; // 是否已结束
 	public boolean isPerforming = false; // 是否正在执行
 
 	public MTTask() {
-		this.weight = 0;
 	}
 
 	public MTTask(byte weight) {
-		this.weight = weight;
 	}
 
 	public final void init() {

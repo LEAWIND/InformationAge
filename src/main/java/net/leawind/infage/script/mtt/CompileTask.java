@@ -2,6 +2,7 @@ package net.leawind.infage.script.mtt;
 
 import javax.script.ScriptException;
 import net.leawind.infage.blockentity.DeviceEntity;
+import net.leawind.infage.script.CompileStatus;
 import net.leawind.infage.script.ScriptHelper;
 import net.leawind.universe.mttv1.MTTask;
 
@@ -16,13 +17,13 @@ public class CompileTask extends MTTask {
 	@Override
 	public void taskBody() {
 		// 编译
-		this.that.isCompiling = true;
+		this.that.compileStatus = CompileStatus.COMPILING;
 		try {
 			this.that.compiledScript_tick = ScriptHelper.compile(this.that.script_tick);
-			this.that.isCompiling = false;
+			this.that.compileStatus = CompileStatus.SUCCESS;
 		} catch (ScriptException e) {
-			e.printStackTrace();
-			// TODO 处理编译错误
+			this.that.consoleOutputs += e; // TODO
+			this.that.compileStatus = CompileStatus.FAILED;
 		}
 	}
 }

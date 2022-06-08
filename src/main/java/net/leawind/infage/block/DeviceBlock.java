@@ -120,7 +120,7 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 			Block block = blockstate.getBlock(); // 由 blockState 获取方块对象
 			if (block instanceof DeviceBlock) { // 检查这个方块是不是设备
 
-				DeviceEntity deviceEntity = (DeviceEntity) world.getBlockEntity(blockPos); // 根据坐标获取这个方块的方块实体
+				// DeviceEntity deviceEntity = (DeviceEntity) world.getBlockEntity(blockPos); // 根据坐标获取这个方块的方块实体
 				// System.out.printf("\nEvent UseBlockCallback:\n\tPlayer:\n");
 				// System.out.printf("\t\t%s\n", player);
 				// System.out.printf("\tused block:\n");
@@ -131,22 +131,18 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 				if (world.isClient) {
 					// 客户端
 					// player.openCommandBlockScreen(commandBlock);
-					System.out.println("================================");
-					System.out.println("Open Device Block Screen At Client !!!");
-					System.out.println("BlockEntity is");
-					System.out.println(deviceEntity);
+					// System.out.println("================================");
+					// System.out.println("Open Device Block Screen At Client !!!");
+					// System.out.println("BlockEntity is");
+					// System.out.println(deviceEntity);
 					// 在客户端显示屏幕
 
-					System.out.printf("\nSendCaches[%d]\n", deviceEntity.sendCaches.length);
-					for (int i = 0; i < deviceEntity.sendCaches.length; i++) {
-						String str = deviceEntity.sendCaches[i];
-						System.out.printf("Cache[%d] %s\n", i, str);
-					}
-					deviceEntity.togglePower();
+					// System.out.printf("\nSendCaches len=[%d]\n", deviceEntity.sendCaches.length);
 					// MinecraftClient.getInstance().openScreen(new InfageDeviceScreen(world,
 					// blockPos));
 				} else {
 					// 服务端
+					// deviceEntity.togglePower();
 					return ActionResult.SUCCESS;
 				}
 				return ActionResult.SUCCESS; // 返回了 SUCCESS 就不会处理后续的事件了 (例如放置方块)
@@ -162,15 +158,16 @@ public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityPro
 	public void onPlaced(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
 		BlockEntity blockEntity = world.getBlockEntity(pos);
 		if (blockEntity != null && blockEntity instanceof DeviceEntity) {
-			DeviceEntity deviceEntity = ((DeviceEntity) blockEntity);
+			// DeviceEntity deviceEntity = ((DeviceEntity) blockEntity);
 			// 将状态设置为已关机
-			deviceEntity.device_shutdown();
+			// deviceEntity.device_shutdown();
 		}
 	}
 
 	// 当方块在服务端上被加入时
 	@Override
 	public void onBlockAdded(BlockState state, World world, BlockPos pos, BlockState oldState, boolean notify) {
-		world.getBlockEntity(pos); // 加载实体
+		// 默认情况下，方块实体只有在有需要的时候才会被加载（玩家使用等）
+		world.getBlockEntity(pos); // 这可以确保设备方块实体永远被加载，除非整个区块被卸载。
 	}
 }

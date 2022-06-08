@@ -8,12 +8,14 @@ public class MTThread extends Thread {
 
 	@Override
 	public void run() {
+		MTTask task;
 		while (this.keepRunning) {
 			// System.out.printf("[thread-1] loop = %d \n", loopCount);
 			try {
 				// 领取任务
-				MTTask task = this.mtm.tasks.pop(); // 执行任务
-				task.execute();
+				task = this.mtm.getTask(); // 执行任务
+				if (task != null)
+					task.execute();
 				// this.adder += 1;
 			} catch (Exception e) {
 				// e.printStackTrace();

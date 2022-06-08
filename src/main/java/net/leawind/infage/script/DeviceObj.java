@@ -21,13 +21,10 @@ public class DeviceObj {
 		}
 	}
 
-	public void print(Object... objs) {
+	public synchronized void print(Object... objs) {
 		String toPrint = "";
-		for (Object obj : objs) {
-			toPrint += obj.toString() + " ";
-		}
-		toPrint += "\n";
-
-		System.out.print(toPrint);
+		for (Object obj : objs)
+			toPrint += obj + " ";
+		System.out.print(toPrint + "\n");
 	}
 }

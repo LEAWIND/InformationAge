@@ -26,9 +26,10 @@ public class ExecuteTask extends MTTask {
 			// 脚本执行成功
 			Arrays.fill(this.that.sendCaches, ""); // 清空接收缓存
 
+			// 取 storage
 			if (deviceObj.storage == null)
 				this.that.storage = "";
-			else // 如果 storage 过长, 则将 js 中的 storage 截取 StorageSize 长度
+			else
 				this.that.storage = deviceObj.storage.length() > this.that.storageSize ? //
 						deviceObj.storage.substring(0, this.that.storageSize) : //
 						deviceObj.storage;

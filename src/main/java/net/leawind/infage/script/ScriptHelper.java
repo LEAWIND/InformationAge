@@ -35,8 +35,6 @@ public final class ScriptHelper {
 			System.out.println(e);
 		}
 
-		// BINDINGS = ENGINE.createBindings();
-
 		LOGGER.info("Infage ScriptHandler is loaded.");
 	}
 
@@ -47,6 +45,7 @@ public final class ScriptHelper {
 
 	// 编译脚本
 	public static CompiledScript compile(String scriptText) throws ScriptException {
+		// scriptText = "Device.print('Hey');";
 		return ((Compilable) ENGINE).compile(packScript(scriptText));
 	}
 }

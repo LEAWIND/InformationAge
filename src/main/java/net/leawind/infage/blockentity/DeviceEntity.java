@@ -39,6 +39,9 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 	public boolean isCompiling = false; // 是否正在编译
 	public CompileStatus compileStatus = CompileStatus.UNKNOWN; // 编译状态
 
+	// public CompileTask compileTask = new CompileTask(this);
+	// public ExecuteTask executeTask = new ExecuteTask(this);
+
 	// 初始化 端口相关属性
 	public void initPorts() {
 		this.portsX = new long[this.portsCount];
@@ -62,14 +65,15 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 
 	// 获取指定接口所连接的设备方块实体
 	public DeviceEntity getConnectedDevice(int portId) {
-		if (this.portsStatus[portId] >= 0) {
-			BlockPos pos = new BlockPos(this.portsX[portId], this.portsY[portId], this.portsZ[portId]);
-			BlockEntity blockEntity = this.getWorld().getBlockEntity(pos);
-			if (blockEntity instanceof DeviceEntity)
-				return (DeviceEntity) blockEntity;
-			else
-				return null;
-		} else
+		if (this.portsStatus[portId] < 0)
+			return null;
+
+		BlockPos pos = new BlockPos(this.portsX[portId], this.portsY[portId], this.portsZ[portId]);
+		BlockEntity blockEntity = this.getWorld().getBlockEntity(pos);
+
+		if (blockEntity instanceof DeviceEntity)
+			return (DeviceEntity) blockEntity;
+		else
 			return null;
 	}
 
@@ -82,12 +86,10 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 	 */
 	@Override
 	public CompoundTag toTag(CompoundTag tag) {
-		// Infage.LOGGER.info("To Tag ()");
-		// 父类的 toTag() 会将方块的 id 和坐标保存到方块实体中。
+		// 父类的 toTag() 会将方块的 id 和坐标 放到 tag 中。
 		// 如果没有这个步骤，以后就无法通过坐标查找到这个方块实体，这些数据就相当于丢失了。
 		super.toTag(tag);
 
-		// // 将本实例的属性保存到 tag
 		tag.putInt("tickCounter", this.tickCounter);
 		tag.putBoolean("isRunning", this.isRunning);
 		tag.putInt("tickInterval", this.tickInterval);
@@ -102,18 +104,14 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 		tag.putLongArray("portsZ", this.portsZ);
 		tag.putString("script_tick", this.script_tick);
 
-		// 字符串数组
 		tag.putString("sendCaches", DataEncoding.encode(this.sendCaches));
 		tag.putString("receiveCaches", DataEncoding.encode(this.receiveCaches));
 
 		return tag;
 	}
 
-
 	@Override
 	public void fromTag(BlockState state, CompoundTag tag) {
-		// Infage.LOGGER.info("From Tag ()");
-		// 从tag中读取数据并保存到实例属性中
 		super.fromTag(state, tag);
 		this.pos = new BlockPos(tag.getInt("x"), tag.getInt("y"), tag.getInt("z"));
 
@@ -131,7 +129,6 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 		this.portsZ = tag.getLongArray("portsZ");
 		this.script_tick = tag.getString("script_tick"); // tick 脚本
 
-		// 字符串数组
 		this.sendCaches = DataEncoding.decode(tag.getString("sendCaches"));
 		this.receiveCaches = DataEncoding.decode(tag.getString("receiveCaches"));
 	}
@@ -139,9 +136,8 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 	@Override
 	public void tick() {
 		this.tickCounter++;
-		if (this.isRunning) { // 如果设备在运行
+		if (this.isRunning) // 如果设备在运行
 			this.deviceTick(); // 执行设备刻
-		}
 	}
 
 	// 获取当前设备实体的 DeviceObj 实例，用于 定义在脚本中可以使用的 可调用方法 和 可读写属性
@@ -151,25 +147,28 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 
 	// 设备刻
 	public void deviceTick() {
-		// System.out.println("Device block running: " + this.getType());
-		if (this.compiledScript_tick == null) { // 如果脚本未编译
-			if (!this.isCompiling) {
-				this.isCompiling = true;
-				// this.compiledScript_tick = net.leawind.infage.script.ScriptHelper.compile(this.script_tick); //
+		// System.out.println("Device ticking: " + this.getClass());
+		switch (this.compileStatus) {
+			case UNKNOWN: // 还没编译
+			case FAILED: // 上次编译失败
+				this.compileStatus = CompileStatus.COMPILING;
 				// 布置任务:编译
-				CompileTask compileTask = new CompileTask(this);
-				ScriptHelper.MTMANGER.addTask(compileTask);
-			}
-		} else {
-			// 创建新任务
-			ExecuteTask executeTask = new ExecuteTask(this);
-			// 获取当前设备实体的 DeviceObj 实例，用于在脚本中提供 可调用方法 和 可读写属性
-			executeTask.deviceObj = this.getDeviceObj();
-			// 创建绑定，并 设置 标识符 与 DeviceObj实例 的对应关系
-			executeTask.bindings = ScriptHelper.ENGINE.createBindings();
-			executeTask.bindings.put("Device", executeTask.deviceObj); // 在脚本中可以通过 Device 访问这个对象
-			// 布置任务:执行
-			ScriptHelper.MTMANGER.addTask(executeTask);
+				CompileTask task = new CompileTask(this);
+				ScriptHelper.MTMANGER.addTask(task);
+				break;
+			case COMPILING: // 正在编译
+				break;
+			case SUCCESS: // 编译完成
+				// 创建新任务
+				// 获取当前设备实体的 DeviceObj 实例，用于在脚本中提供 可调用方法 和 可读写属性
+				ExecuteTask executeTask = new ExecuteTask(this);
+				executeTask.deviceObj = this.getDeviceObj();
+				// 创建绑定，并 设置 标识符 与 DeviceObj实例 的对应关系
+				executeTask.bindings = ScriptHelper.ENGINE.createBindings();
+				executeTask.bindings.put("Device", executeTask.deviceObj); // 在脚本中可以通过 Device 访问这个对象
+				// 布置任务:执行
+				ScriptHelper.MTMANGER.addTask(executeTask);
+				break;
 		}
 	}
 
