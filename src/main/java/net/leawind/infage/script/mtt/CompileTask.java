@@ -17,12 +17,12 @@ public class CompileTask extends MTTask {
 	@Override
 	public void taskBody() {
 		// 编译
-		this.that.compileStatus = CompileStatus.COMPILING;
+		this.that.compileStatus = CompileStatus.DISTRIBUTED;
 		try {
 			this.that.compiledScript_tick = ScriptHelper.compile(this.that.script_tick);
 			this.that.compileStatus = CompileStatus.SUCCESS;
 		} catch (ScriptException e) {
-			this.that.consoleOutputs += e; // TODO
+			this.that.writeLog("CompileTask", "Exception:\n" + e.toString());
 			this.that.compileStatus = CompileStatus.FAILED;
 		}
 	}

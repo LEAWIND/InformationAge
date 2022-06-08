@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 import net.leawind.infage.Infage;
 import net.leawind.infage.blockentity.DeviceEntity;
 import net.leawind.infage.script.ScriptHelper;
+import net.leawind.universe.mttv1.MTTask;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.world.World;
 
@@ -24,9 +25,9 @@ public class MixinWorld {
 		// System.out.println("BlockEntities count = " + tickingBlockEntities.size()); // 打印当前方块实体数量
 		// 在这不应该清空 接收或发送缓存，缓存应该由设备自己 在 tick 中决定何时清空
 		// 遍历方块实体并发送数据
-		Iterator<BlockEntity> iterator = tickingBlockEntities.iterator(); // 获取世界中方块实体的迭代器
-		while (iterator.hasNext()) {
-			BlockEntity blockEntity = iterator.next(); // 向迭代器获取下一个 方块实体
+		Iterator<BlockEntity> blockEntityIterator = tickingBlockEntities.iterator(); // 获取世界中方块实体的迭代器
+		while (blockEntityIterator.hasNext()) {
+			BlockEntity blockEntity = blockEntityIterator.next(); // 向迭代器获取下一个 方块实体
 			if (blockEntity instanceof DeviceEntity && !blockEntity.isRemoved() && blockEntity.hasWorld()) {
 				DeviceEntity deviceEntity = (DeviceEntity) blockEntity;
 				for (int i = 0; i < deviceEntity.portsCount; i++) {
@@ -41,10 +42,17 @@ public class MixinWorld {
 				}
 			}
 		}
-		// 清空所有任务
-		int clearedTasksCount = ScriptHelper.MTMANGER.clearTasks();
+
+		// 清空所有 exec 任务，并统计数量
+		int clearedTasksCount = 0;
+		Iterator<MTTask> execTaskIterator = ScriptHelper.MTM_EXEC.tasks.iterator();
+		while (execTaskIterator.hasNext()) {
+			execTaskIterator.next();
+			execTaskIterator.remove();
+			clearedTasksCount++;
+		}
 		if (clearedTasksCount > 0)
-			Infage.LOGGER.warn(clearedTasksCount + " tasks time out, cleared.\n");
+			Infage.LOGGER.warn(clearedTasksCount + " exec tasks time out, cleared.\n");
 	}
 }
 

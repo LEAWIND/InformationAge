@@ -10,6 +10,7 @@ public class DeviceObj {
 	public boolean[] portsStatus;
 	public String[] inData;
 	public String[] dataToSend;
+	public String outputs;
 
 	public DeviceObj(DeviceEntity blockEntity) {
 		this.storageSize = blockEntity.storageSize;
@@ -22,9 +23,8 @@ public class DeviceObj {
 	}
 
 	public synchronized void print(Object... objs) {
-		String toPrint = "";
 		for (Object obj : objs)
-			toPrint += obj + " ";
-		System.out.print(toPrint + "\n");
+			this.outputs += obj + " ";
+		this.outputs += "\n";
 	}
 }

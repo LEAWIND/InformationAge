@@ -10,7 +10,7 @@ public class MTManager {
 	protected int threadCount;
 
 	public MTManager() {
-		this.threadCount = 1;
+		this.threadCount = 2;
 		this.checkThreadCount();
 	}
 

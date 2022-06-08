@@ -30,7 +30,7 @@ import net.minecraft.world.World;
 
 // 设备方块:全都是有水平方向的 (东西南北), 所以继承 HorizontalFacingBlock
 // 因为设备方块一定有对应的 方块实体, 所以要实现 BlockEntityProvider 接口
-public class DeviceBlock extends HorizontalFacingBlock implements BlockEntityProvider {
+public abstract class DeviceBlock extends HorizontalFacingBlock implements BlockEntityProvider {
 	public static final String BLOCK_ID = "i_forgot_to_set_this_id"; // 用于命名的方块ID (infage:block_id)
 
 	// 默认值: 方块不同方向下的 碰撞箱

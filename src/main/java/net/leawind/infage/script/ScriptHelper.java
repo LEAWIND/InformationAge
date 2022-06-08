@@ -16,14 +16,16 @@ import net.leawind.universe.mttv1.MTManager;
 public final class ScriptHelper {
 	private static final Logger LOGGER;
 	public static ScriptEngine ENGINE; // 脚本引擎
-	public static final MTManager MTMANGER;
+	public static final MTManager MTM_EXEC;
+	public static final MTManager MTM_COMPILE;
 	public static final String[] DELETED_VARS;
 
 	static {
 		DELETED_VARS = new String[] {"java", "javax", "Java", "exit", "quit"}; // 禁止在脚本中访问的全局对象
 		LOGGER = LogManager.getLogger("InfageScriptHandler");
 		ENGINE = new ScriptEngineManager().getEngineByName("nashorn"); // 获取 nashorn 引擎
-		MTMANGER = new MTManager(4);
+		MTM_EXEC = new MTManager(Runtime.getRuntime().availableProcessors() / 2 + 1);
+		MTM_COMPILE = new MTManager(3);
 
 		try {
 			String scr = ";";
@@ -45,7 +47,9 @@ public final class ScriptHelper {
 
 	// 编译脚本
 	public static CompiledScript compile(String scriptText) throws ScriptException {
-		// scriptText = "Device.print('Hey');";
+		// scriptText = "Device.storage += 'o'; if(Device.storage.length>10) Device.storage='';)";
+		// scriptText = "Device.storage = '1234';";
+		// scriptText = "Device.print('hey!');";
 		return ((Compilable) ENGINE).compile(packScript(scriptText));
 	}
 }

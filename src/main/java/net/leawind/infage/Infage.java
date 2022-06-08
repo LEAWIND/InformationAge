@@ -17,18 +17,15 @@ import net.leawind.infage.script.ScriptHelper;
 
 public class Infage implements ModInitializer {
 	public static final Logger LOGGER;
-	// 命名空间
 	public static final String NAMESPACE;
 	public static final int MAX_TRANSMISSION_UNIT; // 发送缓存大小 = 最大传输单元
-	public static final int NASHORN_TIME_LIMIT; // 脚本事件执行时长上限
 	public static final int OUTPUTS_SIZE; // 输出缓冲区最大字符数
+
 	static {
 		LOGGER = LogManager.getLogger("Infage");
 		NAMESPACE = "infage";
-		MAX_TRANSMISSION_UNIT = 750;
-		NASHORN_TIME_LIMIT = 8;
-		OUTPUTS_SIZE = 2000;
-		// DataEncoding.test();
+		MAX_TRANSMISSION_UNIT = 768;
+		OUTPUTS_SIZE = 2048;
 	}
 
 	@Override

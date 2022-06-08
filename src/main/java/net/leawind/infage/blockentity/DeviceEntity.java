@@ -2,6 +2,7 @@ package net.leawind.infage.blockentity;
 
 import java.util.Arrays;
 import javax.script.CompiledScript;
+import net.leawind.infage.Infage;
 import net.leawind.infage.script.CompileStatus;
 import net.leawind.infage.script.DeviceObj;
 import net.leawind.infage.script.ScriptHelper;
@@ -20,13 +21,13 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 
 	public int tickCounter = 0; // tick 游戏刻 计数器
 	public boolean isRunning = false; // 是否正在运行
-	public int portsCount = 1; // 接口数量 (最多同时有多少个设备和它相连接)
-	public int tickInterval = -1; // 周期长度 (每隔一个周期触发一次 clock 事件), 小于 0 代表永远不触发
+	public String consoleOutputs = ""; // 输出缓冲区
+
 	public int storageSize = 64; // 可以在游戏中用脚本存储的数据量最大值 ( 其实就是 storage 字符串的最大长度 )
 	public String storage = ""; // 磁盘内容
-	public String consoleOutputs = ""; // 输出缓冲区
-	public byte portsStatus[]; // 各接口的 目标接口的 id, 若未连接则为 -1
 
+	public int portsCount = 1; // 接口数量 (最多同时有多少个设备和它相连接)
+	public byte portsStatus[]; // 各接口的 目标接口的 id, 若未连接则为 -1
 	public long portsX[]; // 各接口所连接方块的坐标(不一定正确，因为对方可能被破坏)
 	public long portsY[]; // 如果不正确，就会在 World.tickBlockEntities 的时候被发现，然后立即断开这个连接
 	public long portsZ[];
@@ -38,9 +39,6 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 	public CompiledScript compiledScript_tick = null; // 编译后的 tick 脚本
 	public boolean isCompiling = false; // 是否正在编译
 	public CompileStatus compileStatus = CompileStatus.UNKNOWN; // 编译状态
-
-	// public CompileTask compileTask = new CompileTask(this);
-	// public ExecuteTask executeTask = new ExecuteTask(this);
 
 	// 初始化 端口相关属性
 	public void initPorts() {
@@ -63,26 +61,13 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 		initPorts();
 	}
 
-	// 获取指定接口所连接的设备方块实体
-	public DeviceEntity getConnectedDevice(int portId) {
-		if (this.portsStatus[portId] < 0)
-			return null;
 
-		BlockPos pos = new BlockPos(this.portsX[portId], this.portsY[portId], this.portsZ[portId]);
-		BlockEntity blockEntity = this.getWorld().getBlockEntity(pos);
-
-		if (blockEntity instanceof DeviceEntity)
-			return (DeviceEntity) blockEntity;
-		else
-			return null;
-	}
 
 	/*
 	 * 要实现在方块实体中储存数据，就要能够加载和保存数据。 在 1.16.5 中是 toTag() 和 fromTag() 1.16.5 参考
 	 * [https://fabricmc.net/wiki/tutorial:blockentity?rev=1563817083]
 	 * 
 	 * 在 1.18 中标识符变成了 writeNbt() 和 readNbt() 1.18 参考 [https://fabricmc.net/wiki/tutorial:blockentity]
-	 * 
 	 */
 	@Override
 	public CompoundTag toTag(CompoundTag tag) {
@@ -92,7 +77,6 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 
 		tag.putInt("tickCounter", this.tickCounter);
 		tag.putBoolean("isRunning", this.isRunning);
-		tag.putInt("tickInterval", this.tickInterval);
 		tag.putInt("storageSize", this.storageSize);
 		tag.putString("storage", this.storage);
 		tag.putString("consoleOutputs", this.consoleOutputs);
@@ -117,7 +101,6 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 
 		this.tickCounter = tag.getInt("tickCounter");
 		this.isRunning = tag.getBoolean("isRunning");
-		this.tickInterval = tag.getInt("tickInterval");
 		this.storageSize = tag.getInt("storageSize");
 		this.storage = tag.getString("storage");
 		this.consoleOutputs = tag.getString("consoleOutputs");
@@ -131,6 +114,9 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 
 		this.sendCaches = DataEncoding.decode(tag.getString("sendCaches"));
 		this.receiveCaches = DataEncoding.decode(tag.getString("receiveCaches"));
+
+		// 每次读取都重置编译状态
+		this.compileStatus = CompileStatus.UNKNOWN;
 	}
 
 	@Override
@@ -138,6 +124,70 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 		this.tickCounter++;
 		if (this.isRunning) // 如果设备在运行
 			this.deviceTick(); // 执行设备刻
+	}
+
+	// 获取指定接口所连接的设备方块实体
+	public DeviceEntity getConnectedDevice(int portId) {
+		if (this.portsStatus[portId] < 0)
+			return null;
+
+		BlockPos pos = new BlockPos(this.portsX[portId], this.portsY[portId], this.portsZ[portId]);
+		BlockEntity blockEntity = this.getWorld().getBlockEntity(pos);
+
+		if (blockEntity instanceof DeviceEntity)
+			return (DeviceEntity) blockEntity;
+		else
+			return null;
+	}
+
+	// 设置脚本
+	public synchronized void setScirpt_tick(String str) {
+		this.script_tick = str;
+		this.compileStatus = CompileStatus.UNKNOWN;
+	}
+
+	// 设置本地存储
+	public synchronized void setStorage(String str) {
+		this.storage = (str == null) ? "" : //
+				(str.length() <= this.storageSize) ? str : //
+						str.substring(0, this.storageSize);
+	}
+
+	// 向控制台写入新的字符串
+	public synchronized void writeOutputs(String str) {
+		this.consoleOutputs += str;
+		int n = this.consoleOutputs.length() - Infage.OUTPUTS_SIZE;
+		if (n > 0)
+			this.consoleOutputs = this.consoleOutputs.substring(n);
+	}
+
+	// 向控制台添加记录，包含 记录者名称 和 时间（tick数）信息
+	public synchronized void writeLog(String name, String str) {
+		this.writeOutputs("[" + this.tickCounter + "] (" + name + ") " + str);
+	}
+
+	// 清空控制台
+	public synchronized void clearOutputs() {
+		this.consoleOutputs = "";
+	}
+
+	// 设置输出缓存
+	public synchronized void setSendCaches(String[] sc) {
+		if (sc == null)
+			return;
+		int i;
+		for (i = 0; i < this.portsCount && i < sc.length; i++)
+			this.sendCaches[i] = sc[i].length() > Infage.MAX_TRANSMISSION_UNIT ? //
+					sc[i].substring(0, Infage.MAX_TRANSMISSION_UNIT) : //
+					sc[i];
+		for (; i < this.portsCount; i++)
+			this.sendCaches[i] = null;
+
+	}
+
+	// 清空输出缓存
+	public synchronized void clearSendCaches() {
+		Arrays.fill(this.sendCaches, null);
 	}
 
 	// 获取当前设备实体的 DeviceObj 实例，用于 定义在脚本中可以使用的 可调用方法 和 可读写属性
@@ -151,15 +201,14 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 		switch (this.compileStatus) {
 			case UNKNOWN: // 还没编译
 			case FAILED: // 上次编译失败
-				this.compileStatus = CompileStatus.COMPILING;
+				this.compileStatus = CompileStatus.DISTRIBUTED;
 				// 布置任务:编译
 				CompileTask task = new CompileTask(this);
-				ScriptHelper.MTMANGER.addTask(task);
+				ScriptHelper.MTM_COMPILE.addTask(task);
 				break;
-			case COMPILING: // 正在编译
+			case DISTRIBUTED: // 已经布置任务
 				break;
-			case SUCCESS: // 编译完成
-				// 创建新任务
+			case SUCCESS: // 编译已完成, 创建新任务
 				// 获取当前设备实体的 DeviceObj 实例，用于在脚本中提供 可调用方法 和 可读写属性
 				ExecuteTask executeTask = new ExecuteTask(this);
 				executeTask.deviceObj = this.getDeviceObj();
@@ -167,7 +216,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 				executeTask.bindings = ScriptHelper.ENGINE.createBindings();
 				executeTask.bindings.put("Device", executeTask.deviceObj); // 在脚本中可以通过 Device 访问这个对象
 				// 布置任务:执行
-				ScriptHelper.MTMANGER.addTask(executeTask);
+				ScriptHelper.MTM_EXEC.addTask(executeTask);
 				break;
 		}
 	}
