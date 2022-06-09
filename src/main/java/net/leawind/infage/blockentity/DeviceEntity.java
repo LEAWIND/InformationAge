@@ -1,5 +1,6 @@
 package net.leawind.infage.blockentity;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import javax.script.CompiledScript;
 import net.leawind.infage.Infage;
@@ -20,11 +21,11 @@ import net.minecraft.util.math.BlockPos;
 public abstract class DeviceEntity extends BlockEntity implements Tickable {
 
 	public int tickCounter = 0; // tick 游戏刻 计数器
-	public boolean isRunning = false; // 是否正在运行
+	public boolean isRunning = false; // 是否已开机
 	public String consoleOutputs = ""; // 输出缓冲区
 
-	public int storageSize = 64; // 可以在游戏中用脚本存储的数据量最大值 ( 其实就是 storage 字符串的最大长度 )
-	public String storage = ""; // 磁盘内容
+	public int storageSize = 128; // 可以在游戏中用脚本存储的数据量最大值 ( 其实就是 storage 字符串的最大长度 )
+	public byte[] storage; // 磁盘内容
 
 	public int portsCount = 1; // 接口数量 (最多同时有多少个设备和它相连接)
 	public byte portsStatus[]; // 各接口的 目标接口的 id, 若未连接则为 -1
@@ -40,8 +41,10 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 	public boolean isCompiling = false; // 是否正在编译
 	public CompileStatus compileStatus = CompileStatus.UNKNOWN; // 编译状态
 
-	// 初始化 端口相关属性
-	public void initPorts() {
+	// 初始化
+	public void init() {
+		this.storage = new byte[this.storageSize];
+
 		this.portsX = new long[this.portsCount];
 		this.portsY = new long[this.portsCount];
 		this.portsZ = new long[this.portsCount];
@@ -58,10 +61,8 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 
 	public DeviceEntity(BlockEntityType<?> type) {
 		super(type);
-		initPorts();
+		init();
 	}
-
-
 
 	/*
 	 * 要实现在方块实体中储存数据，就要能够加载和保存数据。 在 1.16.5 中是 toTag() 和 fromTag() 1.16.5 参考
@@ -73,12 +74,12 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 	public CompoundTag toTag(CompoundTag tag) {
 		// 父类的 toTag() 会将方块的 id 和坐标 放到 tag 中。
 		// 如果没有这个步骤，以后就无法通过坐标查找到这个方块实体，这些数据就相当于丢失了。
-		super.toTag(tag);
+		tag = super.toTag(tag);
 
 		tag.putInt("tickCounter", this.tickCounter);
 		tag.putBoolean("isRunning", this.isRunning);
 		tag.putInt("storageSize", this.storageSize);
-		tag.putString("storage", this.storage);
+		tag.putByteArray("storage", this.storage);
 		tag.putString("consoleOutputs", this.consoleOutputs);
 
 		tag.putInt("portsCount", this.portsCount);
@@ -102,7 +103,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 		this.tickCounter = tag.getInt("tickCounter");
 		this.isRunning = tag.getBoolean("isRunning");
 		this.storageSize = tag.getInt("storageSize");
-		this.storage = tag.getString("storage");
+		this.storage = tag.getByteArray("storage");
 		this.consoleOutputs = tag.getString("consoleOutputs");
 
 		this.portsCount = tag.getInt("portsCount");
@@ -147,10 +148,19 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 	}
 
 	// 设置本地存储
-	public synchronized void setStorage(String str) {
-		this.storage = (str == null) ? "" : //
-				(str.length() <= this.storageSize) ? str : //
-						str.substring(0, this.storageSize);
+	public synchronized void setStorage(byte[] storage) {
+		if (storage == null) {
+			Arrays.fill(this.storage, (byte) 0);
+		} else {
+			if (storage.length < this.storageSize)
+				Arrays.fill(this.storage, storage.length, this.storageSize, (byte) 0);
+			System.arraycopy(storage, 0, this.storage, 0, this.storageSize);
+		}
+	}
+
+	// 设置本地存储
+	public synchronized void setStorage(String str) throws UnsupportedEncodingException {
+		this.setStorage(str.getBytes("UTF-8"));
 	}
 
 	// 向控制台写入新的字符串
@@ -200,13 +210,12 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 		// System.out.println("Device ticking: " + this.getClass());
 		switch (this.compileStatus) {
 			case UNKNOWN: // 还没编译
-			case FAILED: // 上次编译失败
 				this.compileStatus = CompileStatus.DISTRIBUTED;
 				// 布置任务:编译
 				CompileTask task = new CompileTask(this);
 				ScriptHelper.MTM_COMPILE.addTask(task);
 				break;
-			case DISTRIBUTED: // 已经布置任务
+			case DISTRIBUTED: // 已经布置任务,暂未完成
 				break;
 			case SUCCESS: // 编译已完成, 创建新任务
 				// 获取当前设备实体的 DeviceObj 实例，用于在脚本中提供 可调用方法 和 可读写属性
@@ -217,6 +226,9 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 				executeTask.bindings.put("Device", executeTask.deviceObj); // 在脚本中可以通过 Device 访问这个对象
 				// 布置任务:执行
 				ScriptHelper.MTM_EXEC.addTask(executeTask);
+				break;
+			case ERROR: // 编译出错
+			default:
 				break;
 		}
 	}

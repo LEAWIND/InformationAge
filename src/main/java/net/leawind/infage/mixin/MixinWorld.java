@@ -48,11 +48,11 @@ public class MixinWorld {
 		Iterator<MTTask> execTaskIterator = ScriptHelper.MTM_EXEC.tasks.iterator();
 		while (execTaskIterator.hasNext()) {
 			execTaskIterator.next();
-			execTaskIterator.remove();
+			// execTaskIterator.remove();
 			clearedTasksCount++;
 		}
 		if (clearedTasksCount > 0)
-			Infage.LOGGER.warn(clearedTasksCount + " exec tasks time out, cleared.\n");
+			Infage.LOGGER.warn(clearedTasksCount + " exec tasks time out.\n");
 	}
 }
 

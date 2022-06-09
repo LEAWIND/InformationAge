@@ -9,7 +9,7 @@ public class SwitchEntity extends DeviceEntity {
 		super(InfageBlockEntities.SWITCH);
 		this.portsCount = 8;
 		this.storageSize = 1024;
-		this.initPorts();
+		this.init();
 	}
 
 	public DeviceObj getDeviceObj() {

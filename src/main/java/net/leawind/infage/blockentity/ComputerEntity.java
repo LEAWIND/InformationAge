@@ -9,7 +9,7 @@ public class ComputerEntity extends DeviceEntity {
 		super(InfageBlockEntities.COMPUTER);
 		this.portsCount = 2;
 		this.storageSize = 2048;
-		this.initPorts();
+		this.init();
 	}
 
 	@Override

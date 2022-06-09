@@ -1,5 +1,5 @@
 package net.leawind.infage.script;
 
 public enum CompileStatus {
-	UNKNOWN, SUCCESS, DISTRIBUTED, FAILED
+	UNKNOWN, SUCCESS, DISTRIBUTED, ERROR
 }

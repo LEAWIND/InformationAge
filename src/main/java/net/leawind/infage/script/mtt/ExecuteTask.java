@@ -30,10 +30,7 @@ public class ExecuteTask extends MTTask {
 			Arrays.fill(this.that.sendCaches, ""); // 清空接收缓存
 
 			// 取 storage
-			if (deviceObj.storage == null)
-				this.that.storage = "";
-			else
-				this.that.setStorage(deviceObj.storage);
+			this.that.setStorage(deviceObj.storage);
 
 			// 取控制台输出
 			if (deviceObj.outputs != null)

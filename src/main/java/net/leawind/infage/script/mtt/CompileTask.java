@@ -23,7 +23,7 @@ public class CompileTask extends MTTask {
 			this.that.compileStatus = CompileStatus.SUCCESS;
 		} catch (ScriptException e) {
 			this.that.writeLog("CompileTask", "Exception:\n" + e.toString());
-			this.that.compileStatus = CompileStatus.FAILED;
+			this.that.compileStatus = CompileStatus.ERROR;
 		}
 	}
 }

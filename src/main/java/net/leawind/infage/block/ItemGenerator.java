@@ -27,4 +27,5 @@ public class ItemGenerator extends DeviceBlock {
 	public BlockEntity createBlockEntity(BlockView blockView) {
 		return new ItemGeneratorEntity();
 	}
+
 }

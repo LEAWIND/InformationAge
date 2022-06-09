@@ -47,9 +47,7 @@ public final class ScriptHelper {
 
 	// 编译脚本
 	public static CompiledScript compile(String scriptText) throws ScriptException {
-		// scriptText = "Device.storage += 'o'; if(Device.storage.length>10) Device.storage='';)";
-		// scriptText = "Device.storage = '1234';";
-		// scriptText = "Device.print('hey!');";
+		scriptText = "Device.print(Device.storage[0]);";
 		return ((Compilable) ENGINE).compile(packScript(scriptText));
 	}
 }

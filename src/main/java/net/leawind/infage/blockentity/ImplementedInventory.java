@@ -12,38 +12,27 @@ import net.minecraft.util.collection.DefaultedList;
  * Originally by Juuz
  */
 public interface ImplementedInventory extends Inventory {
-	/**
-	 * 从此物品栏中检索物品。 每次被调用时必须返回相同实例。
-	 */
+	// 从此物品栏中检索物品。 每次被调用时必须返回相同实例。
 	DefaultedList<ItemStack> getItems();
 
-	/**
-	 * 从物品列表创建物品栏。
-	 */
+	// 从物品列表创建物品栏。
 	static ImplementedInventory of(DefaultedList<ItemStack> items) {
 		return () -> items;
 	}
 
-	/**
-	 * 根据指定的尺寸创建新的物品栏。
-	 */
+	// 根据指定的尺寸创建新的物品栏。
 	static ImplementedInventory ofSize(int size) {
 		return of(DefaultedList.ofSize(size, ItemStack.EMPTY));
 	}
 
-	/**
-	 * 返回物品栏的大小。
-	 */
+	// 返回物品栏的大小。
 	@Override
 	default int size() {
 		return getItems().size();
 	}
 
-	/**
-	 * 检查物品栏是否为空。
-	 * 
-	 * @return true，如果物品栏仅有一个空堆，否则为true。
-	 */
+	// 检查物品栏是否为空。
+	// @return true，如果物品栏仅有一个空堆，否则为true。
 	@Override
 	default boolean isEmpty() {
 		for (int i = 0; i < size(); i++) {
@@ -55,9 +44,7 @@ public interface ImplementedInventory extends Inventory {
 		return true;
 	}
 
-	/**
-	 * 检索槽位中的物品。
-	 */
+	// 检索槽位中的物品。
 	@Override
 	default ItemStack getStack(int slot) {
 		return getItems().get(slot);
@@ -102,27 +89,22 @@ public interface ImplementedInventory extends Inventory {
 		}
 	}
 
-	/**
-	 * 清除物品栏。
-	 */
+	// 清除物品栏。
 	@Override
 	default void clear() {
 		getItems().clear();
 	}
 
-	/**
-	 * 将方块状态标记为脏。 更改物品栏之后必须调用，所以游戏正确地储存物品栏内容并提取邻近方块物品栏改变。
-	 */
+	// 将方块状态标记为脏。 更改物品栏之后必须调用，所以游戏正确地储存物品栏内容并提取邻近方块物品栏改变。
 	@Override
 	default void markDirty() {
 		// 需要行为时，覆盖此方法。
 	}
 
-	/**
-	 * @return true 如果玩家可以使用物品栏，否则为 false。i
-	 */
+	// @return true 如果玩家可以使用物品栏，否则为 false。i
 	@Override
 	default boolean canPlayerUse(PlayerEntity player) {
 		return true;
 	}
 }
+
