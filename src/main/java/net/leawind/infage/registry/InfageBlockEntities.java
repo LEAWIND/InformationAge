@@ -5,14 +5,14 @@ import net.leawind.infage.block.Computer;
 import net.leawind.infage.block.Disk;
 import net.leawind.infage.block.ItemGenerator;
 import net.leawind.infage.block.ItemRegester;
-import net.leawind.infage.block.PowerControler;
+import net.leawind.infage.block.PowerController;
 import net.leawind.infage.block.PowerSensor;
 import net.leawind.infage.block.Switch;
 import net.leawind.infage.blockentity.ComputerEntity;
 import net.leawind.infage.blockentity.DiskEntity;
 import net.leawind.infage.blockentity.ItemGeneratorEntity;
 import net.leawind.infage.blockentity.ItemRegesterEntity;
-import net.leawind.infage.blockentity.PowerControlerEntity;
+import net.leawind.infage.blockentity.PowerControllerEntity;
 import net.leawind.infage.blockentity.PowerSensorEntity;
 import net.leawind.infage.blockentity.SwitchEntity;
 import net.minecraft.block.entity.BlockEntityType;
@@ -25,7 +25,7 @@ public class InfageBlockEntities {
 	public static BlockEntityType<DiskEntity> DISK;
 	public static BlockEntityType<ItemGeneratorEntity> ITEM_GENERATOR;
 	public static BlockEntityType<ItemRegesterEntity> ITEM_REGESTER;
-	public static BlockEntityType<PowerControlerEntity> POWER_CONTROLER;
+	public static BlockEntityType<PowerControllerEntity> POWER_CONTROLLER;
 	public static BlockEntityType<PowerSensorEntity> POWER_SENSOR;
 	public static BlockEntityType<SwitchEntity> SWITCH;
 
@@ -51,10 +51,9 @@ public class InfageBlockEntities {
 				Registry.BLOCK_ENTITY_TYPE,
 				new Identifier(Infage.NAMESPACE, ItemRegester.BLOCK_ID + ID_SUFFIX),
 				BlockEntityType.Builder.create(ItemRegesterEntity::new, InfageBlocks.ITEM_REGESTER).build(null));
-		POWER_CONTROLER = Registry.register(
+		POWER_CONTROLLER = Registry.register(
 				Registry.BLOCK_ENTITY_TYPE,
-				new Identifier(Infage.NAMESPACE, PowerControler.BLOCK_ID + ID_SUFFIX),
-				BlockEntityType.Builder.create(PowerControlerEntity::new, InfageBlocks.POWER_CONTROLER).build(null));
+				new Identifier(Infage.NAMESPACE, PowerController.BLOCK_ID + ID_SUFFIX), BlockEntityType.Builder.create(PowerControllerEntity::new, InfageBlocks.POWER_CONTROLLER).build(null));
 		POWER_SENSOR = Registry.register(
 				Registry.BLOCK_ENTITY_TYPE,
 				new Identifier(Infage.NAMESPACE, PowerSensor.BLOCK_ID + ID_SUFFIX),

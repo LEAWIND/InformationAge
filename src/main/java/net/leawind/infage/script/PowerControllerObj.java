@@ -2,12 +2,15 @@ package net.leawind.infage.script;
 
 import net.leawind.infage.blockentity.DeviceEntity;
 
-public class PowerControlerObj extends DeviceObj {
+public class PowerControllerObj extends DeviceObj {
 	public static final String type = "power_controler";
+	public int powerLevel;
 
 	// TODO
-	public PowerControlerObj(DeviceEntity blockEntity) {
+	public PowerControllerObj(DeviceEntity blockEntity) {
 		super(blockEntity);
+		this.powerLevel = 0;
 	}
+
 
 }

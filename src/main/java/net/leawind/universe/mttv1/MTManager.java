@@ -19,11 +19,11 @@ public class MTManager {
 		this.checkThreadCount();
 	}
 
-	public int getThreadCount() {
+	public synchronized int getThreadCount() {
 		return this.threadCount;
 	}
 
-	public int getTaskCount() {
+	public synchronized int getTaskCount() {
 		return this.tasks.size();
 	}
 
@@ -78,7 +78,7 @@ public class MTManager {
 		}
 	}
 
-	public long getTotalAdder() {
+	public synchronized long getTotalAdder() {
 		long s = 0;
 		Iterator<MTThread> iterator = this.threads.iterator(); // 获取线程迭代器
 		while (iterator.hasNext()) {

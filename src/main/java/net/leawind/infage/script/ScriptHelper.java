@@ -47,7 +47,6 @@ public final class ScriptHelper {
 
 	// 编译脚本
 	public static CompiledScript compile(String scriptText) throws ScriptException {
-		scriptText = "Device.print(Device.storage[0]);";
 		return ((Compilable) ENGINE).compile(packScript(scriptText));
 	}
 }

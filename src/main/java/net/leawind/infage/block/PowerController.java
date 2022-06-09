@@ -2,7 +2,7 @@ package net.leawind.infage.block;
 
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.leawind.infage.blockentity.DeviceEntity;
-import net.leawind.infage.blockentity.PowerControlerEntity;
+import net.leawind.infage.blockentity.PowerControllerEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -12,12 +12,12 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 
-public class PowerControler extends DeviceBlock {
+public class PowerController extends DeviceBlock {
 	public static final String BLOCK_ID = "power_controler";
 	public static final FabricBlockSettings BLOCK_SETTINGS = DeviceBlock.getDefaultBlockSettings();
 	public static final Item.Settings BLOCKITEM_SETTINGS = DeviceBlock.getDefaultBlockItemSettings();
 
-	public PowerControler() {
+	public PowerController() {
 		super(BLOCK_SETTINGS);
 		this.shapes = new VoxelShape[] {//
 				Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 北
@@ -29,7 +29,7 @@ public class PowerControler extends DeviceBlock {
 
 	@Override
 	public BlockEntity createBlockEntity(BlockView blockView) {
-		return new PowerControlerEntity();
+		return new PowerControllerEntity();
 	}
 
 	// 获取比较器输出
@@ -37,8 +37,8 @@ public class PowerControler extends DeviceBlock {
 	@Override
 	public int getComparatorOutput(BlockState state, World world, BlockPos pos) {
 		BlockEntity blockEntity = world.getBlockEntity(pos); // 根据坐标获取对应的方块实体
-		return (blockEntity instanceof PowerControlerEntity) && ((DeviceEntity) blockEntity).isRunning ? //
-				((PowerControlerEntity) blockEntity).powerLevel : //
+		return (blockEntity instanceof PowerControllerEntity) && ((DeviceEntity) blockEntity).isRunning ? //
+				((PowerControllerEntity) blockEntity).powerLevel : //
 				0;
 	}
 

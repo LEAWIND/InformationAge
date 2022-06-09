@@ -8,7 +8,7 @@ import net.leawind.infage.block.DeviceBlock;
 import net.leawind.infage.block.Disk;
 import net.leawind.infage.block.ItemGenerator;
 import net.leawind.infage.block.ItemRegester;
-import net.leawind.infage.block.PowerControler;
+import net.leawind.infage.block.PowerController;
 import net.leawind.infage.block.PowerSensor;
 import net.leawind.infage.block.Switch;
 import net.minecraft.util.Identifier;
@@ -20,7 +20,7 @@ public class InfageBlocks {
 	public static final DeviceBlock DISK;
 	public static final DeviceBlock ITEM_GENERATOR;
 	public static final DeviceBlock ITEM_REGESTER;
-	public static final DeviceBlock POWER_CONTROLER;
+	public static final DeviceBlock POWER_CONTROLLER;
 	public static final DeviceBlock POWER_SENSOR;
 
 	static {
@@ -30,7 +30,7 @@ public class InfageBlocks {
 		DISK = new Disk();
 		ITEM_GENERATOR = new ItemGenerator();
 		ITEM_REGESTER = new ItemRegester();
-		POWER_CONTROLER = new PowerControler();
+		POWER_CONTROLLER = new PowerController();
 		POWER_SENSOR = new PowerSensor();
 	}
 
@@ -41,7 +41,7 @@ public class InfageBlocks {
 		Registry.register(Registry.BLOCK, new Identifier(Infage.NAMESPACE, Disk.BLOCK_ID), DISK);
 		Registry.register(Registry.BLOCK, new Identifier(Infage.NAMESPACE, ItemGenerator.BLOCK_ID), ITEM_GENERATOR);
 		Registry.register(Registry.BLOCK, new Identifier(Infage.NAMESPACE, ItemRegester.BLOCK_ID), ITEM_REGESTER);
-		Registry.register(Registry.BLOCK, new Identifier(Infage.NAMESPACE, PowerControler.BLOCK_ID), POWER_CONTROLER);
+		Registry.register(Registry.BLOCK, new Identifier(Infage.NAMESPACE, PowerController.BLOCK_ID), POWER_CONTROLLER);
 		Registry.register(Registry.BLOCK, new Identifier(Infage.NAMESPACE, PowerSensor.BLOCK_ID), POWER_SENSOR);
 	}
 }

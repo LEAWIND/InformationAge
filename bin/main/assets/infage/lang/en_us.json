@@ -4,7 +4,7 @@
 	"block.infage.disk": "Disk Array",
 	"block.infage.item_generator": "Item Generator",
 	"block.infage.item_regester": "Item Regester",
-	"block.infage.power_controler": "Power Controler",
+	"block.infage.power_controller": "Power Controller",
 	"block.infage.power_sensor": "Power Sensor",
 	"block.infage.switch": "Switch",
 	"infage.devicegui.events.init": "init",

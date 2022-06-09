@@ -30,12 +30,10 @@ public class DeviceObj {
 		this.outputs += "\n";
 	}
 
-	// TODO getBytes
 	public byte[] getBytes(String str) {
 		return str.getBytes();
 	}
 
-	// TODO getStr
 	public String getStr(byte[] bytes) {
 		return new String(bytes);
 	}

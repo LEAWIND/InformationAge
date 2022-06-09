@@ -1,6 +1,6 @@
 {
 	"parent": "minecraft:item/generated",
 	"textures": {
-		"layer0": "infage:item/power_controler"
+		"layer0": "infage:item/power_controller"
 	}
 }

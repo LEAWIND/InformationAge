@@ -22,25 +22,13 @@ public class ExecuteTask extends MTTask {
 	@Override
 	public void taskBody() {
 		try {
-
 			this.that.compiledScript_tick.eval(this.bindings);
-
 			// 脚本执行成功
-
 			Arrays.fill(this.that.sendCaches, ""); // 清空接收缓存
-
-			// 取 storage
-			this.that.setStorage(deviceObj.storage);
-
-			// 取控制台输出
-			if (deviceObj.outputs != null)
-				this.that.writeOutputs(deviceObj.outputs);
-
-			// 取发送缓存
-			this.that.setSendCaches(deviceObj.dataToSend);
-
-		} catch (ScriptException e) { // 脚本执行出错
-			this.that.writeLog("ExecuteTask", "Exception:\n" + e.toString());
+			this.that.applyObj(deviceObj); // 将脚本对 obj 做的修改 应用到 方块实体
+		} catch (ScriptException e) {
+			// 脚本执行出错
+			this.that.writeLog("ExecuteTask", "Exception:\n" + e);
 		}
 	}
 }

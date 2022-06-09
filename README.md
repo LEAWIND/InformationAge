@@ -56,7 +56,7 @@
 
 ###  充能控制器
 
-`net.leawind.infage.block.PowerControler`
+`net.leawind.infage.block.PowerController`
 
 可以控制这个方块 通过比较器输出红石信号 的强度。
 

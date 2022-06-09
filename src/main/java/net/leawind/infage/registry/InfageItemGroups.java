@@ -25,7 +25,7 @@ public class InfageItemGroups {
 					stacks.add(new ItemStack(InfageItems.DISK));
 					stacks.add(new ItemStack(InfageItems.ITEM_GENERATOR));
 					stacks.add(new ItemStack(InfageItems.ITEM_REGESTER));
-					stacks.add(new ItemStack(InfageItems.POWER_CONTROLER));
+					stacks.add(new ItemStack(InfageItems.POWER_CONTROLLER));
 					stacks.add(new ItemStack(InfageItems.POWER_SENSOR));
 				}).build();
 	}

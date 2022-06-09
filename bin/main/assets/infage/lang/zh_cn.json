@@ -4,7 +4,7 @@
 	"block.infage.disk": "磁盘阵列",
 	"block.infage.item_generator": "物品生成器",
 	"block.infage.item_regester": "物品消化器",
-	"block.infage.power_controler": "充能控制器",
+	"block.infage.power_controller": "充能控制器",
 	"block.infage.power_sensor": "充能传感器",
 	"block.infage.switch": "交换机",
 	"infage.event.init": "初始化",

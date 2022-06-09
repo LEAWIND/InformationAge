@@ -14,7 +14,7 @@ public class InfageItems {
 	public static final BlockItem DISK;
 	public static final BlockItem ITEM_GENERATOR;
 	public static final BlockItem ITEM_REGESTER;
-	public static final BlockItem POWER_CONTROLER;
+	public static final BlockItem POWER_CONTROLLER;
 	public static final BlockItem POWER_SENSOR;
 	public static final BlockItem SWITCH;
 
@@ -23,7 +23,7 @@ public class InfageItems {
 		DISK = new BlockItem(InfageBlocks.DISK, Disk.getDefaultBlockItemSettings());
 		ITEM_GENERATOR = new BlockItem(InfageBlocks.ITEM_GENERATOR, ItemGenerator.getDefaultBlockItemSettings());
 		ITEM_REGESTER = new BlockItem(InfageBlocks.ITEM_REGESTER, ItemRegester.getDefaultBlockItemSettings());
-		POWER_CONTROLER = new BlockItem(InfageBlocks.POWER_CONTROLER, PowerControler.getDefaultBlockItemSettings());
+		POWER_CONTROLLER = new BlockItem(InfageBlocks.POWER_CONTROLLER, PowerController.getDefaultBlockItemSettings());
 		POWER_SENSOR = new BlockItem(InfageBlocks.POWER_SENSOR, PowerSensor.getDefaultBlockItemSettings());
 		SWITCH = new BlockItem(InfageBlocks.SWITCH, Switch.getDefaultBlockItemSettings());
 	}
@@ -34,7 +34,7 @@ public class InfageItems {
 		Registry.register(Registry.ITEM, new Identifier(Infage.NAMESPACE, Disk.BLOCK_ID), DISK);
 		Registry.register(Registry.ITEM, new Identifier(Infage.NAMESPACE, ItemGenerator.BLOCK_ID), ITEM_GENERATOR);
 		Registry.register(Registry.ITEM, new Identifier(Infage.NAMESPACE, ItemRegester.BLOCK_ID), ITEM_REGESTER);
-		Registry.register(Registry.ITEM, new Identifier(Infage.NAMESPACE, PowerControler.BLOCK_ID), POWER_CONTROLER);
+		Registry.register(Registry.ITEM, new Identifier(Infage.NAMESPACE, PowerController.BLOCK_ID), POWER_CONTROLLER);
 		Registry.register(Registry.ITEM, new Identifier(Infage.NAMESPACE, PowerSensor.BLOCK_ID), POWER_SENSOR);
 		Registry.register(Registry.ITEM, new Identifier(Infage.NAMESPACE, Switch.BLOCK_ID), SWITCH);
 	}

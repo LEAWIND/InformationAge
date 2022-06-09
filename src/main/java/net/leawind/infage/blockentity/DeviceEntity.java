@@ -205,6 +205,14 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 		return new DeviceObj(this);
 	}
 
+	// 在执行完脚本之后应用 脚本对 obj 所做的修改
+	public void applyObj(DeviceObj obj) {
+		this.setStorage(obj.storage);
+		this.setSendCaches(obj.dataToSend);
+		if (obj.outputs != null)
+			this.writeOutputs(obj.outputs);
+	}
+
 	// 设备刻
 	public void deviceTick() {
 		// System.out.println("Device ticking: " + this.getClass());
@@ -234,13 +242,13 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 	}
 
 	// 开机
-	public void device_boot() {
+	public synchronized void device_boot() {
 		this.isRunning = true;
 		this.tickCounter = 0;
 	}
 
 	// 关机
-	public void device_shutdown() {
+	public synchronized void device_shutdown() {
 		this.isRunning = false;
 		// 断开所有连接
 		Arrays.fill(this.portsStatus, (byte) -1);
