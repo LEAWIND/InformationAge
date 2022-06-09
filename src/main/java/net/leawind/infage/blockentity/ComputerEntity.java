@@ -1,8 +1,8 @@
 package net.leawind.infage.blockentity;
 
 import net.leawind.infage.registry.InfageBlockEntities;
-import net.leawind.infage.script.ComputerObj;
-import net.leawind.infage.script.DeviceObj;
+import net.leawind.infage.script.obj.ComputerObj;
+import net.leawind.infage.script.obj.DeviceObj;
 
 public class ComputerEntity extends DeviceEntity {
 	public ComputerEntity() {

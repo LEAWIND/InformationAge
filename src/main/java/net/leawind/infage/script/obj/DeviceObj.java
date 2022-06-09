@@ -1,11 +1,12 @@
-package net.leawind.infage.script;
+package net.leawind.infage.script.obj;
 
 import java.util.Arrays;
+import net.leawind.infage.block.DeviceBlock;
 import net.leawind.infage.blockentity.DeviceEntity;
 
 public class DeviceObj {
 
-	public static final String type = "device";
+	public static final String type = DeviceBlock.BLOCK_ID;
 	public int storageSize;
 	public byte[] storage;
 	public boolean[] portsStatus;

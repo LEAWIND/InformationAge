@@ -2,8 +2,8 @@ package net.leawind.infage.blockentity;
 
 import net.leawind.infage.Infage;
 import net.leawind.infage.registry.InfageBlockEntities;
-import net.leawind.infage.script.DeviceObj;
-import net.leawind.infage.script.ItemRegesterObj;
+import net.leawind.infage.script.obj.DeviceObj;
+import net.leawind.infage.script.obj.ItemRegesterObj;
 import net.minecraft.block.BlockState;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.SidedInventory;

@@ -1,8 +1,8 @@
 package net.leawind.infage.blockentity;
 
 import net.leawind.infage.registry.InfageBlockEntities;
-import net.leawind.infage.script.DeviceObj;
-import net.leawind.infage.script.DiskObj;
+import net.leawind.infage.script.obj.DeviceObj;
+import net.leawind.infage.script.obj.DiskObj;
 
 public class DiskEntity extends DeviceEntity {
 

@@ -4,7 +4,7 @@ import java.util.Arrays;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import net.leawind.infage.blockentity.DeviceEntity;
-import net.leawind.infage.script.DeviceObj;
+import net.leawind.infage.script.obj.DeviceObj;
 import net.leawind.universe.mttv1.MTTask;
 
 public class ExecuteTask extends MTTask {

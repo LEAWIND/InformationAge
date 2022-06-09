@@ -1,8 +1,8 @@
 package net.leawind.infage.blockentity;
 
 import net.leawind.infage.registry.InfageBlockEntities;
-import net.leawind.infage.script.DeviceObj;
-import net.leawind.infage.script.SwitchObj;
+import net.leawind.infage.script.obj.DeviceObj;
+import net.leawind.infage.script.obj.SwitchObj;
 
 public class SwitchEntity extends DeviceEntity {
 	public SwitchEntity() {

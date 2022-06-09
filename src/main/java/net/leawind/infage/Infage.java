@@ -1,15 +1,12 @@
 // 参考
-
 // [yarn](https://maven.fabricmc.net/docs/yarn-1.16.5+build.6/)
 // [Fabric API](https://maven.fabricmc.net/docs/fabric-api-0.32.5+1.16/)
 // [Fabric Loader](https://maven.fabricmc.net/docs/fabric-loader-0.11.3/)
-
 // [耗子的博客](https://mouse0w0.github.io/archives/page/2/)
-// [Fabric Document]()
-// https://www.bilibili.com/read/readlist/rl433929?spm_id_from=333.999.0.0
 // https://fabricmc.net/wiki/zh_cn:start
-// [GUI 界面](https://fabricmc.net/wiki/zh_cn:tutorial:screenhandler)
+// https://www.bilibili.com/read/readlist/rl433929?spm_id_from=333.999.0.0
 // [在方块中存储物品](https://fabricmc.net/wiki/tutorial:inventory)
+// [GUI 界面](https://fabricmc.net/wiki/zh_cn:tutorial:screenhandler)
 
 package net.leawind.infage;
 

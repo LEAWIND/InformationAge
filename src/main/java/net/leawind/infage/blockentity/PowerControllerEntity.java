@@ -2,8 +2,8 @@ package net.leawind.infage.blockentity;
 
 import net.leawind.infage.registry.InfageBlockEntities;
 import net.leawind.infage.registry.InfageBlocks;
-import net.leawind.infage.script.DeviceObj;
-import net.leawind.infage.script.PowerControllerObj;
+import net.leawind.infage.script.obj.DeviceObj;
+import net.leawind.infage.script.obj.PowerControllerObj;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundTag;
 
