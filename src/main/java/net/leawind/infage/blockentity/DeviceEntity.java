@@ -327,3 +327,4 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 		}
 	}
 }
+
