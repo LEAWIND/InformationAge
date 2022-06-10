@@ -27,9 +27,6 @@ public class Computer extends DeviceBlock {
 		};
 	}
 
-	// 要想 "在方块中存储数据", 就要能够通过方块获取方块对应的方块实体(根据方块坐标来获取)
-	// 当没有对应的方块实体时要能够创建一个方块实体
-	// 所以要覆写这个创建对应方块实体的方法
 	@Override
 	public BlockEntity createBlockEntity(BlockView blockView) {
 		return new ComputerEntity();

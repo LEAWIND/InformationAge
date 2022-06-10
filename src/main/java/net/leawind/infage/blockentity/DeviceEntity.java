@@ -215,7 +215,6 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 					sc[i];
 		for (; i < this.portsCount; i++)
 			this.sendCaches[i] = null;
-
 	}
 
 	// 清空输出缓存
