@@ -15,7 +15,7 @@ public class Disk extends DeviceBlock {
 
 	public Disk() {
 		super(BLOCK_SETTINGS);
-		this.shapes = new VoxelShape[] {
+		this.shapes = new VoxelShape[] {//
 				Block.createCuboidShape(0, 0, 2, 16, 14, 14), // 北
 				Block.createCuboidShape(0, 0, 2, 16, 14, 14), // 南
 				Block.createCuboidShape(2, 0, 0, 14, 14, 16), // 东

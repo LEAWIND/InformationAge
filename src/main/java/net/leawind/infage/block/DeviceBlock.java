@@ -35,7 +35,8 @@ public abstract class DeviceBlock extends HorizontalFacingBlock implements Block
 
 	// 默认值: 方块不同方向下的 碰撞箱
 	// 北南东西 的顺序是在 getOutlineShape 方法中自定义的
-	public static final VoxelShape[] DEFAULT_SHAPES = {Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 北
+	public static final VoxelShape[] DEFAULT_SHAPES = {//
+			Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 北
 			Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 南
 			Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 东
 			Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 西

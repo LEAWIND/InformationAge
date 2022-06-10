@@ -15,7 +15,7 @@ public class Switch extends DeviceBlock {
 
 	public Switch() {
 		super(BLOCK_SETTINGS);
-		this.shapes = new VoxelShape[] {
+		this.shapes = new VoxelShape[] {//
 				Block.createCuboidShape(0, 0, 3, 16, 8, 13), // 北
 				Block.createCuboidShape(0, 0, 3, 16, 8, 13), // 南
 				Block.createCuboidShape(3, 0, 0, 13, 8, 16), // 东

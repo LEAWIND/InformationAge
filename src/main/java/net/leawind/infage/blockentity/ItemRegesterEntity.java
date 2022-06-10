@@ -17,6 +17,7 @@ public class ItemRegesterEntity extends DeviceEntity implements ImplementedInven
 	public ItemRegesterEntity() {
 		super(InfageBlockEntities.ITEM_REGESTER);
 		this.storageSize = 256;
+		this.init();
 	}
 
 	@Override

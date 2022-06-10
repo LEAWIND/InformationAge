@@ -10,8 +10,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.google.common.collect.Lists;
 import net.leawind.infage.Infage;
 import net.leawind.infage.blockentity.DeviceEntity;
+// import net.leawind.infage.exception.InfageDevicePortsNotMatchException;
 import net.leawind.infage.script.ScriptHelper;
-import net.leawind.universe.mttv1.MTTask;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.world.World;
 
@@ -29,30 +29,15 @@ public class MixinWorld {
 		while (blockEntityIterator.hasNext()) {
 			BlockEntity blockEntity = blockEntityIterator.next(); // 向迭代器获取下一个 方块实体
 			if (blockEntity instanceof DeviceEntity && !blockEntity.isRemoved() && blockEntity.hasWorld()) {
-				DeviceEntity deviceEntity = (DeviceEntity) blockEntity;
-				for (int i = 0; i < deviceEntity.portsCount; i++) {
-					if (deviceEntity.portsStatus[i] >= 0 && deviceEntity.sendCaches[i] != null && deviceEntity.sendCaches[i] != "") {
-						BlockEntity targetEntity = deviceEntity.getConnectedDevice(i);
-						if (targetEntity != null && targetEntity instanceof DeviceEntity) {
-							((DeviceEntity) targetEntity).receiveCaches[deviceEntity.portsStatus[i]] = deviceEntity.sendCaches[i]; // 写入
-						} else {
-							deviceEntity.portsStatus[i] = -1;
-						}
-					}
-				}
+				((DeviceEntity) blockEntity).sendAllData();
 			}
 		}
 
 		// 清空所有 exec 任务，并统计数量
-		int clearedTasksCount = 0;
-		Iterator<MTTask> execTaskIterator = ScriptHelper.MTM_EXEC.tasks.iterator();
-		while (execTaskIterator.hasNext()) {
-			execTaskIterator.next();
-			// execTaskIterator.remove();
-			clearedTasksCount++;
-		}
+		int clearedTasksCount = ScriptHelper.MTM_EXEC.clearTasks();
 		if (clearedTasksCount > 0)
 			Infage.LOGGER.warn(clearedTasksCount + " exec tasks time out.\n");
+
 	}
 }
 

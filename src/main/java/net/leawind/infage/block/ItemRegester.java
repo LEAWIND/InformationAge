@@ -15,7 +15,8 @@ public class ItemRegester extends DeviceBlock {
 
 	public ItemRegester() {
 		super(BLOCK_SETTINGS);
-		this.shapes = new VoxelShape[] {Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 北
+		this.shapes = new VoxelShape[] {//
+				Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 北
 				Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 南
 				Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 东
 				Block.createCuboidShape(0, 0, 0, 16, 16, 16), // 西

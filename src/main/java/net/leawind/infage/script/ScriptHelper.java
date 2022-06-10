@@ -21,8 +21,8 @@ public final class ScriptHelper {
 	public static final String[] DELETED_VARS;
 
 	static {
-		DELETED_VARS = new String[] {"java", "javax", "Java", "exit", "quit"}; // 禁止在脚本中访问的全局对象
 		LOGGER = LogManager.getLogger("InfageScriptHandler");
+		DELETED_VARS = new String[] {"java", "javax", "Java", "exit", "quit"}; // 禁止在脚本中访问的全局对象
 		ENGINE = new ScriptEngineManager().getEngineByName("nashorn"); // 获取 nashorn 引擎
 		MTM_EXEC = new MTManager(Runtime.getRuntime().availableProcessors() / 2 + 1);
 		MTM_COMPILE = new MTManager(3);
@@ -48,5 +48,17 @@ public final class ScriptHelper {
 	// 编译脚本
 	public static CompiledScript compile(String scriptText) throws ScriptException {
 		return ((Compilable) ENGINE).compile(packScript(scriptText));
+	}
+
+	public synchronized static void errorLog(Object obj) {
+		LOGGER.error(obj);
+	}
+
+	public synchronized static void warnLog(Object obj) {
+		LOGGER.warn(obj);
+	}
+
+	public synchronized static void infoLog(Object obj) {
+		LOGGER.info(obj);
 	}
 }

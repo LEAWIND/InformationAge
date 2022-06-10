@@ -4,6 +4,7 @@ import java.util.Arrays;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import net.leawind.infage.blockentity.DeviceEntity;
+import net.leawind.infage.script.ScriptHelper;
 import net.leawind.infage.script.obj.DeviceObj;
 import net.leawind.universe.mttv1.MTTask;
 
@@ -29,6 +30,8 @@ public class ExecuteTask extends MTTask {
 		} catch (ScriptException e) {
 			// 脚本执行出错
 			this.that.writeLog("ExecuteTask", "Exception:\n" + e);
+		} catch (NullPointerException e) {
+			ScriptHelper.warnLog(e);
 		}
 	}
 }

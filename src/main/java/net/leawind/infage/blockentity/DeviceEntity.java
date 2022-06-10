@@ -4,12 +4,14 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import javax.script.CompiledScript;
 import net.leawind.infage.Infage;
+import net.leawind.infage.exception.InfageDevicePortsNotMatchException;
 import net.leawind.infage.script.CompileStatus;
 import net.leawind.infage.script.ScriptHelper;
 import net.leawind.infage.script.mtt.CompileTask;
 import net.leawind.infage.script.mtt.ExecuteTask;
 import net.leawind.infage.script.obj.DeviceObj;
 import net.leawind.infage.util.DataEncoding;
+import net.leawind.infage.util.Others;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
@@ -17,9 +19,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Tickable;
 import net.minecraft.util.math.BlockPos;
 
-
 public abstract class DeviceEntity extends BlockEntity implements Tickable {
-
 	public int tickCounter = 0; // tick 游戏刻 计数器
 	public boolean isRunning = false; // 是否已开机
 	public String consoleOutputs = ""; // 输出缓冲区
@@ -33,35 +33,31 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 	public long portsY[]; // 如果不正确，就会在 World.tickBlockEntities 的时候被发现，然后立即断开这个连接
 	public long portsZ[];
 
-	public String receiveCaches[]; // 各接口的接收缓存
-	public String sendCaches[]; // 各接口的发送缓存
+	public String receiveCaches[]; // 各接口的接收缓存 //TODO toByte
+	public String sendCaches[]; // 各接口的发送缓存 //TODO toByte
 	public String script_tick = ";"; // tick 脚本
-	public String prev_script_tick = ""; // 之前的 tick 脚本
 	public CompiledScript compiledScript_tick = null; // 编译后的 tick 脚本
-	public boolean isCompiling = false; // 是否正在编译
 	public CompileStatus compileStatus = CompileStatus.UNKNOWN; // 编译状态
 
 	// 初始化
 	public void init() {
 		this.storage = new byte[this.storageSize];
+		this.portsStatus = new byte[this.portsCount];
 
 		this.portsX = new long[this.portsCount];
 		this.portsY = new long[this.portsCount];
 		this.portsZ = new long[this.portsCount];
 
-		this.portsStatus = new byte[this.portsCount];
-		Arrays.fill(this.portsStatus, (byte) -1);
-
 		this.sendCaches = new String[this.portsCount];
-		Arrays.fill(this.sendCaches, "");
-
 		this.receiveCaches = new String[this.portsCount];
-		Arrays.fill(this.receiveCaches, "");
+		for (int i = 0; i < this.portsCount; i++) {
+			this.receiveCaches[i] = "";
+			this.sendCaches[i] = "";
+		}
 	}
 
 	public DeviceEntity(BlockEntityType<?> type) {
 		super(type);
-		init();
 	}
 
 	/*
@@ -70,56 +66,56 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 	 * 
 	 * 在 1.18 中标识符变成了 writeNbt() 和 readNbt() 1.18 参考 [https://fabricmc.net/wiki/tutorial:blockentity]
 	 */
+	// 生成实体方块标签用于保存
 	@Override
-	public CompoundTag toTag(CompoundTag tag) {
-		// 父类的 toTag() 会将方块的 id 和坐标 放到 tag 中。
-		// 如果没有这个步骤，以后就无法通过坐标查找到这个方块实体，这些数据就相当于丢失了。
+	public synchronized CompoundTag toTag(CompoundTag tag) {
 		tag = super.toTag(tag);
-
+		this.init();
 		tag.putInt("tickCounter", this.tickCounter);
 		tag.putBoolean("isRunning", this.isRunning);
 		tag.putInt("storageSize", this.storageSize);
-		tag.putByteArray("storage", this.storage);
-		tag.putString("consoleOutputs", this.consoleOutputs);
-
 		tag.putInt("portsCount", this.portsCount);
+
+		tag.putString("consoleOutputs", this.consoleOutputs == null ? "" : this.consoleOutputs);
+		tag.putString("script_tick", this.script_tick == null ? "" : this.script_tick);
+
+		tag.putString("sendCaches", DataEncoding.encodeStringArray(this.sendCaches));
+		tag.putString("receiveCaches", DataEncoding.encodeStringArray(this.receiveCaches));
+
+		tag.putByteArray("storage", this.storage);
 		tag.putByteArray("portsStatus", this.portsStatus);
+
 		tag.putLongArray("portsX", this.portsX);
 		tag.putLongArray("portsY", this.portsY);
 		tag.putLongArray("portsZ", this.portsZ);
-		tag.putString("script_tick", this.script_tick);
-
-		tag.putString("sendCaches", DataEncoding.encode(this.sendCaches));
-		tag.putString("receiveCaches", DataEncoding.encode(this.receiveCaches));
 
 		return tag;
 	}
 
+	// 加载实体方块标签
 	@Override
-	public void fromTag(BlockState state, CompoundTag tag) {
+	public synchronized void fromTag(BlockState state, CompoundTag tag) {
 		super.fromTag(state, tag);
-		this.pos = new BlockPos(tag.getInt("x"), tag.getInt("y"), tag.getInt("z"));
-
 		this.tickCounter = tag.getInt("tickCounter");
 		this.isRunning = tag.getBoolean("isRunning");
 		this.storageSize = tag.getInt("storageSize");
-		this.storage = tag.getByteArray("storage");
-		this.consoleOutputs = tag.getString("consoleOutputs");
-
 		this.portsCount = tag.getInt("portsCount");
-		this.portsStatus = tag.getByteArray("portsStatus");
-		this.portsX = tag.getLongArray("portsX");
-		this.portsY = tag.getLongArray("portsY");
-		this.portsZ = tag.getLongArray("portsZ");
-		this.script_tick = tag.getString("script_tick"); // tick 脚本
 
-		this.sendCaches = DataEncoding.decode(tag.getString("sendCaches"));
-		this.receiveCaches = DataEncoding.decode(tag.getString("receiveCaches"));
+		this.setOutputs(tag.getString("consoleOutputs"));
+		this.setScirpt_tick(tag.getString("script_tick"));
 
-		// 每次读取都重置编译状态
-		this.compileStatus = CompileStatus.UNKNOWN;
+		this.setStorage(tag.getByteArray("storage"));
+		this.setPortsStatus(tag.getByteArray("portsStatus"));
+
+		this.portsX = Others.arrayFrom(tag.getLongArray("portsX"), this.portsCount);
+		this.portsY = Others.arrayFrom(tag.getLongArray("portsY"), this.portsCount);
+		this.portsZ = Others.arrayFrom(tag.getLongArray("portsZ"), this.portsCount);
+
+		this.sendCaches = Others.arrayFrom(DataEncoding.decodeStringArray(tag.getString("sendCaches")), this.portsCount);
+		this.receiveCaches = Others.arrayFrom(DataEncoding.decodeStringArray(tag.getString("receiveCaches")), this.portsCount);
 	}
 
+	// 方块实体刻
 	@Override
 	public void tick() {
 		this.tickCounter++;
@@ -129,12 +125,12 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 
 	// 获取指定接口所连接的设备方块实体
 	public DeviceEntity getConnectedDevice(int portId) {
-		if (this.portsStatus[portId] < 0)
+		if (this.portsStatus == null || this.portsStatus[portId] < 0)
 			return null;
-
+		if (portId >= this.portsCount || this.portsX == null || this.portsY == null || this.portsZ == null)
+			return null;
 		BlockPos pos = new BlockPos(this.portsX[portId], this.portsY[portId], this.portsZ[portId]);
 		BlockEntity blockEntity = this.getWorld().getBlockEntity(pos);
-
 		if (blockEntity instanceof DeviceEntity)
 			return (DeviceEntity) blockEntity;
 		else
@@ -143,24 +139,51 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 
 	// 设置脚本
 	public synchronized void setScirpt_tick(String str) {
-		this.script_tick = str;
 		this.compileStatus = CompileStatus.UNKNOWN;
+		this.script_tick = str == null ? "" : str;
+	}
+
+	// 设置端口状态
+	public synchronized void setPortsStatus(byte[] arr) {
+		if (this.portsStatus == null || this.portsStatus.length != this.portsCount)
+			this.portsStatus = new byte[this.portsCount];
+		if (arr == null || arr.length == 0) {
+			Arrays.fill(this.portsStatus, (byte) 0);
+		} else {
+			if (arr.length < this.portsCount)
+				Arrays.fill(this.portsStatus, arr.length, this.portsCount, (byte) 0);
+			System.arraycopy(arr, 0, this.portsStatus, 0, arr.length);
+		}
 	}
 
 	// 设置本地存储
-	public synchronized void setStorage(byte[] storage) {
-		if (storage == null) {
+	public synchronized void setStorage(byte[] arr) {
+		if (this.storage == null || this.storage.length != this.storageSize)
+			this.storage = new byte[this.storageSize];
+		if (arr == null || arr.length == 0) {
 			Arrays.fill(this.storage, (byte) 0);
 		} else {
-			if (storage.length < this.storageSize)
-				Arrays.fill(this.storage, storage.length, this.storageSize, (byte) 0);
-			System.arraycopy(storage, 0, this.storage, 0, this.storageSize);
+			if (arr.length < this.storageSize)
+				Arrays.fill(this.storage, arr.length, this.storageSize, (byte) 0);
+			System.arraycopy(arr, 0, this.storage, 0, this.storageSize);
 		}
 	}
 
 	// 设置本地存储
 	public synchronized void setStorage(String str) throws UnsupportedEncodingException {
+		if (str == null)
+			str = "";
 		this.setStorage(str.getBytes("UTF-8"));
+	}
+
+	// 设置输出信息
+	public synchronized void setOutputs(String str) {
+		if (str == null) {
+			this.consoleOutputs = "";
+		} else {
+			int leng = str.length() - Infage.OUTPUTS_SIZE;
+			this.consoleOutputs = leng > 0 ? str.substring(leng, Infage.OUTPUTS_SIZE) : str; // 如果过长，则保留后面部分
+		}
 	}
 
 	// 向控制台写入新的字符串
@@ -200,13 +223,15 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 		Arrays.fill(this.sendCaches, null);
 	}
 
+
 	// 获取当前设备实体的 DeviceObj 实例，用于 定义在脚本中可以使用的 可调用方法 和 可读写属性
-	public DeviceObj getDeviceObj() {
+	public synchronized DeviceObj getDeviceObj() {
 		return new DeviceObj(this);
 	}
 
 	// 在执行完脚本之后应用 脚本对 obj 所做的修改
-	public void applyObj(DeviceObj obj) {
+	public synchronized void applyObj(DeviceObj obj) {
+		// this.db_checkPortsCount();
 		this.setStorage(obj.storage);
 		this.setSendCaches(obj.dataToSend);
 		if (obj.outputs != null)
@@ -215,7 +240,6 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 
 	// 设备刻
 	public void deviceTick() {
-		// System.out.println("Device ticking: " + this.getClass());
 		switch (this.compileStatus) {
 			case UNKNOWN: // 还没编译
 				this.compileStatus = CompileStatus.DISTRIBUTED;
@@ -225,7 +249,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 				break;
 			case DISTRIBUTED: // 已经布置任务,暂未完成
 				break;
-			case SUCCESS: // 编译已完成, 创建新任务
+			case SUCCESS: // 编译已完成
 				// 获取当前设备实体的 DeviceObj 实例，用于在脚本中提供 可调用方法 和 可读写属性
 				ExecuteTask executeTask = new ExecuteTask(this);
 				executeTask.deviceObj = this.getDeviceObj();
@@ -238,6 +262,21 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 			case ERROR: // 编译出错
 			default:
 				break;
+		}
+	}
+
+	// 将所有要发送的数据写到目标方块实体的接收缓存中
+	public void sendAllData() {
+		// this.db_checkPortsCount();
+		for (int i = 0; i < this.portsCount; i++) {
+			if (this.portsStatus[i] >= 0 && this.sendCaches[i] != null && this.sendCaches[i] != "") {
+				BlockEntity targetEntity = this.getConnectedDevice(i);
+				if (targetEntity != null && targetEntity instanceof DeviceEntity) {
+					((DeviceEntity) targetEntity).receiveCaches[this.portsStatus[i]] = this.sendCaches[i]; // 写入
+				} else {
+					this.portsStatus[i] = -1;
+				}
+			}
 		}
 	}
 
@@ -265,4 +304,26 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 		this.device_boot();
 	}
 
+	public void db_checkPortsCount() {
+		try {
+			if (this.portsStatus == null//
+					|| this.sendCaches == null//
+					|| this.receiveCaches == null//
+					|| this.portsX == null//
+					|| this.portsY == null//
+					|| this.portsZ == null//
+			)
+				throw new NullPointerException();
+			if (this.portsCount != this.portsStatus.length //
+					|| this.portsCount != this.sendCaches.length //
+					|| this.portsCount != this.receiveCaches.length//
+					|| this.portsCount != this.portsX.length//
+					|| this.portsCount != this.portsY.length//
+					|| this.portsCount != this.portsZ.length//
+			)
+				throw new InfageDevicePortsNotMatchException(this.portsCount);
+		} catch (NullPointerException | InfageDevicePortsNotMatchException e) {
+			e.printStackTrace();
+		}
+	}
 }

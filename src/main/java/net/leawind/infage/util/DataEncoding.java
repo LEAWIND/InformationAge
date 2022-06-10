@@ -28,7 +28,7 @@ public class DataEncoding {
 		return sa;
 	}
 
-	public static final String encode(String[] strArr) {
+	public static final String encodeStringArray(String[] strArr) {
 		if (strArr == null || strArr.length < 1)
 			return SPLITER;
 		String str;
@@ -47,10 +47,9 @@ public class DataEncoding {
 		return SPLITER + str;
 	}
 
-	public static final String[] decode(String str) {
-		if (str == null) {
-			LOGGER.info("Arguement String str is NULL !!!");
-		}
+	public static final String[] decodeStringArray(String str) {
+		if (str == null)
+			return new String[] {};
 		String[] strArr = str.split("(?<!" + ESCAPES + ")" + SPLITER, -1);
 		for (int i = 0; i < strArr.length; i++) {
 			if (strArr[i] == null) {
@@ -81,8 +80,8 @@ public class DataEncoding {
 		// String[] sa = {""};
 		// String[] sa = {"", ""};
 		// String[] sa = {"", "", "", "",};
-		String tp = encode(sa);
-		String[] sb = decode(tp);
+		String tp = encodeStringArray(sa);
+		String[] sb = decodeStringArray(tp);
 		printArr(sa);
 		System.out.println(tp);
 		printArr(sb);

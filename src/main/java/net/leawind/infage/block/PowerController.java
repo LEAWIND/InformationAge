@@ -13,7 +13,7 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 
 public class PowerController extends DeviceBlock {
-	public static final String BLOCK_ID = "power_controler";
+	public static final String BLOCK_ID = "power_controller";
 	public static final FabricBlockSettings BLOCK_SETTINGS = DeviceBlock.getDefaultBlockSettings();
 	public static final Item.Settings BLOCKITEM_SETTINGS = DeviceBlock.getDefaultBlockItemSettings();
 
