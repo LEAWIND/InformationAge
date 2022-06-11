@@ -16,7 +16,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
-import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.DirectionProperty;
@@ -132,25 +131,16 @@ public abstract class DeviceBlock extends BlockWithEntity {
 
 	@Override
 	public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hitResult) {
-		try {
-			if (player == null || player.isSpectator() || world == null || hitResult == null) // 如果任意参数为 null 或玩家处于旁观者模式，则不处理
-				return ActionResult.PASS;
-			BlockState blockstate = world.getBlockState(pos); // 根据坐标获取 blockState
-			Block block = blockstate.getBlock(); // 由 blockState 获取方块对象
-			if (block instanceof DeviceBlock) {
-				if (!world.isClient) {
-					NamedScreenHandlerFactory screenHandlerFactory = this.createScreenHandlerFactory(state, world, pos);
-					if (screenHandlerFactory != null) {
-						player.openHandledScreen(screenHandlerFactory); // 这个调用会让服务器请求客户端开启合适的 Screenhandler
-					}
-					return ActionResult.SUCCESS;
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ActionResult.FAIL;
+		if (player == null || player.isSpectator() || world == null || hitResult == null) // 如果任意参数为 null 或玩家处于旁观者模式，则不处理
+			return ActionResult.PASS;
+		// BlockState blockstate = world.getBlockState(pos); // 根据坐标获取 blockState
+		// Block block = blockstate.getBlock(); // 由 blockState 获取方块对象
+		BlockEntity blockEntity = world.getBlockEntity(pos);
+		if (blockEntity instanceof DeviceEntity) {
+			return ((DeviceEntity) blockEntity).openScreen(player) ? ActionResult.success(world.isClient) : ActionResult.PASS;
+		} else {
+			return ActionResult.PASS;
 		}
-		return ActionResult.SUCCESS;
 	}
 
 	// 事件：放置

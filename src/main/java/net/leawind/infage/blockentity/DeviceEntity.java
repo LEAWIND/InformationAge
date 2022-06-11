@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import javax.script.CompiledScript;
 import net.leawind.infage.Infage;
+import net.leawind.infage.client.gui.screen.InfageDeviceScreen;
 import net.leawind.infage.exception.InfageDevicePortsNotMatchException;
 import net.leawind.infage.screen.InfageDeviceScreenHandler;
 import net.leawind.infage.script.CompileStatus;
@@ -17,6 +18,7 @@ import net.leawind.infage.util.Others;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.CompoundTag;
@@ -26,6 +28,7 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Tickable;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 public abstract class DeviceEntity extends BlockEntity implements Tickable, NamedScreenHandlerFactory {
 	protected int tickCounter = 0; // tick 游戏刻 计数器
@@ -393,6 +396,17 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 			// e.printStackTrace();
 			Infage.LOGGER.warn(e);
 		}
+	}
+
+	// TODO 打开设备屏幕
+	public boolean openScreen(PlayerEntity player) {
+		World world = player.getEntityWorld();
+		if (world.isClient) {
+			// ClientPlayerEntity.openStructureBlockScreen:
+			// this.client.openScreen(new StructureBlockScreen(structureBlockEntity));
+			MinecraftClient.getInstance().openScreen(new InfageDeviceScreen(this));
+		}
+		return true;
 	}
 }
 
