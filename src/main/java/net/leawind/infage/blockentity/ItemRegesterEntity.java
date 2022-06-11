@@ -1,9 +1,9 @@
 package net.leawind.infage.blockentity;
 
-import net.leawind.infage.Infage;
 import net.leawind.infage.registry.InfageBlockEntities;
 import net.leawind.infage.script.obj.DeviceObj;
 import net.leawind.infage.script.obj.ItemRegesterObj;
+import net.leawind.infage.settings.InfageSettings;
 import net.minecraft.block.BlockState;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.SidedInventory;
@@ -12,7 +12,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.collection.DefaultedList;
 
 public class ItemRegesterEntity extends DeviceEntity implements ImplementedInventory, SidedInventory {
-	private final DefaultedList<ItemStack> items = DefaultedList.ofSize(Infage.DEVICE_INVENTORY_SIZE, ItemStack.EMPTY);
+	private final DefaultedList<ItemStack> items = DefaultedList.ofSize(InfageSettings.DEVICE_INVENTORY_SIZE, ItemStack.EMPTY);
 
 	public ItemRegesterEntity() {
 		super(InfageBlockEntities.ITEM_REGESTER);
@@ -45,7 +45,7 @@ public class ItemRegesterEntity extends DeviceEntity implements ImplementedInven
 
 	// 对于 side 侧，哪些物品槽位可以被插入
 	public int[] getAvailableSlots(net.minecraft.util.math.Direction side) {
-		return Infage.AVAILABLE_SLOTS;
+		return InfageSettings.AVAILABLE_SLOTS;
 	}
 
 	// 能否在 dir方向 将 物品stack 放入 物品槽slot

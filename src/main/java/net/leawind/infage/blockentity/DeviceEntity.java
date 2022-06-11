@@ -11,6 +11,7 @@ import net.leawind.infage.script.ScriptHelper;
 import net.leawind.infage.script.mtt.CompileTask;
 import net.leawind.infage.script.mtt.ExecuteTask;
 import net.leawind.infage.script.obj.DeviceObj;
+import net.leawind.infage.settings.InfageSettings;
 import net.leawind.infage.util.DataEncoding;
 import net.leawind.infage.util.Others;
 import net.minecraft.block.BlockState;
@@ -244,15 +245,15 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 		if (str == null) {
 			this.consoleOutputs = "";
 		} else {
-			int leng = str.length() - Infage.OUTPUTS_SIZE;
-			this.consoleOutputs = leng > 0 ? str.substring(leng, Infage.OUTPUTS_SIZE) : str; // 如果过长，则保留后面部分
+			int leng = str.length() - InfageSettings.OUTPUTS_SIZE;
+			this.consoleOutputs = leng > 0 ? str.substring(leng, InfageSettings.OUTPUTS_SIZE) : str; // 如果过长，则保留后面部分
 		}
 	}
 
 	// 添加输出字符串
 	public synchronized void writeOutputs(String str) {
 		this.consoleOutputs += str;
-		int n = this.consoleOutputs.length() - Infage.OUTPUTS_SIZE;
+		int n = this.consoleOutputs.length() - InfageSettings.OUTPUTS_SIZE;
 		if (n > 0)
 			this.consoleOutputs = this.consoleOutputs.substring(n);
 	}
@@ -273,8 +274,8 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 			return;
 		int i;
 		for (i = 0; i < this.portsCount && i < sc.length; i++)
-			this.sendCaches[i] = sc[i].length() > Infage.MAX_TRANSMISSION_UNIT ? //
-					sc[i].substring(0, Infage.MAX_TRANSMISSION_UNIT) : //
+			this.sendCaches[i] = sc[i].length() > InfageSettings.MAX_TRANSMISSION_UNIT ? //
+					sc[i].substring(0, InfageSettings.MAX_TRANSMISSION_UNIT) : //
 					sc[i];
 		for (; i < this.portsCount; i++)
 			this.sendCaches[i] = "";

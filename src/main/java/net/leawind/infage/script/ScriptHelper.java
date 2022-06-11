@@ -11,6 +11,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import net.leawind.infage.settings.InfageSettings;
 import net.leawind.universe.mttv1.MTManager;
 
 public final class ScriptHelper {
@@ -24,8 +25,8 @@ public final class ScriptHelper {
 		LOGGER = LogManager.getLogger("InfageScriptHandler");
 		DELETED_VARS = new String[] {"java", "javax", "Java", "exit", "quit"}; // 禁止在脚本中访问的全局对象
 		ENGINE = new ScriptEngineManager().getEngineByName("nashorn"); // 获取 nashorn 引擎
-		MTM_EXEC = new MTManager(Runtime.getRuntime().availableProcessors() / 2 + 1); // 执行线程数是 CPU 核心数 / 2 + 1
-		MTM_COMPILE = new MTManager(3); // 编译线程们
+		MTM_EXEC = new MTManager(InfageSettings.EXEC_THREAD_COUNT); // 执行线程数是 CPU 核心数 / 2 + 1
+		MTM_COMPILE = new MTManager(InfageSettings.COMPILE_THREAD_COUNT); // 编译线程们
 
 		try {
 			String scr = ";";

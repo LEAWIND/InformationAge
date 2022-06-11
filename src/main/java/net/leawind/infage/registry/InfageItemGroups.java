@@ -3,7 +3,7 @@
 package net.leawind.infage.registry;
 
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
-import net.leawind.infage.Infage;
+import net.leawind.infage.settings.InfageSettings;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
@@ -14,7 +14,7 @@ public class InfageItemGroups {
 	public static ItemGroup GROUP_IT;
 	static {
 		// 将一些方块加入这个组里
-		GROUP_IT = FabricItemGroupBuilder.create(new Identifier(Infage.NAMESPACE, "devices")) // device 是物品组的名称
+		GROUP_IT = FabricItemGroupBuilder.create(new Identifier(InfageSettings.NAMESPACE, "devices")) // device 是物品组的名称
 				.icon(() -> new ItemStack(InfageBlocks.COMPUTER)) // 通过一个方块实例来定义物品组图标，会显示在创造模式物品栏。
 				.appendItems(stacks -> {
 					// 在这个匿名函数中向这个物品组里加入物品

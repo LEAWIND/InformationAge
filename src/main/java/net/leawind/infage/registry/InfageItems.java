@@ -1,7 +1,13 @@
 package net.leawind.infage.registry;
 
-import net.leawind.infage.Infage;
-import net.leawind.infage.block.*;
+import net.leawind.infage.block.Computer;
+import net.leawind.infage.block.Disk;
+import net.leawind.infage.block.ItemGenerator;
+import net.leawind.infage.block.ItemRegester;
+import net.leawind.infage.block.PowerController;
+import net.leawind.infage.block.PowerSensor;
+import net.leawind.infage.block.Switch;
+import net.leawind.infage.settings.InfageSettings;
 import net.minecraft.item.BlockItem;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -30,12 +36,12 @@ public class InfageItems {
 
 	public InfageItems() {
 		// 注册这些物品
-		Registry.register(Registry.ITEM, new Identifier(Infage.NAMESPACE, Computer.BLOCK_ID), COMPUTER);
-		Registry.register(Registry.ITEM, new Identifier(Infage.NAMESPACE, Disk.BLOCK_ID), DISK);
-		Registry.register(Registry.ITEM, new Identifier(Infage.NAMESPACE, ItemGenerator.BLOCK_ID), ITEM_GENERATOR);
-		Registry.register(Registry.ITEM, new Identifier(Infage.NAMESPACE, ItemRegester.BLOCK_ID), ITEM_REGESTER);
-		Registry.register(Registry.ITEM, new Identifier(Infage.NAMESPACE, PowerController.BLOCK_ID), POWER_CONTROLLER);
-		Registry.register(Registry.ITEM, new Identifier(Infage.NAMESPACE, PowerSensor.BLOCK_ID), POWER_SENSOR);
-		Registry.register(Registry.ITEM, new Identifier(Infage.NAMESPACE, Switch.BLOCK_ID), SWITCH);
+		Registry.register(Registry.ITEM, new Identifier(InfageSettings.NAMESPACE, Computer.BLOCK_ID), COMPUTER);
+		Registry.register(Registry.ITEM, new Identifier(InfageSettings.NAMESPACE, Disk.BLOCK_ID), DISK);
+		Registry.register(Registry.ITEM, new Identifier(InfageSettings.NAMESPACE, ItemGenerator.BLOCK_ID), ITEM_GENERATOR);
+		Registry.register(Registry.ITEM, new Identifier(InfageSettings.NAMESPACE, ItemRegester.BLOCK_ID), ITEM_REGESTER);
+		Registry.register(Registry.ITEM, new Identifier(InfageSettings.NAMESPACE, PowerController.BLOCK_ID), POWER_CONTROLLER);
+		Registry.register(Registry.ITEM, new Identifier(InfageSettings.NAMESPACE, PowerSensor.BLOCK_ID), POWER_SENSOR);
+		Registry.register(Registry.ITEM, new Identifier(InfageSettings.NAMESPACE, Switch.BLOCK_ID), SWITCH);
 	}
 }

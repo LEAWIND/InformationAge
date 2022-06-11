@@ -21,32 +21,22 @@ import net.leawind.infage.registry.InfageItemGroups;
 import net.leawind.infage.registry.InfageItems;
 import net.leawind.infage.registry.InfageScreenHandlers;
 import net.leawind.infage.script.ScriptHelper;
+import net.leawind.infage.settings.InfageSettings;
 
 public class Infage implements ModInitializer {
 	public static final Logger LOGGER;
-	public static final String NAMESPACE;
-	public static final int MAX_TRANSMISSION_UNIT; // 发送缓存大小 = 最大传输单元
-	public static final int OUTPUTS_SIZE; // 输出缓冲区最大字符数
-	public static final int DEVICE_INVENTORY_SIZE; // 设备库存容量
-	public static int[] AVAILABLE_SLOTS;
 
 	static {
 		LOGGER = LogManager.getLogger("Infage");
-		NAMESPACE = "infage";
-		MAX_TRANSMISSION_UNIT = 768;
-		OUTPUTS_SIZE = 2048;
-
-		DEVICE_INVENTORY_SIZE = 4;
-		// 任何方向都可以插入所有槽位
-		AVAILABLE_SLOTS = new int[Infage.DEVICE_INVENTORY_SIZE];
-		for (int i = 0; i < Infage.DEVICE_INVENTORY_SIZE; i++)
-			AVAILABLE_SLOTS[i] = i;
 	}
 
 	@Override
 	public void onInitialize() {
 		new ScriptHelper();
 		LOGGER.info("Infage.java: I'm here!!!");
+
+		// 各种参数设置
+		new InfageSettings();
 
 		// 实例化并注册方块
 		// 注册了的方块才能在世界中被放置
