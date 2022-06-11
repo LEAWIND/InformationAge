@@ -31,6 +31,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldAccess;
 
 // 设备方块:全都是有水平方向的 (东西南北), 所以继承 HorizontalFacingBlock
 // 因为设备方块一定有对应的 方块实体, 所以要实现 BlockEntityProvider 接口
@@ -158,12 +159,15 @@ public abstract class DeviceBlock extends BlockWithEntity {
 
 	// 事件：放置
 	@Override
-	public void onPlaced(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
+	public void onPlaced(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {}
+
+	// 事件：被破坏
+	@Override
+	public void onBroken(WorldAccess world, BlockPos pos, BlockState state) {
 		BlockEntity blockEntity = world.getBlockEntity(pos);
 		if (blockEntity != null && blockEntity instanceof DeviceEntity) {
-			// DeviceEntity deviceEntity = ((DeviceEntity) blockEntity);
 			// 将状态设置为已关机
-			// deviceEntity.device_shutdown();
+			((DeviceEntity) blockEntity).device_shutdown();
 		}
 	}
 
@@ -171,6 +175,6 @@ public abstract class DeviceBlock extends BlockWithEntity {
 	@Override
 	public void onBlockAdded(BlockState state, World world, BlockPos pos, BlockState oldState, boolean notify) {
 		// 默认情况下，方块实体不会立即被加载
-		world.getBlockEntity(pos); // 这可以确保设备方块实体永远被加载，除非整个区块被卸载。
+		world.getBlockEntity(pos); // 这可以确保设备方块实体一开始就被加载
 	}
 }

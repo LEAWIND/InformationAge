@@ -6,6 +6,7 @@
 // https://fabricmc.net/wiki/zh_cn:start
 // https://www.bilibili.com/read/readlist/rl433929?spm_id_from=333.999.0.0
 // [在方块中存储物品](https://fabricmc.net/wiki/tutorial:inventory)
+// [GUI 界面 1.16.5](https://fabricmc.net/wiki/tutorial:screenhandler?rev=1613658170)
 // [GUI 界面](https://fabricmc.net/wiki/zh_cn:tutorial:screenhandler)
 // [1.16.5 toTag, fromTag](https://fabricmc.net/wiki/tutorial:blockentity?rev=1563817083)
 

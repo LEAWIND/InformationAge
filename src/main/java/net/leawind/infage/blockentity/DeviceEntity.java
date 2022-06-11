@@ -4,8 +4,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import javax.script.CompiledScript;
 import net.leawind.infage.Infage;
-import net.leawind.infage.exception.InfageDevicePortIdOutOfRange;
 import net.leawind.infage.exception.InfageDevicePortsNotMatchException;
+import net.leawind.infage.screen.InfageDeviceScreenHandler;
 import net.leawind.infage.script.CompileStatus;
 import net.leawind.infage.script.ScriptHelper;
 import net.leawind.infage.script.mtt.CompileTask;
@@ -116,6 +116,18 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 		this.receiveCaches = Others.arrayFrom(DataEncoding.decodeStringArray(tag.getString("receiveCaches")), this.portsCount);
 	}
 
+	// [ScreenHandlerFactory] 创建 ScreenHandler
+	@Override
+	public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
+		return new InfageDeviceScreenHandler(syncId, playerInventory, this);
+	}
+
+	// [NamedScreenHandlerFactory] 界面名称
+	@Override
+	public Text getDisplayName() {
+		return new TranslatableText(getCachedState().getBlock().getTranslationKey());
+	}
+
 	// 方块实体刻 World.tickBlockEntities
 	@Override
 	public void tick() {
@@ -124,19 +136,28 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 			this.deviceTick(); // 执行设备刻
 	}
 
-	// 创建 ScreenHandler
-	@Override
-	public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
-		return null;
-		// return new InfageDeviceScreenHandler(syncId, playerInventory, this);
-	}
+	/**
+	 * 将本设备指定接口 连接至 指定设备的指定接口
+	 * 
+	 * @param portId 接口 ID
+	 * @param selfOnly 是否只断开自己这边，而不通知被连接的另一方
+	 * @return {boolean} 是否成功断开，如果原本已经断开则返回false
+	 */
+	public synchronized boolean connect(int srcPort, BlockPos tarPos, int tarPort, boolean selfOnly) {
+		this.portsStatus[srcPort] = (byte) tarPort;
+		this.portsX[srcPort] = tarPos.getX();
+		this.portsY[srcPort] = tarPos.getY();
+		this.portsZ[srcPort] = tarPos.getZ();
 
-	// 界面名称
-	@Override
-	public Text getDisplayName() {
-		return new TranslatableText(getCachedState().getBlock().getTranslationKey());
+		if (selfOnly) {
+			return true;
+		} else {
+			BlockEntity blockEntity = this.getWorld().getBlockEntity(tarPos);
+			if (blockEntity instanceof DeviceEntity)
+				return ((DeviceEntity) blockEntity).connect(tarPort, this.getPos(), srcPort, true);
+		}
+		return false;
 	}
-
 
 	/**
 	 * 获取指定接口所连接的设备方块实体
@@ -147,10 +168,9 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 	public synchronized DeviceEntity getConnectedDevice(int portId) {
 		if (this.portsStatus == null || this.portsStatus[portId] < 0)
 			return null;
-		if (portId >= this.portsCount || this.portsX == null || this.portsY == null || this.portsZ == null)
+		if (portId >= this.portsCount || portId < 0 || this.portsX == null || this.portsY == null || this.portsZ == null)
 			return null;
-		BlockPos pos = new BlockPos(this.portsX[portId], this.portsY[portId], this.portsZ[portId]);
-		BlockEntity blockEntity = this.getWorld().getBlockEntity(pos);
+		BlockEntity blockEntity = this.getWorld().getBlockEntity(new BlockPos(this.portsX[portId], this.portsY[portId], this.portsZ[portId]));
 		if (blockEntity instanceof DeviceEntity)
 			return (DeviceEntity) blockEntity;
 		else
@@ -164,26 +184,26 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 	 * @param selfOnly 是否只断开自己这边，而不通知被连接的另一方
 	 * @return {boolean} 是否成功断开，如果原本已经断开则返回false
 	 */
-	public synchronized boolean disconnect(int portId, boolean selfOnly) throws InfageDevicePortIdOutOfRange {
-		if (portId >= this.portsCount)
-			throw new InfageDevicePortIdOutOfRange(this.portsCount, portId);
-		if (this.portsStatus[portId] < 0)
-			return false;
-		if (!selfOnly) {
+	public synchronized boolean disconnect(int portId, boolean selfOnly) {
+		int tarPort = this.portsStatus[portId];
+		this.portsStatus[portId] = (byte) -1;
+
+		if (selfOnly) {
+			return true;
+		} else {
 			DeviceEntity targeEntity = this.getConnectedDevice(portId);
-			if (targeEntity == null)
-				return false;
-			else
-				targeEntity.disconnect(this.portsStatus[portId], true);
+			if (targeEntity instanceof DeviceEntity)
+				return ((DeviceEntity) targeEntity).disconnect(tarPort, true);
 		}
-		this.portsStatus[portId] = -1;
-		return true;
+		return false;
 	}
 
 	// 设置脚本
 	public synchronized void setScirpt_tick(String str) {
-		this.compileStatus = CompileStatus.UNKNOWN;
-		this.script_tick = str == null ? "" : str;
+		if (str != this.script_tick) {
+			this.compileStatus = CompileStatus.UNKNOWN;
+			this.script_tick = str == null ? "" : str;
+		}
 	}
 
 	// 设置端口状态
@@ -280,7 +300,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 	}
 
 	// 设备刻
-	public void deviceTick() {
+	public synchronized void deviceTick() {
 		switch (this.compileStatus) {
 			case UNKNOWN: // 还没编译
 				this.compileStatus = CompileStatus.DISTRIBUTED;
@@ -307,7 +327,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 	}
 
 	// 将所有要发送的数据写到目标方块实体的接收缓存中
-	public void sendAllData() {
+	public synchronized void sendAllData() {
 		// this.db_checkPortsCount();
 		for (int i = 0; i < this.portsCount; i++) {
 			if (this.portsStatus[i] >= 0 && this.sendCaches[i] != null && this.sendCaches[i] != "") {
@@ -330,23 +350,27 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 	// 关机
 	public synchronized void device_shutdown() {
 		this.isRunning = false;
-		// TODO 断开所有连接
-		// Arrays.fill(this.portsStatus, (byte) -1);
+		// 断开所有连接
+		for (int i = 0; i < this.portsCount; i++)
+			this.disconnect(i, true);
 	}
 
 	// 切换开关机状态
-	public void togglePower() {
-		this.isRunning = !this.isRunning;
+	public synchronized void togglePower() {
+		if (this.isRunning)
+			this.device_shutdown();
+		else
+			this.device_boot();
 	}
 
 	// 重启
-	public void device_reboot() {
+	public synchronized void device_reboot() {
 		this.device_shutdown();
 		this.device_boot();
 	}
 
 	// DEBUG: 检查端口相关数组 是否为空指针 和 长度是否匹配
-	public void db_checkPortsCount() {
+	public synchronized void db_checkPortsCount() {
 		try {
 			if (this.portsStatus == null//
 					|| this.sendCaches == null//
