@@ -8,6 +8,7 @@ public class InfageSettings {
 	public static final int EXEC_THREAD_COUNT; // 执行脚本线程数
 	public static final int COMPILE_THREAD_COUNT; // 编译脚本线程数
 
+	public static final int MAX_SCRIPT_SIZE; // 脚本最大字节数
 	public static final int MAX_TRANSMISSION_UNIT; // 发送缓存大小 = 最大传输单元
 	public static final int OUTPUTS_SIZE; // 输出缓冲区最大字符数
 
@@ -19,7 +20,7 @@ public class InfageSettings {
 		AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
 		EXEC_THREAD_COUNT = (int) (AVAILABLE_PROCESSORS * 0.7 + 1);
 		COMPILE_THREAD_COUNT = (int) (AVAILABLE_PROCESSORS * 0.2 + 1);
-
+		MAX_SCRIPT_SIZE = 20479;
 		MAX_TRANSMISSION_UNIT = 768;
 		OUTPUTS_SIZE = 2048;
 		DEVICE_INVENTORY_SIZE = 4;

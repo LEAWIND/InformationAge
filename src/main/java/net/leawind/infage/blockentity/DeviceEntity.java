@@ -126,7 +126,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 	// [NamedScreenHandlerFactory] 界面名称
 	@Override
 	public Text getDisplayName() {
-		return new TranslatableText(getCachedState().getBlock().getTranslationKey());
+		return new TranslatableText(getCachedState().getBlock().getTranslationKey()); // 本方块名称
 	}
 
 	// 方块实体刻 World.tickBlockEntities
