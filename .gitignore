@@ -1,29 +1,20 @@
-# gradle
 *.ignored
 *.ignored/
 .gradle/
+.settings/
+bin/
 build/*
 !build/libs
+gradle/
+run/
 out/
 classes/
-
-# eclipse
+.project
 
 *.launch
-
-# idea
-
 .idea/
 *.iml
 *.ipr
 *.iws
 
-# vscode
-
-# macos
-
 *.DS_Store
-
-# fabric
-
-run/

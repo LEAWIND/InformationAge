@@ -1,7 +1,6 @@
 package net.leawind.infage.block;
 
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.leawind.infage.blockentity.ItemGeneratorEntity;
 import net.leawind.infage.blockentity.ItemRegesterEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;

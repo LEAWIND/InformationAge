@@ -10,12 +10,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.collection.DefaultedList;
 
-// implements ImplementedInventory
 public class ItemGeneratorEntity extends DeviceEntity implements ImplementedInventory {
-	private final DefaultedList<ItemStack> items = DefaultedList.ofSize(2, ItemStack.EMPTY);
+	private final DefaultedList<ItemStack> items = DefaultedList.ofSize(Infage.DEVICE_INVENTORY_SIZE, ItemStack.EMPTY);
+
 	public ItemGeneratorEntity() {
 		super(InfageBlockEntities.ITEM_GENERATOR);
-		this.storageSize = 2048;
+		this.storageSize = 512;
 		this.init();
 	}
 

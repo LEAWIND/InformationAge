@@ -4,7 +4,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import javax.script.CompiledScript;
 import net.leawind.infage.Infage;
+import net.leawind.infage.exception.InfageDevicePortIdOutOfRange;
 import net.leawind.infage.exception.InfageDevicePortsNotMatchException;
+import net.leawind.infage.screen.InfageDeviceScreenHandler;
 import net.leawind.infage.script.CompileStatus;
 import net.leawind.infage.script.ScriptHelper;
 import net.leawind.infage.script.mtt.CompileTask;
@@ -15,23 +17,29 @@ import net.leawind.infage.util.Others;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.screen.NamedScreenHandlerFactory;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Tickable;
 import net.minecraft.util.math.BlockPos;
 
-public abstract class DeviceEntity extends BlockEntity implements Tickable {
-	public int tickCounter = 0; // tick 游戏刻 计数器
+public abstract class DeviceEntity extends BlockEntity implements Tickable, NamedScreenHandlerFactory {
+	protected int tickCounter = 0; // tick 游戏刻 计数器
 	public boolean isRunning = false; // 是否已开机
-	public String consoleOutputs = ""; // 输出缓冲区
+	protected String consoleOutputs = ""; // 输出缓冲区
 
 	public int storageSize = 128; // 可以在游戏中用脚本存储的数据量最大值 ( 其实就是 storage 字符串的最大长度 )
 	public byte[] storage; // 磁盘内容
 
 	public int portsCount = 1; // 接口数量 (最多同时有多少个设备和它相连接)
 	public byte portsStatus[]; // 各接口的 目标接口的 id, 若未连接则为 -1
-	public long portsX[]; // 各接口所连接方块的坐标(不一定正确，因为对方可能被破坏)
-	public long portsY[]; // 如果不正确，就会在 World.tickBlockEntities 的时候被发现，然后立即断开这个连接
-	public long portsZ[];
+	protected long portsX[]; // 各接口所连接方块的坐标(不一定正确，因为对方可能被破坏)
+	protected long portsY[]; // 如果不正确，就会在 MixinWorld -> World.tickBlockEntities -> this.sendAllData 的时候被发现，然后立即断开这个连接
+	protected long portsZ[];
 
 	public String receiveCaches[]; // 各接口的接收缓存 //TODO toByte
 	public String sendCaches[]; // 各接口的发送缓存 //TODO toByte
@@ -42,35 +50,29 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 	// 初始化
 	public void init() {
 		this.storage = new byte[this.storageSize];
-		this.portsStatus = new byte[this.portsCount];
-
 		this.portsX = new long[this.portsCount];
 		this.portsY = new long[this.portsCount];
 		this.portsZ = new long[this.portsCount];
 
+		this.portsStatus = new byte[this.portsCount];
+		Arrays.fill(this.portsStatus, (byte) -1);
+
 		this.sendCaches = new String[this.portsCount];
+		Arrays.fill(this.sendCaches, "");
+
 		this.receiveCaches = new String[this.portsCount];
-		for (int i = 0; i < this.portsCount; i++) {
-			this.receiveCaches[i] = "";
-			this.sendCaches[i] = "";
-		}
+		Arrays.fill(this.receiveCaches, "");
 	}
 
 	public DeviceEntity(BlockEntityType<?> type) {
 		super(type);
 	}
 
-	/*
-	 * 要实现在方块实体中储存数据，就要能够加载和保存数据。 在 1.16.5 中是 toTag() 和 fromTag() 1.16.5 参考
-	 * [https://fabricmc.net/wiki/tutorial:blockentity?rev=1563817083]
-	 * 
-	 * 在 1.18 中标识符变成了 writeNbt() 和 readNbt() 1.18 参考 [https://fabricmc.net/wiki/tutorial:blockentity]
-	 */
 	// 生成实体方块标签用于保存
 	@Override
 	public synchronized CompoundTag toTag(CompoundTag tag) {
 		tag = super.toTag(tag);
-		this.init();
+
 		tag.putInt("tickCounter", this.tickCounter);
 		tag.putBoolean("isRunning", this.isRunning);
 		tag.putInt("storageSize", this.storageSize);
@@ -115,7 +117,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 		this.receiveCaches = Others.arrayFrom(DataEncoding.decodeStringArray(tag.getString("receiveCaches")), this.portsCount);
 	}
 
-	// 方块实体刻
+	// 方块实体刻 World.tickBlockEntities
 	@Override
 	public void tick() {
 		this.tickCounter++;
@@ -123,8 +125,27 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 			this.deviceTick(); // 执行设备刻
 	}
 
-	// 获取指定接口所连接的设备方块实体
-	public DeviceEntity getConnectedDevice(int portId) {
+	// 创建 ScreenHandler
+	@Override
+	public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
+		return null;
+		// return new InfageDeviceScreenHandler(syncId, playerInventory, this);
+	}
+
+	// 界面名称
+	@Override
+	public Text getDisplayName() {
+		return new TranslatableText(getCachedState().getBlock().getTranslationKey());
+	}
+
+
+	/**
+	 * 获取指定接口所连接的设备方块实体
+	 * 
+	 * @param portId 接口 ID
+	 * @return 该接口所连接的方块实体
+	 */
+	public synchronized DeviceEntity getConnectedDevice(int portId) {
 		if (this.portsStatus == null || this.portsStatus[portId] < 0)
 			return null;
 		if (portId >= this.portsCount || this.portsX == null || this.portsY == null || this.portsZ == null)
@@ -135,6 +156,29 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 			return (DeviceEntity) blockEntity;
 		else
 			return null;
+	}
+
+	/**
+	 * 断开指定接口的连接
+	 * 
+	 * @param portId 接口 ID
+	 * @param selfOnly 是否只断开自己这边，而不通知被连接的另一方
+	 * @return {boolean} 是否成功断开，如果原本已经断开则返回false
+	 */
+	public synchronized boolean disconnect(int portId, boolean selfOnly) throws InfageDevicePortIdOutOfRange {
+		if (portId >= this.portsCount)
+			throw new InfageDevicePortIdOutOfRange(this.portsCount, portId);
+		if (this.portsStatus[portId] < 0)
+			return false;
+		if (!selfOnly) {
+			DeviceEntity targeEntity = this.getConnectedDevice(portId);
+			if (targeEntity == null)
+				return false;
+			else
+				targeEntity.disconnect(this.portsStatus[portId], true);
+		}
+		this.portsStatus[portId] = -1;
+		return true;
 	}
 
 	// 设置脚本
@@ -186,7 +230,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 		}
 	}
 
-	// 向控制台写入新的字符串
+	// 添加输出字符串
 	public synchronized void writeOutputs(String str) {
 		this.consoleOutputs += str;
 		int n = this.consoleOutputs.length() - Infage.OUTPUTS_SIZE;
@@ -194,14 +238,14 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 			this.consoleOutputs = this.consoleOutputs.substring(n);
 	}
 
-	// 向控制台添加记录，包含 记录者名称 和 时间（tick数）信息
+	// 添加输出记录，自动添加 记录者名称 和 时间（tick数）信息
 	public synchronized void writeLog(String name, String str) {
 		this.writeOutputs("[" + this.tickCounter + "] (" + name + ") " + str);
 	}
 
-	// 清空控制台
+	// 清空输出
 	public synchronized void clearOutputs() {
-		this.consoleOutputs = "";
+		this.setOutputs(null);
 	}
 
 	// 设置输出缓存
@@ -214,14 +258,13 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 					sc[i].substring(0, Infage.MAX_TRANSMISSION_UNIT) : //
 					sc[i];
 		for (; i < this.portsCount; i++)
-			this.sendCaches[i] = null;
+			this.sendCaches[i] = "";
 	}
 
 	// 清空输出缓存
 	public synchronized void clearSendCaches() {
-		Arrays.fill(this.sendCaches, null);
+		Arrays.fill(this.sendCaches, "");
 	}
-
 
 	// 获取当前设备实体的 DeviceObj 实例，用于 定义在脚本中可以使用的 可调用方法 和 可读写属性
 	public synchronized DeviceObj getDeviceObj() {
@@ -288,8 +331,8 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 	// 关机
 	public synchronized void device_shutdown() {
 		this.isRunning = false;
-		// 断开所有连接
-		Arrays.fill(this.portsStatus, (byte) -1);
+		// TODO 断开所有连接
+		// Arrays.fill(this.portsStatus, (byte) -1);
 	}
 
 	// 切换开关机状态
@@ -303,6 +346,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 		this.device_boot();
 	}
 
+	// DEBUG: 检查端口相关数组 是否为空指针 和 长度是否匹配
 	public void db_checkPortsCount() {
 		try {
 			if (this.portsStatus == null//
@@ -322,7 +366,8 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable {
 			)
 				throw new InfageDevicePortsNotMatchException(this.portsCount);
 		} catch (NullPointerException | InfageDevicePortsNotMatchException e) {
-			e.printStackTrace();
+			// e.printStackTrace();
+			Infage.LOGGER.warn(e);
 		}
 	}
 }

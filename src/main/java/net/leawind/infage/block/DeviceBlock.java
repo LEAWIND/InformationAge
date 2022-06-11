@@ -16,6 +16,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
+import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Properties;
@@ -114,39 +115,26 @@ public abstract class DeviceBlock extends HorizontalFacingBlock implements Block
 	@Override
 	public ActionResult onUse(BlockState state, World world, BlockPos blockPos, PlayerEntity player, Hand hand, BlockHitResult hitResult) {
 		try {
-			// 如果任意参数为 null 或玩家处于旁观者模式，则不处理
-			if (player == null || player.isSpectator() || world == null || hitResult == null)
+			if (player == null || player.isSpectator() || world == null || hitResult == null) // 如果任意参数为 null 或玩家处于旁观者模式，则不处理
 				return ActionResult.PASS;
 			BlockState blockstate = world.getBlockState(blockPos); // 根据坐标获取 blockState
 			Block block = blockstate.getBlock(); // 由 blockState 获取方块对象
-			if (block instanceof DeviceBlock) { // 检查这个方块是不是设备
-
-				// DeviceEntity deviceEntity = (DeviceEntity) world.getBlockEntity(blockPos); // 根据坐标获取这个方块的方块实体
-				// System.out.printf("\nEvent UseBlockCallback:\n\tPlayer:\n");
-				// System.out.printf("\t\t%s\n", player);
-				// System.out.printf("\tused block:\n");
-				// System.out.printf("\t\t%s\n", block);
-				// System.out.printf("\tBlockEntity:\n\t\t%s\n", deviceEntity);
-
+			if (block instanceof DeviceBlock) {
 				// 判断是不是 客户端
-				if (world.isClient) {
-					// 客户端
+				if (world.isClient) { // 客户端
 					// player.openCommandBlockScreen(commandBlock);
-					// System.out.println("================================");
-					// System.out.println("Open Device Block Screen At Client !!!");
-					// System.out.println("BlockEntity is");
-					// System.out.println(deviceEntity);
 					// 在客户端显示屏幕
-
 					// System.out.printf("\nSendCaches len=[%d]\n", deviceEntity.sendCaches.length);
 					// MinecraftClient.getInstance().openScreen(new InfageDeviceScreen(world,
 					// blockPos));
-				} else {
-					// 服务端
-					// deviceEntity.togglePower();
+					return ActionResult.SUCCESS; // 返回了 SUCCESS 就不会处理后续的事件了 (例如放置方块)
+				} else { // 服务端
+					NamedScreenHandlerFactory screenHandlerFactory = state.createScreenHandlerFactory(world, blockPos);
+					if (screenHandlerFactory != null) {
+						player.openHandledScreen(screenHandlerFactory); // 这个调用会让服务器请求客户端开启合适的 Screenhandler
+					}
 					return ActionResult.SUCCESS;
 				}
-				return ActionResult.SUCCESS; // 返回了 SUCCESS 就不会处理后续的事件了 (例如放置方块)
 			}
 		} catch (Exception e) {
 			return ActionResult.FAIL;

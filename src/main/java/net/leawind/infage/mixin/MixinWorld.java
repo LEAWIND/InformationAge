@@ -10,7 +10,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.google.common.collect.Lists;
 import net.leawind.infage.Infage;
 import net.leawind.infage.blockentity.DeviceEntity;
-// import net.leawind.infage.exception.InfageDevicePortsNotMatchException;
 import net.leawind.infage.script.ScriptHelper;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.world.World;
@@ -22,9 +21,13 @@ public class MixinWorld {
 
 	@Inject(at = @At("HEAD"), method = "tickBlockEntities()V")
 	private void onTickBlockEntities_head(CallbackInfo info) {
-		// System.out.println("BlockEntities count = " + tickingBlockEntities.size()); // 打印当前方块实体数量
+
+		// 清空所有 exec 任务，并统计数量
+		int clearedTasksCount = ScriptHelper.MTM_EXEC.clearTasks();
+		if (clearedTasksCount > 0)
+			Infage.LOGGER.warn(clearedTasksCount + " exec tasks time out.\n");
+
 		// 在这不应该清空 接收或发送缓存，缓存应该由设备自己 在 tick 中决定何时清空
-		// 遍历方块实体并发送数据
 		Iterator<BlockEntity> blockEntityIterator = tickingBlockEntities.iterator(); // 获取世界中方块实体的迭代器
 		while (blockEntityIterator.hasNext()) {
 			BlockEntity blockEntity = blockEntityIterator.next(); // 向迭代器获取下一个 方块实体
@@ -32,11 +35,6 @@ public class MixinWorld {
 				((DeviceEntity) blockEntity).sendAllData();
 			}
 		}
-
-		// 清空所有 exec 任务，并统计数量
-		int clearedTasksCount = ScriptHelper.MTM_EXEC.clearTasks();
-		if (clearedTasksCount > 0)
-			Infage.LOGGER.warn(clearedTasksCount + " exec tasks time out.\n");
 
 	}
 }

@@ -31,10 +31,12 @@ public class DeviceObj {
 		this.outputs += "\n";
 	}
 
+	// 将字符串转换为字节数组
 	public byte[] getBytes(String str) {
 		return str.getBytes();
 	}
 
+	// 将字节转数组换为字符串
 	public String getStr(byte[] bytes) {
 		return new String(bytes);
 	}

@@ -34,33 +34,14 @@ public class InfageBlockEntities {
 		// 这后缀会加在方块 id 后面, 得到方块实体 id
 		final String ID_SUFFIX = "_blockentity";
 		// 注册方块实体
-		COMPUTER = Registry.register(
-				Registry.BLOCK_ENTITY_TYPE,
-				new Identifier(Infage.NAMESPACE, Computer.BLOCK_ID + ID_SUFFIX),
+		COMPUTER = Registry.register(Registry.BLOCK_ENTITY_TYPE, new Identifier(Infage.NAMESPACE, Computer.BLOCK_ID + ID_SUFFIX),
 				// 需要在那个 方块实体类 中定义无参构造
 				BlockEntityType.Builder.create(ComputerEntity::new, InfageBlocks.COMPUTER).build(null));
-		DISK = Registry.register(
-				Registry.BLOCK_ENTITY_TYPE,
-				new Identifier(Infage.NAMESPACE, Disk.BLOCK_ID + ID_SUFFIX),
-				BlockEntityType.Builder.create(DiskEntity::new, InfageBlocks.DISK).build(null));
-		ITEM_GENERATOR = Registry.register(
-				Registry.BLOCK_ENTITY_TYPE,
-				new Identifier(Infage.NAMESPACE, ItemGenerator.BLOCK_ID + ID_SUFFIX),
-				BlockEntityType.Builder.create(ItemGeneratorEntity::new, InfageBlocks.ITEM_GENERATOR).build(null));
-		ITEM_REGESTER = Registry.register(
-				Registry.BLOCK_ENTITY_TYPE,
-				new Identifier(Infage.NAMESPACE, ItemRegester.BLOCK_ID + ID_SUFFIX),
-				BlockEntityType.Builder.create(ItemRegesterEntity::new, InfageBlocks.ITEM_REGESTER).build(null));
-		POWER_CONTROLLER = Registry.register(
-				Registry.BLOCK_ENTITY_TYPE,
-				new Identifier(Infage.NAMESPACE, PowerController.BLOCK_ID + ID_SUFFIX), BlockEntityType.Builder.create(PowerControllerEntity::new, InfageBlocks.POWER_CONTROLLER).build(null));
-		POWER_SENSOR = Registry.register(
-				Registry.BLOCK_ENTITY_TYPE,
-				new Identifier(Infage.NAMESPACE, PowerSensor.BLOCK_ID + ID_SUFFIX),
-				BlockEntityType.Builder.create(PowerSensorEntity::new, InfageBlocks.POWER_SENSOR).build(null));
-		SWITCH = Registry.register(
-				Registry.BLOCK_ENTITY_TYPE,
-				new Identifier(Infage.NAMESPACE, Switch.BLOCK_ID + ID_SUFFIX),
-				BlockEntityType.Builder.create(SwitchEntity::new, InfageBlocks.SWITCH).build(null));
+		DISK = Registry.register(Registry.BLOCK_ENTITY_TYPE, new Identifier(Infage.NAMESPACE, Disk.BLOCK_ID + ID_SUFFIX), BlockEntityType.Builder.create(DiskEntity::new, InfageBlocks.DISK).build(null));
+		ITEM_GENERATOR = Registry.register(Registry.BLOCK_ENTITY_TYPE, new Identifier(Infage.NAMESPACE, ItemGenerator.BLOCK_ID + ID_SUFFIX), BlockEntityType.Builder.create(ItemGeneratorEntity::new, InfageBlocks.ITEM_GENERATOR).build(null));
+		ITEM_REGESTER = Registry.register(Registry.BLOCK_ENTITY_TYPE, new Identifier(Infage.NAMESPACE, ItemRegester.BLOCK_ID + ID_SUFFIX), BlockEntityType.Builder.create(ItemRegesterEntity::new, InfageBlocks.ITEM_REGESTER).build(null));
+		POWER_CONTROLLER = Registry.register(Registry.BLOCK_ENTITY_TYPE, new Identifier(Infage.NAMESPACE, PowerController.BLOCK_ID + ID_SUFFIX), BlockEntityType.Builder.create(PowerControllerEntity::new, InfageBlocks.POWER_CONTROLLER).build(null));
+		POWER_SENSOR = Registry.register(Registry.BLOCK_ENTITY_TYPE, new Identifier(Infage.NAMESPACE, PowerSensor.BLOCK_ID + ID_SUFFIX), BlockEntityType.Builder.create(PowerSensorEntity::new, InfageBlocks.POWER_SENSOR).build(null));
+		SWITCH = Registry.register(Registry.BLOCK_ENTITY_TYPE, new Identifier(Infage.NAMESPACE, Switch.BLOCK_ID + ID_SUFFIX), BlockEntityType.Builder.create(SwitchEntity::new, InfageBlocks.SWITCH).build(null));
 	}
 }
