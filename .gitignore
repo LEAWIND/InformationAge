@@ -5,7 +5,6 @@
 bin/
 build/*
 !build/libs
-gradle/
 run/
 out/
 classes/

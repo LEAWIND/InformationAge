@@ -1,81 +1,79 @@
 package net.leawind.infage.client.gui.screen;
 
 import java.util.List;
-
-import com.google.common.collect.Lists;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import com.google.common.collect.Lists;
 import net.leawind.infage.blockentity.DeviceEntity;
 import net.leawind.infage.client.gui.widget.MultilineTextFieldWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.CommandSuggestor;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
+import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.util.NarratorManager;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.screen.ScreenHandler;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 // Screen extends DrawableHelper
-public class InfageDeviceScreen extends Screen {
-	private static final Logger LOGGER = LogManager.getLogger("DeviceScreen");
+public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
+	private static final Logger LOGGER;
 	public static boolean ENABLE_COMMAND_SUGGESTOR = false; // 是否启用代码提示
+
+	static {
+		LOGGER = LogManager.getLogger("InfageDeviceScreen");
+	}
 
 	// Style 设置
 	public static final class Style {
-		public static final double tilePos[] = {0.10, 0.00, 0.50, 0.03}; // 标题文本位置
-		public static final double codeFieldPos[] = {0.10, 0.03, 0.50, 0.97}; // 代码文本域位置
-		public static final double outputsFieldPos[] = {0.60, 0.40, 0.40, 0.60}; // 输出文本域位置
-		public static double doneButtonPos[] = {0.80, 0.00, 0.20, 0.05}; // 完成按钮位置
-		public static double powerButtonPos[] = {0.60, 0.00, 0.20, 0.05}; // 电源按钮位置
+		public static final double tilePos[] = {0.10, 0.00, 0.50, 0.03}; // 标题文本 位置
+		public static final double codeFieldPos[] = {0.10, 0.03, 0.50, 0.97}; // 代码文本域 位置
+		public static final double outputsFieldPos[] = {0.60, 0.40, 0.40, 0.60}; // 输出文本域 位置
+		public static double doneButtonPos[] = {0.80, 0.00, 0.20, 0.05}; // 完成按钮 位置
+		public static double powerButtonPos[] = {0.60, 0.00, 0.20, 0.05}; // 电源按钮 位置
 
-		public static final double eventButtonPos[] = {0.00, 0.00}; // 事件按钮宽高
-		public static final double eventButtonShape[] = {0.10, 0.06}; // 事件按钮宽高
+		public static final double eventButtonPos[] = {0.00, 0.00}; // 事件按钮 宽高
 		public static final double eventButtonMargin = 1.2;
 
-		public static final double portsButtonShape[] = {0.085, 0.04}; // 端口按钮宽高
-		public static final double portsButtonPos[] = {0.61, 0.06}; // 端口按钮起始位置
+		public static final double portsButtonShape[] = {0.085, 0.04}; // 端口按钮 宽高
+		public static final double portsButtonPos[] = {0.61, 0.06}; // 端口按钮起始 位置
 		public static final double portButtonMargin = 1.2;
 		public static final int portsCountPerLine = 4; // 每行多少个端口按钮
 	};
 
-	public DeviceEntity deviceEntity; // 对应的设备方块
-	public World world;
-	public BlockPos devicePos;
-
-	// 针对每一个事件脚本，都有历史记录栈。每输入一个非字母，就添加一次记录
-	// public List<List<String>> ScriptHistory = Lists.newArrayList();
-	// 当前在历史记录中的位置
-	// public List<int> ScriptHistoryPos = Lists.newArrayList();
+	public DeviceEntity deviceEntity; // 对应的设备方块实体
+	public World world; // 所在的世界
+	public BlockPos devicePos; // 设备坐标
 
 	public MultilineTextFieldWidget codeField;// 输入代码的文本域
 	public MultilineTextFieldWidget outputsField;// 输出的文本域
 	public ButtonWidget doneButton; // 完成按钮，按esc也是完成
 	public ButtonWidget powerButton; // 开关机按钮
 	public List<ButtonWidget> portsButtons = Lists.newArrayList(); // 端口按钮(连接、断开)
-	public List<ButtonWidget> eventButtons = Lists.newArrayList(); // 针对每个事件都有一个脚本
 	public CommandSuggestor commandSuggestor;
 
-	public ButtonWidget testButton; // TODO Test button
+	public ButtonWidget testButton; //
 
-	public InfageDeviceScreen(World world, BlockPos devicePos) {
-		super(NarratorManager.EMPTY);
-		this.deviceEntity = (DeviceEntity) world.getBlockEntity(devicePos);
+	public InfageDeviceScreen(ScreenHandler handler, PlayerInventory inventory, Text title) {
+		super(handler, inventory, title);
 	}
 
 	// 在初始化方法中绘制界面
 	@Override
 	public void init() {
-		super.init(); // 这个方法是空的，用不用无所谓
+		super.init();
+		System.out.println("Infage Device Screen: init");
 		this.deviceEntity = (DeviceEntity) this.world.getBlockEntity(this.devicePos);
 		if (this.deviceEntity.portsCount == 0) {
 			System.out.println("God damn");
 		}
+		titleX = (int) (width * 0.5);
+		titleY = (int) (height * 0.0);
 		// 列 1
 		// 列 2
 		{
@@ -132,6 +130,11 @@ public class InfageDeviceScreen extends Screen {
 		}
 	}
 
+	@Override
+	protected void drawBackground(MatrixStack matrices, float delta, int mouseX, int mouseY) {
+
+	}
+
 	// 键盘事件
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -158,7 +161,6 @@ public class InfageDeviceScreen extends Screen {
 
 	@Override
 	public void tick() {
-		// ??
 		this.codeField.tick();
 		this.outputsField.tick();
 	}
@@ -177,9 +179,6 @@ public class InfageDeviceScreen extends Screen {
 		this.doneButton.active = true;
 		this.powerButton.active = true;
 		// for (int i = 0; i < this.portsButtons.size(); i++) {
-		// this.portsButtons.get(i).active = true;
-		// }
-		// for (int i = 0; i < this.eventButtons.size(); i++) {
 		// this.portsButtons.get(i).active = true;
 		// }
 	}
@@ -222,4 +221,6 @@ public class InfageDeviceScreen extends Screen {
 	public void onPressEventButton(ButtonWidget buttonWidget) {
 		LOGGER.info("Event: press event button");
 	}
+
+
 }

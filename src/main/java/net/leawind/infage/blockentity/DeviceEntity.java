@@ -6,7 +6,6 @@ import javax.script.CompiledScript;
 import net.leawind.infage.Infage;
 import net.leawind.infage.exception.InfageDevicePortIdOutOfRange;
 import net.leawind.infage.exception.InfageDevicePortsNotMatchException;
-import net.leawind.infage.screen.InfageDeviceScreenHandler;
 import net.leawind.infage.script.CompileStatus;
 import net.leawind.infage.script.ScriptHelper;
 import net.leawind.infage.script.mtt.CompileTask;

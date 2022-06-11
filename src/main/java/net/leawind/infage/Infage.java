@@ -18,6 +18,7 @@ import net.leawind.infage.registry.InfageBlockEntities;
 import net.leawind.infage.registry.InfageBlocks;
 import net.leawind.infage.registry.InfageItemGroups;
 import net.leawind.infage.registry.InfageItems;
+import net.leawind.infage.registry.InfageScreenHandlers;
 import net.leawind.infage.script.ScriptHelper;
 
 public class Infage implements ModInitializer {
@@ -61,5 +62,8 @@ public class Infage implements ModInitializer {
 		// 注册方块实体
 		// 方块有了对应的方块实体才能储存数据
 		new InfageBlockEntities();
+
+		// 注册屏幕处理器
+		new InfageScreenHandlers();
 	}
 }
