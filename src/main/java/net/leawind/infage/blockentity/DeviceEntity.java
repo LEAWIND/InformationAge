@@ -360,11 +360,14 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 	}
 
 	// 切换开关机状态
-	public synchronized void togglePower() {
-		if (this.isRunning)
+	public synchronized boolean togglePower() {
+		if (this.isRunning) {
 			this.device_shutdown();
-		else
+			return false;
+		} else {
 			this.device_boot();
+			return true;
+		}
 	}
 
 	// 重启
@@ -407,6 +410,16 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 			MinecraftClient.getInstance().openScreen(new InfageDeviceScreen(this));
 		}
 		return true;
+	}
+
+	// 行为
+	public enum Action {
+		UPDATE_DATA, // 更新所有状态
+		UPDATE_SCRIPT, // 更新脚本
+		SHUT_DOWN, // 要求关机
+		BOOT, // 要求开机
+		CONNECT, // 点击了一个未连接的接口, 连接其他设备
+		DISCONNECT, // 点击了一个已连接的接口，断开它
 	}
 }
 

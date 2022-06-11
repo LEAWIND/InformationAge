@@ -3,9 +3,14 @@ package net.leawind.infage.client.gui.screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import net.leawind.infage.blockentity.DeviceEntity;
+import net.leawind.infage.blockentity.ImplementedInventory;
+import net.leawind.infage.client.gui.widget.MultilineTextFieldWidget;
 import net.leawind.infage.settings.InfageStyle;
+import net.leawind.infage.settings.InfageTexts;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.ScreenTexts;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.TranslatableText;
@@ -14,7 +19,15 @@ import net.minecraft.text.TranslatableText;
 public class InfageDeviceScreen extends Screen {
 	public DeviceEntity deviceEntity;
 	public static final Logger LOGGER;
+
+	private boolean isRunning = false;
+	private boolean hasItemSlots = false;
+
 	private TextFieldWidget codeField;
+	private TextFieldWidget outputsField;
+	private ButtonWidget doneButton;
+	private ButtonWidget powerButton;
+
 
 	static {
 		LOGGER = LogManager.getLogger("InfageDeviceScreen");
@@ -23,6 +36,7 @@ public class InfageDeviceScreen extends Screen {
 	public InfageDeviceScreen(DeviceEntity deviceEntity) {
 		super(new TranslatableText(deviceEntity.getCachedState().getBlock().getTranslationKey()));
 		this.deviceEntity = deviceEntity;
+		this.hasItemSlots = this.deviceEntity instanceof ImplementedInventory;
 	}
 
 	@Override
@@ -33,19 +47,73 @@ public class InfageDeviceScreen extends Screen {
 	@Override
 	public void init() {
 		// 代码域
-		this.codeField = new TextFieldWidget(this.textRenderer, //
-				(int) (this.width * InfageStyle.code[0]), //
-				(int) (this.height * InfageStyle.code[1]), //
-				(int) (this.width * InfageStyle.code[2]), //
-				(int) (this.height * InfageStyle.code[3]), //
-				new TranslatableText("structure_block.structure_name")) {
-			public boolean charTyped(char chr, int modifiers) {
-				return !InfageDeviceScreen.this.isValidCharacterForName(this.getText(), chr, this.getCursor()) ? false : super.charTyped(chr, modifiers);
-			}
-		};
-		this.codeField.setMaxLength(64);
-		this.codeField.setText("Code Field");
-		this.children.add(this.codeField);
+		{
+			this.codeField = new MultilineTextFieldWidget(this.textRenderer, //
+					(int) (this.width * InfageStyle.code[0]), //
+					(int) (this.height * InfageStyle.code[1]), //
+					(int) (this.width * InfageStyle.code[2]), //
+					(int) (this.height * InfageStyle.code[3]), //
+					new TranslatableText("itemGroup.infage.devices"));
+			this.codeField.setMaxLength(64);
+			this.codeField.setText("Code Field");
+			this.children.add(this.codeField);
+		}
+		// 输出域
+		{
+			this.outputsField = new MultilineTextFieldWidget(this.textRenderer, //
+					(int) (this.width * InfageStyle.outputs[0]), //
+					(int) (this.height * InfageStyle.outputs[1]), //
+					(int) (this.width * InfageStyle.outputs[2]), //
+					(int) (this.height * InfageStyle.outputs[3]), //
+					InfageTexts.INFAGE_DEVICES);
+			this.outputsField.setMaxLength(64);
+			this.outputsField.setText("outpusField");
+			this.outputsField.setEditable(false);
+			this.children.add(this.outputsField);
+		}
+
+		// 完成按钮
+		{
+			this.doneButton = (ButtonWidget) this.addButton(new ButtonWidget(//
+					(int) (this.width * InfageStyle.done[0]), //
+					(int) (this.height * InfageStyle.done[1]), //
+					(int) (this.width * InfageStyle.done[2]), //
+					(int) (this.height * InfageStyle.done[3]), //
+					ScreenTexts.DONE, (buttonWidget) -> {
+						LOGGER.info("Clicked done button.");
+						this.done();
+					}));
+		}
+
+		// 电源按钮
+		{
+			this.powerButton = (ButtonWidget) this.addButton(new ButtonWidget(//
+					(int) (this.width * InfageStyle.power[0]), //
+					(int) (this.height * InfageStyle.power[1]), //
+					(int) (this.width * InfageStyle.power[2]), //
+					(int) (this.height * InfageStyle.power[3]), //
+					this.isRunning ? InfageTexts.SHUT_DOWN : InfageTexts.BOOT, //
+					(buttonWidget) -> {
+						LOGGER.info("Clicked power button.");
+						if (this.deviceEntity.isRunning) {
+							this.updateDeviceBlock(DeviceEntity.Action.SHUT_DOWN);
+							this.deviceEntity.device_shutdown();
+						} else {
+							this.updateDeviceBlock(DeviceEntity.Action.BOOT);
+							this.deviceEntity.device_boot();
+						}
+					}));
+		}
+
+		// TODO 可能存在的物品槽
+		if (this.hasItemSlots) {
+
+		}
+
+		// TODO 端口按钮们
+		for (int i = 0; i < this.deviceEntity.portsCount; i++) {
+
+		}
 
 
 		this.setInitialFocus(this.codeField);
@@ -53,14 +121,38 @@ public class InfageDeviceScreen extends Screen {
 
 	@Override
 	public void resize(MinecraftClient client, int width, int height) {
-		String string = this.codeField.getText();
+		String string0 = this.codeField.getText();
+		String string1 = this.outputsField.getText();
 		this.init(client, width, height);
-		this.codeField.setText(string);
+		this.codeField.setText(string0);
+		this.outputsField.setText(string1);
 	}
 
 	@Override
 	public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
 		this.renderBackground(matrices);
 		this.codeField.render(matrices, mouseX, mouseY, delta);
+		this.outputsField.render(matrices, mouseX, mouseY, delta);
+		super.render(matrices, mouseX, mouseY, delta);
 	}
+
+	// 更新
+	private boolean updateDeviceBlock(DeviceEntity.Action action) {
+		// TODO 发送数据包通知服务器更新
+		return true;
+	}
+
+	// 按下电源键
+	public void togglePower() {
+		if (this.deviceEntity != null)
+			this.isRunning = this.deviceEntity.togglePower();
+	}
+
+	// 结束
+	public void done() {
+		if (this.updateDeviceBlock(DeviceEntity.Action.UPDATE_DATA)) {
+			this.client.openScreen((Screen) null);
+		}
+	}
+
 }
