@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.leawind.infage.blockentity.DeviceEntity;
 import net.leawind.infage.client.gui.widget.MultilineTextFieldWidget;
+import net.leawind.infage.client.gui.widget.StretchableButtonWidget;
 import net.leawind.infage.screenhandler.InfageDeviceScreenHandler;
 import net.leawind.infage.settings.InfageSettings;
 import net.leawind.infage.settings.InfageStyle;
@@ -14,7 +15,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
@@ -30,9 +30,9 @@ import net.minecraft.util.math.BlockPos;
 // Screen extends DrawableHelper
 public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	public static final Logger LOGGER = LogManager.getLogger("InfageDeviceScreen");;
-	private static final Identifier TEXTURE_WIDGETS = new Identifier("minecraft", "textures/gui/advancements/widgets.png");;
+	private static final Identifier TEXTURE_WIDGETS = new Identifier("minecraft", "textures/gui/advancements/widgets.png");
 	InfageDeviceScreenHandler handler;
-	private UUID playerUUID; // 玩家 uuid
+	private UUID playerUUID; // 玩家 uuid (虽然不知道有什么用)
 	private Text displayName; // 显示的设备名称
 	private BlockPos pos; // 设备方块位置
 	private boolean isRunning = false;
@@ -45,16 +45,16 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 
 	private TextFieldWidget codeField; // 代码域
 	private TextFieldWidget outputsField; // 输出域
-	public ButtonWidget doneButton; // 完成按钮
-	public ButtonWidget powerButton; // 电源按钮
-	private ButtonWidget[] portsButtons; // 接口按钮们
+	public StretchableButtonWidget doneButton; // 完成按钮
+	public StretchableButtonWidget powerButton; // 电源按钮
+	private StretchableButtonWidget[] portsButtons; // 接口按钮们
 
 	public InfageDeviceScreen(ScreenHandler handler, PlayerInventory inventory, Text title) {
 		super(handler, inventory, title);
 		this.handler = (InfageDeviceScreenHandler) handler;
 		// this.getAttributesFromHandler(this.handler); // 从 handler 读取方块数据
 		this.readScreenOpeningData(this.handler.getBuf()); // 从 handler.packetByteBuf 读取方块数据
-		this.portsButtons = new ButtonWidget[this.portsCount]; // 初始化接口按钮数组
+		this.portsButtons = new StretchableButtonWidget[this.portsCount]; // 初始化接口按钮数组
 	}
 
 	@Override
@@ -67,8 +67,6 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	@Override
 	public void init() {
 		super.init();
-		titleX = (int) (this.width * InfageStyle.title[0]);
-		titleY = (int) (this.height * InfageStyle.title[1]);
 		// 代码域
 		{
 			this.codeField = new MultilineTextFieldWidget(this.textRenderer, //
@@ -95,7 +93,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 			this.children.add(this.outputsField);
 		}
 		// 完成按钮
-		this.doneButton = (ButtonWidget) this.addButton(new ButtonWidget(//
+		this.doneButton = (StretchableButtonWidget) this.addButton(new StretchableButtonWidget(//
 				(int) (this.width * InfageStyle.done[0]), //
 				(int) (this.height * InfageStyle.done[1]), //
 				(int) (this.width * InfageStyle.done[2]), //
@@ -106,7 +104,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 				}));
 
 		// 电源按钮
-		this.powerButton = (ButtonWidget) this.addButton(new ButtonWidget(//
+		this.powerButton = (StretchableButtonWidget) this.addButton(new StretchableButtonWidget(//
 				(int) (this.width * InfageStyle.power[0]), //
 				(int) (this.height * InfageStyle.power[1]), //
 				(int) (this.width * InfageStyle.power[2]), //
@@ -129,7 +127,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		}
 		// TODO 端口按钮们
 		for (int i = 0; i < this.portsCount; i++) {
-			ButtonWidget portButton = (ButtonWidget) this.addButton(new ButtonWidget(//
+			StretchableButtonWidget portButton = (StretchableButtonWidget) this.addButton(new StretchableButtonWidget(//
 					this.width - (int) (this.width * InfageStyle.ports[0]), // x
 					this.height - (int) (this.height * InfageStyle.ports[1] * (i + 1)), // y
 					(int) (this.width * InfageStyle.ports[0]), // w
@@ -160,8 +158,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 
 	// 参考 package net.minecraft.client.gui.DrawableHelper;
 	@Override
-	protected void drawBackground(MatrixStack matrices, float delta, int mouseX, int mouseY) {
-	}
+	protected void drawBackground(MatrixStack matrices, float delta, int mouseX, int mouseY) {}
 
 	// 渲染界面
 	@Override
