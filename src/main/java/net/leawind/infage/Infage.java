@@ -28,12 +28,9 @@ public class Infage implements ModInitializer {
 
 	static {
 		LOGGER = LogManager.getLogger("Infage");
-	}
 
-	@Override
-	public void onInitialize() {
+		// 用于执行方块实体的脚本
 		new ScriptHelper();
-		LOGGER.info("Infage.java: I'm here!!!");
 
 		// 各种参数设置
 		new InfageSettings();
@@ -56,5 +53,10 @@ public class Infage implements ModInitializer {
 
 		// 注册屏幕处理器
 		new InfageScreenHandlers();
+	}
+
+	@Override
+	public void onInitialize() {
+		LOGGER.info("Infage.java: I'm here!!!");
 	}
 }

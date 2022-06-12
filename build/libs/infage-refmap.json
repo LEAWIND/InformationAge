@@ -1,0 +1,14 @@
+{
+  "mappings": {
+    "net/leawind/infage/mixin/MixinWorld": {
+      "tickBlockEntities()V": "Lnet/minecraft/class_1937;method_18471()V"
+    }
+  },
+  "data": {
+    "named:intermediary": {
+      "net/leawind/infage/mixin/MixinWorld": {
+        "tickBlockEntities()V": "Lnet/minecraft/class_1937;method_18471()V"
+      }
+    }
+  }
+}

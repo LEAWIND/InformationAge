@@ -1,9 +1,6 @@
 package net.leawind.infage.client.gui.screen;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.leawind.infage.blockentity.DeviceEntity;
 import net.leawind.infage.settings.InfageStyle;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.util.math.MatrixStack;
@@ -14,14 +11,10 @@ import net.minecraft.util.Identifier;
 
 // Screen extends DrawableHelper
 public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
-	private static final Logger LOGGER;
 	private static final Identifier TEXTURE_WIDGETS;
-	// private static final Identifier TEXTURE_BACKGROUND;
 
 	static {
-		LOGGER = LogManager.getLogger("InfageDeviceScreen");
 		TEXTURE_WIDGETS = new Identifier("minecraft", "textures/gui/advancements/widgets.png");
-		// TEXTURE_BACKGROUND = new Identifier("minecraft", "textures/gui/advancements/window.png");
 	}
 
 	public InfageDeviceScreen(ScreenHandler handler, PlayerInventory inventory, Text title) {
@@ -34,8 +27,6 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		super.init();
 		titleX = (int) (width * InfageStyle.title[0]);
 		titleY = (int) (height * InfageStyle.title[1]);
-		// this.deviceEntity = (DeviceEntity) this.world.getBlockEntity(this.devicePos);
-
 	}
 
 	// 参考 package net.minecraft.client.gui.DrawableHelper;
@@ -78,14 +69,13 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	// 渲染界面
 	@Override
 	public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-		// renderBackground(matrices); // 不需要背景
+		renderBackground(matrices);
 		super.render(matrices, mouseX, mouseY, delta);
 		drawMouseoverTooltip(matrices, mouseX, mouseY);
 	}
 
 	@Override
 	public void tick() {
-
 	}
 
 	/**
