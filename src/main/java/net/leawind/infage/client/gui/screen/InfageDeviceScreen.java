@@ -1,8 +1,15 @@
 package net.leawind.infage.client.gui.screen;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.leawind.infage.blockentity.DeviceEntity;
 import net.leawind.infage.settings.InfageStyle;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.screen.ScreenHandler;
@@ -11,22 +18,57 @@ import net.minecraft.util.Identifier;
 
 // Screen extends DrawableHelper
 public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
+	public static final Logger LOGGER;
 	private static final Identifier TEXTURE_WIDGETS;
 
+	private boolean isRunning = false;
+	private boolean hasItemSlots = false;
+	private ButtonWidget doneButton; // 完成按钮
+	private ButtonWidget powerButton; // 电源按钮
+
 	static {
+		LOGGER = LogManager.getLogger("InfageDeviceScreen");
 		TEXTURE_WIDGETS = new Identifier("minecraft", "textures/gui/advancements/widgets.png");
 	}
 
 	public InfageDeviceScreen(ScreenHandler handler, PlayerInventory inventory, Text title) {
 		super(handler, inventory, title);
+
 	}
 
 	// 在初始化方法中绘制界面
 	@Override
 	public void init() {
 		super.init();
-		titleX = (int) (width * InfageStyle.title[0]);
-		titleY = (int) (height * InfageStyle.title[1]);
+		titleX = (int) (this.width * InfageStyle.title[0]);
+		titleY = (int) (this.height * InfageStyle.title[1]);
+		// 完成按钮
+		this.doneButton = (ButtonWidget) this.addButton(new ButtonWidget(//
+				(int) (this.width * InfageStyle.done[0]), //
+				(int) (this.height * InfageStyle.done[1]), //
+				(int) (this.width * InfageStyle.done[2]), //
+				(int) (this.height * InfageStyle.done[3]), //
+				ScreenTexts.DONE, (buttonWidget) -> {
+					LOGGER.info("Clicked done button.");
+					this.done();
+				}));
+
+		// 电源按钮
+		this.powerButton = (ButtonWidget) this.addButton(new ButtonWidget(//
+				(int) (this.width * InfageStyle.power[0]), //
+				(int) (this.height * InfageStyle.power[1]), //
+				(int) (this.width * InfageStyle.power[2]), //
+				(int) (this.height * InfageStyle.power[3]), //
+				this.isRunning ? ScreenTexts.OFF : ScreenTexts.ON, //
+				(buttonWidget) -> {
+					LOGGER.info("Clicked power button.");
+					this.onTogglePower();
+				}));
+	}
+
+	@Override
+	public void resize(MinecraftClient client, int width, int height) {
+		this.init(client, width, height);
 	}
 
 	// 参考 package net.minecraft.client.gui.DrawableHelper;
@@ -69,14 +111,23 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	// 渲染界面
 	@Override
 	public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-		renderBackground(matrices);
+		this.renderBackground(matrices);
 		super.render(matrices, mouseX, mouseY, delta);
 		drawMouseoverTooltip(matrices, mouseX, mouseY);
 	}
 
-	@Override
-	public void tick() {
+
+	private void done() {
+		this.client.openScreen((Screen) null);
 	}
+
+	private void onTogglePower() {
+		if (this.isRunning) {
+		} else {
+		}
+		this.isRunning = !this.isRunning;
+	}
+
 
 	/**
 	 * 绘制一个带边框的矩形区域
@@ -130,4 +181,5 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		drawTexture(matrices, x, y + b, b, h - 2 * b, u, v + rb, rb, rh - 2 * rb, tw, th); // 左
 		drawTexture(matrices, x + w - b, y + b, b, h - 2 * b, u + rw - rb, v + rb, rb, rh - 2 * rb, tw, th); // 右
 	}
+
 }

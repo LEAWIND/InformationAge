@@ -121,7 +121,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 	@Override
 	// 在服务端调用
 	public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
-		return new InfageDeviceScreenHandler(syncId, this.getPos());
+		return new InfageDeviceScreenHandler(syncId, this.getWorld(), this.getPos());
 	}
 
 	// [NamedScreenHandlerFactory] 界面名称
