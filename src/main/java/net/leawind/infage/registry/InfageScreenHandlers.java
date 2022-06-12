@@ -10,6 +10,6 @@ public class InfageScreenHandlers {
 	public static final ScreenHandlerType<InfageDeviceScreenHandler> DEVICE_SCREEN_HANDLER;
 	static {
 		// https://fabricmc.net/wiki/tutorial:screenhandler?rev=1613658170
-		DEVICE_SCREEN_HANDLER = ScreenHandlerRegistry.registerSimple(new Identifier(DeviceBlock.BLOCK_ID), InfageDeviceScreenHandler::new);
+		DEVICE_SCREEN_HANDLER = ScreenHandlerRegistry.registerExtended(new Identifier(DeviceBlock.BLOCK_ID), InfageDeviceScreenHandler::new);
 	}
 }

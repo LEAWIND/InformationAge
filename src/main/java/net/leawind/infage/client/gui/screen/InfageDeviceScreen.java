@@ -1,9 +1,10 @@
 package net.leawind.infage.client.gui.screen;
 
+import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.leawind.infage.blockentity.DeviceEntity;
+import net.leawind.infage.screen.InfageDeviceScreenHandler;
 import net.leawind.infage.settings.InfageStyle;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -12,17 +13,26 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 
 // Screen extends DrawableHelper
 public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	public static final Logger LOGGER;
 	private static final Identifier TEXTURE_WIDGETS;
-
+	InfageDeviceScreenHandler handler;
+	private UUID playerUUID;
+	private Text displayName;
+	private BlockPos pos;
 	private boolean isRunning = false;
+	private int portsCount;
+	private byte[] portsStatus;
 	private boolean hasItemSlots = false;
+	private ItemStack[] itemsStacks;
+
 	private ButtonWidget doneButton; // 完成按钮
 	private ButtonWidget powerButton; // 电源按钮
 
@@ -33,7 +43,20 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 
 	public InfageDeviceScreen(ScreenHandler handler, PlayerInventory inventory, Text title) {
 		super(handler, inventory, title);
+		this.handler = (InfageDeviceScreenHandler) handler;
+		getAttributesFromHandler(this.handler);
 
+	}
+
+	private void getAttributesFromHandler(InfageDeviceScreenHandler handler) {
+		this.playerUUID = handler.playerUUID;
+		this.displayName = handler.displayName;
+		this.pos = handler.pos;
+		this.isRunning = handler.isRunning;
+		this.portsCount = handler.portsCount;
+		this.portsStatus = handler.portsStatus;
+		this.hasItemSlots = handler.hasItemSlots;
+		this.itemsStacks = handler.itemsStacks;
 	}
 
 	// 在初始化方法中绘制界面
@@ -62,6 +85,11 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 				this.isRunning ? ScreenTexts.OFF : ScreenTexts.ON, //
 				(buttonWidget) -> {
 					LOGGER.info("Clicked power button.");
+					LOGGER.info("!!!!!!!!!!this.displayName = " + this.displayName);
+					LOGGER.info("!!!!!!!!!!this.pos= " + this.pos);
+					LOGGER.info("!!!!!!!!!!this.portCount = " + this.portsCount);
+					LOGGER.info("!!!!!!!!!!this.portStatus length= " + this.portsStatus.length);
+					LOGGER.info("!!!!!!!!!!this.hasItemSlots = " + this.hasItemSlots);
 					this.onTogglePower();
 				}));
 	}

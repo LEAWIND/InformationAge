@@ -3,6 +3,7 @@ package net.leawind.infage.blockentity;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import javax.script.CompiledScript;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.leawind.infage.Infage;
 import net.leawind.infage.exception.InfageDevicePortsNotMatchException;
 import net.leawind.infage.screen.InfageDeviceScreenHandler;
@@ -20,14 +21,19 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.screen.NamedScreenHandlerFactory;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.ScreenHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Tickable;
 import net.minecraft.util.math.BlockPos;
 
-public abstract class DeviceEntity extends BlockEntity implements Tickable, NamedScreenHandlerFactory {
+/**
+ * <ExtendedScreenHandlerFactory> 接口的 writeScreenOpeningData 方法可以在打开方块时向客户端发送数据。 当它请求客户端(client)打开一个
+ * ScreenHandler 时， 将在服务器(server)上调用该方法。 写入 PacketByteBuf 的数据将通过网络传输到客户端(client)。
+ */
+public abstract class DeviceEntity extends BlockEntity implements Tickable, ExtendedScreenHandlerFactory {
 	protected int tickCounter = 0; // tick 游戏刻 计数器
 	public boolean isRunning = false; // 是否已开机
 	protected String consoleOutputs = ""; // 输出缓冲区
@@ -121,7 +127,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 	@Override
 	// 在服务端调用
 	public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
-		return new InfageDeviceScreenHandler(syncId, this.getWorld(), this.getPos());
+		return new InfageDeviceScreenHandler(syncId, playerInventory, this.getWorld(), this.getPos());
 	}
 
 	// [NamedScreenHandlerFactory] 界面名称
@@ -395,5 +401,27 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 			Infage.LOGGER.warn(e);
 		}
 	}
+
+
+	// 当请求客户端(client)打开 screenHandler 时，在服务器(server)上调用此方法
+	// 在此写入 buf 的内容将自动以 数据包 的形式传输到客户端
+	// 并在客户端(client)调用带有 buf 参数的 ScreenHandler 构造函数
+	//
+	// 当玩家打开设备时，发送数据给客户端
+	// <ExtendedScreenHandlerFactory>
+	@Override
+	public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
+		buf.writeUuid(player.getUuid()); // 玩家的 UUID
+		buf.writeText(this.getDisplayName()); // 名称
+		buf.writeBlockPos(this.getPos()); // 方块坐标
+		buf.writeBoolean(this.isRunning); // 设备是否开机
+		buf.writeByte(this.portsCount);// 接口数量
+		buf.writeByteArray(this.portsStatus);// 接口状态
+		buf.writeBoolean(this instanceof ImplementedInventory); // 是否有库存
+		if (this instanceof ImplementedInventory) { // 将库存物品们写进去
+			for (int i = 0; i < InfageSettings.DEVICE_INVENTORY_SIZE; i++)
+				buf.writeItemStack(((ImplementedInventory) this).getStack(i));
+		}
+	};
 }
 
