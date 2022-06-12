@@ -13,21 +13,28 @@ import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 // Screen extends DrawableHelper
 public class InfageDeviceScreen extends Screen {
+	public World world;
 	public DeviceEntity deviceEntity;
+	public BlockPos blockPos;
+
 	public static final Logger LOGGER;
 
 	private boolean isRunning = false;
 	private boolean hasItemSlots = false;
 
-	private TextFieldWidget codeField;
-	private TextFieldWidget outputsField;
-	private ButtonWidget doneButton;
-	private ButtonWidget powerButton;
+	private TextFieldWidget codeField; // 代码域
+	private TextFieldWidget outputsField; // 输出域
 
+	private ButtonWidget doneButton; // 完成按钮
+	private ButtonWidget powerButton; // 电源按钮
+	private ButtonWidget[] portsButtons; // 接口按钮们
 
 	static {
 		LOGGER = LogManager.getLogger("InfageDeviceScreen");
@@ -36,7 +43,12 @@ public class InfageDeviceScreen extends Screen {
 	public InfageDeviceScreen(DeviceEntity deviceEntity) {
 		super(new TranslatableText(deviceEntity.getCachedState().getBlock().getTranslationKey()));
 		this.deviceEntity = deviceEntity;
+		this.blockPos = deviceEntity.getPos();
+		this.world = deviceEntity.getWorld();
+
+
 		this.hasItemSlots = this.deviceEntity instanceof ImplementedInventory;
+		this.portsButtons = new ButtonWidget[this.deviceEntity.portsCount]; // 初始化接口按钮数组
 	}
 
 	@Override
@@ -95,13 +107,7 @@ public class InfageDeviceScreen extends Screen {
 					this.isRunning ? InfageTexts.SHUT_DOWN : InfageTexts.BOOT, //
 					(buttonWidget) -> {
 						LOGGER.info("Clicked power button.");
-						if (this.deviceEntity.isRunning) {
-							this.updateDeviceBlock(DeviceEntity.Action.SHUT_DOWN);
-							this.deviceEntity.device_shutdown();
-						} else {
-							this.updateDeviceBlock(DeviceEntity.Action.BOOT);
-							this.deviceEntity.device_boot();
-						}
+						this.onTogglePower();
 					}));
 		}
 
@@ -111,13 +117,29 @@ public class InfageDeviceScreen extends Screen {
 		}
 
 		// TODO 端口按钮们
-		for (int i = 0; i < this.deviceEntity.portsCount; i++) {
-
+		for (int i = 0; i < this.getEntity().portsCount; i++) {
+			ButtonWidget portButton = (ButtonWidget) this.addButton(new ButtonWidget(//
+					this.width - (int) (this.width * InfageStyle.ports[0]), // x
+					this.height - (int) (this.height * InfageStyle.ports[1] * (i + 1)), // y
+					(int) (this.width * InfageStyle.ports[0]), // w
+					(int) (this.height * InfageStyle.ports[1]), // h
+					this.isRunning ? InfageTexts.SHUT_DOWN : InfageTexts.BOOT, //
+					(buttonWidget) -> {
+						LOGGER.info("Clicked port button ");
+						for (int j = 0; j < this.portsButtons.length; j++) {
+							if (this.portsButtons[j] == buttonWidget) {
+								this.onClickPortButton(j);
+								break;
+							}
+						}
+					}));
+			portButton.setMessage(new LiteralText("P " + i + "    "));
+			this.portsButtons[i] = portButton;
 		}
-
 
 		this.setInitialFocus(this.codeField);
 	}
+
 
 	@Override
 	public void resize(MinecraftClient client, int width, int height) {
@@ -136,16 +158,14 @@ public class InfageDeviceScreen extends Screen {
 		super.render(matrices, mouseX, mouseY, delta);
 	}
 
+	private DeviceEntity getEntity() {
+		return (DeviceEntity) this.world.getBlockEntity(this.blockPos);
+	}
+
 	// 更新
 	private boolean updateDeviceBlock(DeviceEntity.Action action) {
 		// TODO 发送数据包通知服务器更新
 		return true;
-	}
-
-	// 按下电源键
-	public void togglePower() {
-		if (this.deviceEntity != null)
-			this.isRunning = this.deviceEntity.togglePower();
 	}
 
 	// 结束
@@ -155,4 +175,22 @@ public class InfageDeviceScreen extends Screen {
 		}
 	}
 
+	// TODO 按下电源键
+	public void onTogglePower() {
+		DeviceEntity deviceEntity = this.getEntity();
+		if (deviceEntity.isRunning) {
+			this.updateDeviceBlock(DeviceEntity.Action.SHUT_DOWN);
+			deviceEntity.device_shutdown();
+		} else {
+			this.updateDeviceBlock(DeviceEntity.Action.BOOT);
+			deviceEntity.device_boot();
+		}
+	}
+
+
+
+	// TODO 按下接口按钮
+	private void onClickPortButton(int j) {
+		LOGGER.info("Port button clicked: " + j);
+	}
 }
