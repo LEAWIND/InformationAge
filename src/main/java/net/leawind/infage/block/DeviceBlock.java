@@ -135,9 +135,8 @@ public abstract class DeviceBlock extends BlockWithEntity {
 		try {
 			if (player == null || player.isSpectator() || world == null || hitResult == null) // 如果任意参数为 null 或玩家处于旁观者模式，则不处理
 				return ActionResult.PASS;
-			BlockState blockstate = world.getBlockState(pos); // 根据坐标获取 blockState
-			Block block = blockstate.getBlock(); // 由 blockState 获取方块对象
-			if (block instanceof DeviceBlock) { // TODO DeviceEntity?
+			BlockEntity blockEntity = world.getBlockEntity(pos);
+			if (blockEntity instanceof DeviceEntity) {
 				if (!world.isClient) { // 服务端
 					NamedScreenHandlerFactory screenHandlerFactory = this.createScreenHandlerFactory(state, world, pos);
 					if (screenHandlerFactory != null) {

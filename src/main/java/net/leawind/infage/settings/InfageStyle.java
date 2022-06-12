@@ -8,6 +8,6 @@ public class InfageStyle {
 	public static double power[] = {0.50, 0.00, 0.25, 0.05}; // 电源按钮 位置
 	public static double done[] = {0.75, 0.00, 0.25, 0.05}; // 完成按钮 位置
 
-	public static final double ports[] = {0.10, 0.07}; // 端口按钮 宽高
+	public static final double ports[] = {0.10, 0.05}; // 端口按钮 宽高
 	public static final int portsCountPerLine = 4; // 每行多少个端口按钮
 }

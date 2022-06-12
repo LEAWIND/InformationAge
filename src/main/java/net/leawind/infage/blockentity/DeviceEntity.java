@@ -109,6 +109,11 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 		this.storageSize = tag.getInt("storageSize");
 		this.portsCount = tag.getInt("portsCount");
 
+		// 根据 InfageSettings 配置进行范围检查
+		this.portsCount = Math.max(InfageSettings.Limit.PORTS_COUNT[0], Math.min(InfageSettings.Limit.PORTS_COUNT[1], this.portsCount));
+		this.storageSize = Math.max(InfageSettings.Limit.STORAGE_SIZE[0], Math.min(InfageSettings.Limit.STORAGE_SIZE[1], this.storageSize));
+
+
 		this.setOutputs(tag.getString("consoleOutputs"));
 		this.setScirpt_tick(tag.getString("script_tick"));
 
@@ -121,6 +126,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 
 		this.sendCaches = Others.arrayFrom(DataEncoding.decodeStringArray(tag.getString("sendCaches")), this.portsCount);
 		this.receiveCaches = Others.arrayFrom(DataEncoding.decodeStringArray(tag.getString("receiveCaches")), this.portsCount);
+		this.db_checkPortsCount();
 	}
 
 	// [ScreenHandlerFactory] 创建 ScreenHandler
@@ -221,9 +227,10 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 		if (arr == null || arr.length == 0) {
 			Arrays.fill(this.portsStatus, (byte) 0);
 		} else {
-			if (arr.length < this.portsCount)
-				Arrays.fill(this.portsStatus, arr.length, this.portsCount, (byte) 0);
-			System.arraycopy(arr, 0, this.portsStatus, 0, arr.length);
+			this.portsStatus = Arrays.copyOf(arr, this.portsCount);
+			// if (arr.length < this.portsCount)
+			// Arrays.fill(this.portsStatus, arr.length, this.portsCount, (byte) 0);
+			// System.arraycopy(arr, 0, this.portsStatus, 0, arr.length);
 		}
 	}
 
@@ -234,9 +241,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 		if (arr == null || arr.length == 0) {
 			Arrays.fill(this.storage, (byte) 0);
 		} else {
-			if (arr.length < this.storageSize)
-				Arrays.fill(this.storage, arr.length, this.storageSize, (byte) 0);
-			System.arraycopy(arr, 0, this.storage, 0, this.storageSize);
+			this.storage = Arrays.copyOf(arr, this.storageSize);
 		}
 	}
 

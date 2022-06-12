@@ -1,6 +1,10 @@
 package net.leawind.infage.settings;
 
 public class InfageSettings {
+	public static final class Limit {
+		public static final int[] PORTS_COUNT = {1, 15};
+		public static final int[] STORAGE_SIZE = {8, 8192};
+	}
 	public static final int AVAILABLE_PROCESSORS; // 处理器可用逻辑核心数
 
 	public static final String NAMESPACE; // 命名空间
@@ -20,10 +24,10 @@ public class InfageSettings {
 		AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
 		EXEC_THREAD_COUNT = (int) (AVAILABLE_PROCESSORS * 0.7 + 1);
 		COMPILE_THREAD_COUNT = (int) (AVAILABLE_PROCESSORS * 0.2 + 1);
-		MAX_SCRIPT_SIZE = 20479;
 		MAX_TRANSMISSION_UNIT = 768;
 		OUTPUTS_SIZE = 2048;
 		DEVICE_INVENTORY_SIZE = 4;
+		MAX_SCRIPT_SIZE = 20479;
 
 		AVAILABLE_SLOTS = new int[DEVICE_INVENTORY_SIZE];
 		for (int i = 0; i < DEVICE_INVENTORY_SIZE; i++)
