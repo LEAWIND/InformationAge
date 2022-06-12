@@ -3,8 +3,8 @@ package net.leawind.infage.client.gui.screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import net.leawind.infage.blockentity.DeviceEntity;
-import net.leawind.infage.blockentity.ImplementedInventory;
 import net.leawind.infage.client.gui.widget.MultilineTextFieldWidget;
+import net.leawind.infage.network.UpdateDeviceC2SPacket;
 import net.leawind.infage.settings.InfageStyle;
 import net.leawind.infage.settings.InfageTexts;
 import net.minecraft.client.MinecraftClient;
@@ -14,20 +14,19 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
 // Screen extends DrawableHelper
 public class InfageDeviceScreen extends Screen {
-	public World world;
-	public DeviceEntity deviceEntity;
 	public BlockPos blockPos;
 
 	public static final Logger LOGGER;
 
 	private boolean isRunning = false;
 	private boolean hasItemSlots = false;
+	private int portsCount = 0;
 
 	private TextFieldWidget codeField; // 代码域
 	private TextFieldWidget outputsField; // 输出域
@@ -36,19 +35,18 @@ public class InfageDeviceScreen extends Screen {
 	private ButtonWidget powerButton; // 电源按钮
 	private ButtonWidget[] portsButtons; // 接口按钮们
 
+	private byte[] portsStatus; // 接口状态
+
 	static {
 		LOGGER = LogManager.getLogger("InfageDeviceScreen");
 	}
 
-	public InfageDeviceScreen(DeviceEntity deviceEntity) {
-		super(new TranslatableText(deviceEntity.getCachedState().getBlock().getTranslationKey()));
-		this.deviceEntity = deviceEntity;
-		this.blockPos = deviceEntity.getPos();
-		this.world = deviceEntity.getWorld();
-
-
-		this.hasItemSlots = this.deviceEntity instanceof ImplementedInventory;
-		this.portsButtons = new ButtonWidget[this.deviceEntity.portsCount]; // 初始化接口按钮数组
+	public InfageDeviceScreen(BlockPos pos, Text text) {
+		// deviceEntity.getCachedState().getBlock().getTranslationKey())
+		super(text);
+		this.blockPos = pos;
+		this.portsButtons = new ButtonWidget[this.portsCount]; // 初始化接口按钮数组
+		this.act(DeviceEntity.Action.GET_DATA); // 从服务器获取数据
 	}
 
 	@Override
@@ -85,39 +83,38 @@ public class InfageDeviceScreen extends Screen {
 		}
 
 		// 完成按钮
-		{
-			this.doneButton = (ButtonWidget) this.addButton(new ButtonWidget(//
-					(int) (this.width * InfageStyle.done[0]), //
-					(int) (this.height * InfageStyle.done[1]), //
-					(int) (this.width * InfageStyle.done[2]), //
-					(int) (this.height * InfageStyle.done[3]), //
-					ScreenTexts.DONE, (buttonWidget) -> {
-						LOGGER.info("Clicked done button.");
-						this.done();
-					}));
-		}
+		this.doneButton = (ButtonWidget) this.addButton(new ButtonWidget(//
+				(int) (this.width * InfageStyle.done[0]), //
+				(int) (this.height * InfageStyle.done[1]), //
+				(int) (this.width * InfageStyle.done[2]), //
+				(int) (this.height * InfageStyle.done[3]), //
+				ScreenTexts.DONE, (buttonWidget) -> {
+					LOGGER.info("Clicked done button.");
+					this.done();
+				}));
 
 		// 电源按钮
-		{
-			this.powerButton = (ButtonWidget) this.addButton(new ButtonWidget(//
-					(int) (this.width * InfageStyle.power[0]), //
-					(int) (this.height * InfageStyle.power[1]), //
-					(int) (this.width * InfageStyle.power[2]), //
-					(int) (this.height * InfageStyle.power[3]), //
-					this.isRunning ? InfageTexts.SHUT_DOWN : InfageTexts.BOOT, //
-					(buttonWidget) -> {
-						LOGGER.info("Clicked power button.");
-						this.onTogglePower();
-					}));
-		}
+		this.powerButton = (ButtonWidget) this.addButton(new ButtonWidget(//
+				(int) (this.width * InfageStyle.power[0]), //
+				(int) (this.height * InfageStyle.power[1]), //
+				(int) (this.width * InfageStyle.power[2]), //
+				(int) (this.height * InfageStyle.power[3]), //
+				this.isRunning ? InfageTexts.SHUT_DOWN : InfageTexts.BOOT, //
+				(buttonWidget) -> {
+					LOGGER.info("Clicked power button.");
+					this.onTogglePower();
+				}));
 
 		// TODO 可能存在的物品槽
 		if (this.hasItemSlots) {
-
+			for (int i = 0; i < 2; i++) {
+				for (int j = 0; j < 2; j++) {
+				}
+			}
 		}
 
 		// TODO 端口按钮们
-		for (int i = 0; i < this.getEntity().portsCount; i++) {
+		for (int i = 0; i < this.portsCount; i++) {
 			ButtonWidget portButton = (ButtonWidget) this.addButton(new ButtonWidget(//
 					this.width - (int) (this.width * InfageStyle.ports[0]), // x
 					this.height - (int) (this.height * InfageStyle.ports[1] * (i + 1)), // y
@@ -158,33 +155,42 @@ public class InfageDeviceScreen extends Screen {
 		super.render(matrices, mouseX, mouseY, delta);
 	}
 
-	private DeviceEntity getEntity() {
-		return (DeviceEntity) this.world.getBlockEntity(this.blockPos);
-	}
-
 	// 更新
-	private boolean updateDeviceBlock(DeviceEntity.Action action) {
-		// TODO 发送数据包通知服务器更新
+	private boolean act(DeviceEntity.Action action, int... args) {
+		// TODO 发送数据包给服务器
+		switch (action) {
+			case GET_DATA:
+				break;
+			case BOOT:
+			case SHUT_DOWN:
+				break;
+			case DISCONNECT:
+				break;
+			case CONNECT:
+				break;
+			case UPDATE_DATA:
+				break;
+			case UPDATE_SCRIPT:
+				break;
+		}
+		// this.client.getNetworkHandler().sendPacket(new UpdateDeviceC2SPacket(action));
 		return true;
 	}
 
 	// 结束
 	public void done() {
-		if (this.updateDeviceBlock(DeviceEntity.Action.UPDATE_DATA)) {
-			this.client.openScreen((Screen) null);
-		}
+		this.act(DeviceEntity.Action.UPDATE_DATA);
+		this.client.openScreen((Screen) null);
 	}
 
 	// TODO 按下电源键
 	public void onTogglePower() {
-		DeviceEntity deviceEntity = this.getEntity();
-		if (deviceEntity.isRunning) {
-			this.updateDeviceBlock(DeviceEntity.Action.SHUT_DOWN);
-			deviceEntity.device_shutdown();
+		if (this.isRunning) {
+			this.act(DeviceEntity.Action.SHUT_DOWN);
 		} else {
-			this.updateDeviceBlock(DeviceEntity.Action.BOOT);
-			deviceEntity.device_boot();
+			this.act(DeviceEntity.Action.BOOT);
 		}
+		this.isRunning = !this.isRunning;
 	}
 
 
@@ -192,5 +198,12 @@ public class InfageDeviceScreen extends Screen {
 	// TODO 按下接口按钮
 	private void onClickPortButton(int j) {
 		LOGGER.info("Port button clicked: " + j);
+		if (this.portsStatus[j] < 0) {
+			this.act(DeviceEntity.Action.CONNECT, j);
+		} else {
+			this.act(DeviceEntity.Action.DISCONNECT);
+			this.portsStatus[j] = -1;
+		}
 	}
+
 }

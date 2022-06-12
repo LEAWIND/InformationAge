@@ -24,6 +24,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Tickable;
@@ -407,13 +408,15 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 		if (world.isClient) {
 			// ClientPlayerEntity.openStructureBlockScreen:
 			// this.client.openScreen(new StructureBlockScreen(structureBlockEntity));
-			MinecraftClient.getInstance().openScreen(new InfageDeviceScreen(this));
+			Text text = new LiteralText(this.getCachedState().getBlock().getTranslationKey());
+			MinecraftClient.getInstance().openScreen(new InfageDeviceScreen(this.getPos(), text));
 		}
 		return true;
 	}
 
 	// 行为
-	public enum Action {
+	public static enum Action {
+		GET_DATA, // 获取所有状态
 		UPDATE_DATA, // 更新所有状态
 		UPDATE_SCRIPT, // 更新脚本
 		SHUT_DOWN, // 要求关机
@@ -421,5 +424,6 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Name
 		CONNECT, // 点击了一个未连接的接口, 连接其他设备
 		DISCONNECT, // 点击了一个已连接的接口，断开它
 	}
+
 }
 
