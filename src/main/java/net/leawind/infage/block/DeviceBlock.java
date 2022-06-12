@@ -130,17 +130,19 @@ public abstract class DeviceBlock extends BlockWithEntity {
 		return null;
 	}
 
+	// 玩家使用方块
 	@Override
 	public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hitResult) {
 		try {
 			if (player == null || player.isSpectator() || world == null || hitResult == null) // 如果任意参数为 null 或玩家处于旁观者模式，则不处理
 				return ActionResult.PASS;
 			BlockEntity blockEntity = world.getBlockEntity(pos);
-			if (blockEntity instanceof DeviceEntity) {
+			if (blockEntity instanceof DeviceEntity) { // 如果是设备方块实体
 				if (!world.isClient) { // 服务端
 					NamedScreenHandlerFactory screenHandlerFactory = this.createScreenHandlerFactory(state, world, pos);
 					if (screenHandlerFactory != null) {
-						player.openHandledScreen(screenHandlerFactory); // 这个调用会让服务器请求客户端开启合适的 Screenhandler
+						player.openHandledScreen(screenHandlerFactory); // 告诉客户端开启对应的 Screenhandler
+						// 由于初始化时在 ScreenHandlerRegistry 中注册过设备方块的 ScreenHandler 了，所以服务端能够找到对应的 ScreenHandler
 					}
 				}
 			}

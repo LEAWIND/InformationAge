@@ -1,6 +1,5 @@
-package net.leawind.infage.screen;
+package net.leawind.infage.screenhandler;
 
-import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import net.leawind.infage.blockentity.DeviceEntity;
@@ -10,27 +9,17 @@ import net.leawind.infage.settings.InfageSettings;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class InfageDeviceScreenHandler extends ScreenHandler {
 	public static final Logger LOGGER = LogManager.getLogger("InfageDeviceScreenHandler");
+	public PacketByteBuf buf;
 	private Inventory inventory;
-
-	public UUID playerUUID;
-	public Text displayName;
 	public BlockPos pos;
-	public boolean isRunning;
-	public int portsCount;
-	public byte[] portsStatus;
-	public boolean hasItemSlots;
-	public ItemStack[] itemsStacks;
-
 	private DeviceEntity deviceEntity;
 
 	// 服务器想要客户端开启 screenHandler 时，客户端调用这个构造器
@@ -38,7 +27,8 @@ public class InfageDeviceScreenHandler extends ScreenHandler {
 	// 客户端回用一个空的物品栏调用另一个构造器，然后 screenHandler 会自动用服务器端的物品栏同步这个空物品栏
 	public InfageDeviceScreenHandler(int syncId, PlayerInventory playerInventory, PacketByteBuf buf) {
 		this(syncId, playerInventory, null, null);
-		this.readScreenOpeningData(buf);
+		// this.readScreenOpeningData(buf);
+		this.buf = buf;
 	}
 
 	// 此构造函数从服务器上的 BlockEntity 调用，服务器知道容器的库存(你可以将它理解为物品栏)
@@ -56,28 +46,12 @@ public class InfageDeviceScreenHandler extends ScreenHandler {
 		}
 	}
 
+	public PacketByteBuf getBuf() {
+		return this.buf;
+	}
+
 	@Override
 	public boolean canUse(PlayerEntity player) {
 		return true;
-	}
-
-	public BlockPos getBlockPos() {
-		return this.pos;
-	}
-
-	// 从服务端发过来了一段字节流，从中读取本方块实体的数据
-	public void readScreenOpeningData(PacketByteBuf buf) {
-		this.playerUUID = buf.readUuid();
-		this.displayName = buf.readText();
-		this.pos = buf.readBlockPos();
-		this.isRunning = buf.readBoolean();
-		this.portsCount = buf.readByte();
-		this.portsStatus = buf.readByteArray();
-		this.hasItemSlots = buf.readBoolean();
-		if (this.hasItemSlots) {
-			this.itemsStacks = new ItemStack[InfageSettings.DEVICE_INVENTORY_SIZE];
-			for (int i = 0; i < InfageSettings.DEVICE_INVENTORY_SIZE; i++)
-				this.itemsStacks[i] = buf.readItemStack();
-		}
 	}
 }

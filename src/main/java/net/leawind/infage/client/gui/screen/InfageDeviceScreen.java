@@ -6,7 +6,8 @@ import org.apache.logging.log4j.Logger;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.leawind.infage.blockentity.DeviceEntity;
 import net.leawind.infage.client.gui.widget.MultilineTextFieldWidget;
-import net.leawind.infage.screen.InfageDeviceScreenHandler;
+import net.leawind.infage.screenhandler.InfageDeviceScreenHandler;
+import net.leawind.infage.settings.InfageSettings;
 import net.leawind.infage.settings.InfageStyle;
 import net.leawind.infage.settings.InfageTexts;
 import net.minecraft.client.MinecraftClient;
@@ -18,6 +19,7 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
@@ -27,13 +29,15 @@ import net.minecraft.util.math.BlockPos;
 
 // Screen extends DrawableHelper
 public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
-	public static final Logger LOGGER;
-	private static final Identifier TEXTURE_WIDGETS;
+	public static final Logger LOGGER = LogManager.getLogger("InfageDeviceScreen");;
+	private static final Identifier TEXTURE_WIDGETS = new Identifier("minecraft", "textures/gui/advancements/widgets.png");;
 	InfageDeviceScreenHandler handler;
 	private UUID playerUUID; // 玩家 uuid
 	private Text displayName; // 显示的设备名称
 	private BlockPos pos; // 设备方块位置
 	private boolean isRunning = false;
+	private String script_tick = ""; // 脚本
+	private String consoleOutputs = ""; // 输出
 	private int portsCount; // 接口数量
 	private byte[] portsStatus; // 接口状态
 	private boolean hasItemSlots = false; // 是否有物品槽
@@ -45,29 +49,13 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	public ButtonWidget powerButton; // 电源按钮
 	private ButtonWidget[] portsButtons; // 接口按钮们
 
-	static {
-		LOGGER = LogManager.getLogger("InfageDeviceScreen");
-		TEXTURE_WIDGETS = new Identifier("minecraft", "textures/gui/advancements/widgets.png");
-	}
-
 	public InfageDeviceScreen(ScreenHandler handler, PlayerInventory inventory, Text title) {
 		super(handler, inventory, title);
 		this.handler = (InfageDeviceScreenHandler) handler;
-		getAttributesFromHandler(this.handler); // 从 handler 读取方块数据
+		// this.getAttributesFromHandler(this.handler); // 从 handler 读取方块数据
+		this.readScreenOpeningData(this.handler.getBuf()); // 从 handler.packetByteBuf 读取方块数据
 		this.portsButtons = new ButtonWidget[this.portsCount]; // 初始化接口按钮数组
 	}
-
-	private void getAttributesFromHandler(InfageDeviceScreenHandler handler) {
-		this.playerUUID = handler.playerUUID;
-		this.displayName = handler.displayName;
-		this.pos = handler.pos;
-		this.isRunning = handler.isRunning;
-		this.portsCount = handler.portsCount;
-		this.portsStatus = handler.portsStatus;
-		this.hasItemSlots = handler.hasItemSlots;
-		this.itemsStacks = handler.itemsStacks;
-	}
-
 
 	@Override
 	public void tick() {
@@ -126,6 +114,8 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 				this.isRunning ? InfageTexts.SHUT_DOWN : InfageTexts.BOOT, //
 				(buttonWidget) -> {
 					LOGGER.info("Clicked power button.");
+					LOGGER.info("this.portsCount = " + this.portsCount);
+					LOGGER.info("this.isRunning = " + this.isRunning);
 					this.onTogglePower();
 				}));
 
@@ -133,7 +123,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		if (this.hasItemSlots) {
 			for (int i = 0; i < 2; i++) {
 				for (int j = 0; j < 2; j++) {
-					
+
 				}
 			}
 		}
@@ -171,38 +161,6 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	// 参考 package net.minecraft.client.gui.DrawableHelper;
 	@Override
 	protected void drawBackground(MatrixStack matrices, float delta, int mouseX, int mouseY) {
-		// 代码文本域
-		drawBorder(matrices, //
-				(int) (InfageStyle.code[0] * width), //
-				(int) (InfageStyle.code[1] * height), //
-				(int) (InfageStyle.code[2] * width), //
-				(int) (InfageStyle.code[3] * height), //
-				2, true//
-		);
-		// 输出文本域
-		drawBorder(matrices, //
-				(int) (InfageStyle.outputs[0] * width), //
-				(int) (InfageStyle.outputs[1] * height), //
-				(int) (InfageStyle.outputs[2] * width), //
-				(int) (InfageStyle.outputs[3] * height), //
-				2, true//
-		);
-		// 电源按钮
-		drawBorder(matrices, //
-				(int) (InfageStyle.power[0] * width), //
-				(int) (InfageStyle.power[1] * height), //
-				(int) (InfageStyle.power[2] * width), //
-				(int) (InfageStyle.power[3] * height), //
-				2, true//
-		);
-		// 完成按钮
-		drawBorder(matrices, //
-				(int) (InfageStyle.done[0] * width), //
-				(int) (InfageStyle.done[1] * height), //
-				(int) (InfageStyle.done[2] * width), //
-				(int) (InfageStyle.done[3] * height), //
-				2, true//
-		);
 	}
 
 	// 渲染界面
@@ -215,26 +173,43 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		drawMouseoverTooltip(matrices, mouseX, mouseY);
 	}
 
-	// 更新
+	// TODO 发送数据包给服务器
 	private boolean act(DeviceEntity.Action action, int... args) {
-		// TODO 发送数据包给服务器
 		switch (action) {
-			case GET_DATA:
+			case GET_DATA: // 请求获取最新数据
 				break;
-			case BOOT:
-			case SHUT_DOWN:
+			case BOOT: // 启动设备
+			case SHUT_DOWN: // 关闭设备
 				break;
-			case DISCONNECT:
+			case DISCONNECT: // 断开指定端口
 				break;
-			case CONNECT:
+			case CONNECT: // 玩家希望连接指定端口
 				break;
-			case UPDATE_DATA:
+			case UPDATE_DATA: // 更新数据
 				break;
-			case UPDATE_SCRIPT:
+			case UPDATE_SCRIPT: // 更新脚本
 				break;
 		}
 		// this.client.getNetworkHandler().sendPacket(new UpdateDeviceC2SPacket(action));
 		return true;
+	}
+
+	// 将服务端发过来的字节流，解析为本方块实体的数据
+	public void readScreenOpeningData(PacketByteBuf buf) {
+		this.playerUUID = buf.readUuid();
+		this.displayName = buf.readText();
+		this.pos = buf.readBlockPos();
+		this.isRunning = buf.readBoolean();
+		this.script_tick = buf.readString();
+		this.consoleOutputs = buf.readString();
+		this.portsCount = buf.readByte();
+		this.portsStatus = buf.readByteArray();
+		this.hasItemSlots = buf.readBoolean();
+		if (this.hasItemSlots) {
+			this.itemsStacks = new ItemStack[InfageSettings.DEVICE_INVENTORY_SIZE];
+			for (int i = 0; i < InfageSettings.DEVICE_INVENTORY_SIZE; i++)
+				this.itemsStacks[i] = buf.readItemStack();
+		}
 	}
 
 	// 完成，更新数据并退出
@@ -263,6 +238,8 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 			this.portsStatus[j] = -1;
 		}
 	}
+
+
 
 	/**
 	 * 绘制一个带边框的矩形区域

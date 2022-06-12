@@ -6,7 +6,7 @@ import javax.script.CompiledScript;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.leawind.infage.Infage;
 import net.leawind.infage.exception.InfageDevicePortsNotMatchException;
-import net.leawind.infage.screen.InfageDeviceScreenHandler;
+import net.leawind.infage.screenhandler.InfageDeviceScreenHandler;
 import net.leawind.infage.script.CompileStatus;
 import net.leawind.infage.script.ScriptHelper;
 import net.leawind.infage.script.mtt.CompileTask;
@@ -423,6 +423,8 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 		buf.writeText(this.getDisplayName()); // 名称
 		buf.writeBlockPos(this.getPos()); // 方块坐标
 		buf.writeBoolean(this.isRunning); // 设备是否开机
+		buf.writeString(this.script_tick);// 脚本代码
+		buf.writeString(this.consoleOutputs);// 输出
 		buf.writeByte(this.portsCount);// 接口数量
 		buf.writeByteArray(this.portsStatus);// 接口状态
 		buf.writeBoolean(this instanceof ImplementedInventory); // 是否有库存
