@@ -24,17 +24,17 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	public static final Logger LOGGER;
 	private static final Identifier TEXTURE_WIDGETS;
 	InfageDeviceScreenHandler handler;
-	private UUID playerUUID;
-	private Text displayName;
-	private BlockPos pos;
+	private UUID playerUUID; // 玩家 uuid
+	private Text displayName; // 显示的设备名称
+	private BlockPos pos; // 设备方块位置
 	private boolean isRunning = false;
-	private int portsCount;
-	private byte[] portsStatus;
-	private boolean hasItemSlots = false;
-	private ItemStack[] itemsStacks;
+	private int portsCount; // 接口数量
+	private byte[] portsStatus; // 接口状态
+	private boolean hasItemSlots = false; // 是否有物品槽
+	private ItemStack[] itemsStacks; // 物品槽们
 
-	private ButtonWidget doneButton; // 完成按钮
-	private ButtonWidget powerButton; // 电源按钮
+	public ButtonWidget doneButton; // 完成按钮
+	public ButtonWidget powerButton; // 电源按钮
 
 	static {
 		LOGGER = LogManager.getLogger("InfageDeviceScreen");
@@ -85,11 +85,6 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 				this.isRunning ? ScreenTexts.OFF : ScreenTexts.ON, //
 				(buttonWidget) -> {
 					LOGGER.info("Clicked power button.");
-					LOGGER.info("!!!!!!!!!!this.displayName = " + this.displayName);
-					LOGGER.info("!!!!!!!!!!this.pos= " + this.pos);
-					LOGGER.info("!!!!!!!!!!this.portCount = " + this.portsCount);
-					LOGGER.info("!!!!!!!!!!this.portStatus length= " + this.portsStatus.length);
-					LOGGER.info("!!!!!!!!!!this.hasItemSlots = " + this.hasItemSlots);
 					this.onTogglePower();
 				}));
 	}
@@ -144,11 +139,12 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		drawMouseoverTooltip(matrices, mouseX, mouseY);
 	}
 
-
+	// 完成，更新数据并退出
 	private void done() {
 		this.client.openScreen((Screen) null);
 	}
 
+	// 按下电源键
 	private void onTogglePower() {
 		if (this.isRunning) {
 		} else {
@@ -200,10 +196,8 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		drawTexture(matrices, x, y + h - b, b, b, u, v + rh - rb, rb, rb, tw, th); // 左下
 		drawTexture(matrices, x + w - b, y, b, b, u + rw - rb, v, rb, rb, tw, th); // 右上
 		drawTexture(matrices, x + w - b, y + h - b, b, b, u + rw - rb, v + rh - rb, rb, rb, tw, th); // 右下
-
 		if (doFill)
 			drawTexture(matrices, x + b, y + b, w - 2 * b, h - 2 * b, u + rb, v + rb, rw - 2 * rb, rh - 2 * rb, tw, th); // 中
-
 		drawTexture(matrices, x + b, y, w - 2 * b, b, u + rb, v, rw - 2 * rb, rb, tw, th); // 上
 		drawTexture(matrices, x + b, y + h - b, w - 2 * b, b, u + rb, v + rh - rb, rw - 2 * rb, rb, tw, th); // 下
 		drawTexture(matrices, x, y + b, b, h - 2 * b, u, v + rb, rb, rh - 2 * rb, tw, th); // 左

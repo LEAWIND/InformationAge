@@ -65,7 +65,7 @@ public class InfageDeviceScreenHandler extends ScreenHandler {
 		return this.pos;
 	}
 
-
+	// 从服务端发过来了一段字节流，从中读取本方块实体的数据
 	public void readScreenOpeningData(PacketByteBuf buf) {
 		this.playerUUID = buf.readUuid();
 		this.displayName = buf.readText();
