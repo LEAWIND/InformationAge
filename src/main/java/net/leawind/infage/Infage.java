@@ -19,7 +19,6 @@ import net.leawind.infage.registry.InfageBlockEntities;
 import net.leawind.infage.registry.InfageBlocks;
 import net.leawind.infage.registry.InfageItemGroups;
 import net.leawind.infage.registry.InfageItems;
-import net.leawind.infage.registry.InfageScreenHandlers;
 import net.leawind.infage.script.ScriptHelper;
 import net.leawind.infage.settings.InfageSettings;
 
@@ -52,7 +51,7 @@ public class Infage implements ModInitializer {
 		new InfageBlockEntities();
 
 		// 注册屏幕处理器
-		new InfageScreenHandlers();
+		// new InfageScreenHandlers();
 	}
 
 	@Override

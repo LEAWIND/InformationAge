@@ -137,13 +137,12 @@ public abstract class DeviceBlock extends BlockWithEntity {
 				return ActionResult.PASS;
 			BlockState blockstate = world.getBlockState(pos); // 根据坐标获取 blockState
 			Block block = blockstate.getBlock(); // 由 blockState 获取方块对象
-			if (block instanceof DeviceBlock) {
+			if (block instanceof DeviceBlock) { // TODO DeviceEntity?
 				if (!world.isClient) { // 服务端
 					NamedScreenHandlerFactory screenHandlerFactory = this.createScreenHandlerFactory(state, world, pos);
 					if (screenHandlerFactory != null) {
 						player.openHandledScreen(screenHandlerFactory); // 这个调用会让服务器请求客户端开启合适的 Screenhandler
 					}
-					return ActionResult.SUCCESS;
 				}
 			}
 		} catch (Exception e) {

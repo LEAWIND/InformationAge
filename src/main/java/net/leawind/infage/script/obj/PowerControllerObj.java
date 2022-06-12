@@ -7,7 +7,6 @@ public class PowerControllerObj extends DeviceObj {
 	public static final String type = PowerController.BLOCK_ID;
 	public int powerLevel;
 
-	// TODO
 	public PowerControllerObj(DeviceEntity blockEntity) {
 		super(blockEntity);
 		this.powerLevel = 0;
