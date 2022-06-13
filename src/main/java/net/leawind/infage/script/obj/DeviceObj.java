@@ -9,7 +9,7 @@ public class DeviceObj {
 	public static final String type = DeviceBlock.BLOCK_ID;
 	public int storageSize;
 	public byte[] storage;
-	public boolean[] portsStatus;
+	public boolean[] portStates;
 	public String[] inData;
 	public String[] dataToSend;
 	public String outputs;
@@ -17,11 +17,11 @@ public class DeviceObj {
 	public DeviceObj(DeviceEntity that) {
 		this.storageSize = that.storageSize;
 		this.storage = Arrays.copyOf(that.storage, that.storageSize);
-		this.portsStatus = new boolean[that.portsCount];
+		this.portStates = new boolean[that.portsCount];
 		this.inData = Arrays.copyOf(that.sendCaches, that.portsCount);
 
 		for (int i = 0; i < that.portsCount; i++)
-			this.portsStatus[i] = that.portsStatus[i] >= 0;
+			this.portStates[i] = that.portStates[i] >= 0;
 	}
 
 	// 输出信息

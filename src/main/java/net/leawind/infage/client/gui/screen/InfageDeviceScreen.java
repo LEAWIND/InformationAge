@@ -40,7 +40,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	private String script_tick = ""; // 脚本
 	private String consoleOutputs = ""; // 输出
 	private int portsCount; // 接口数量
-	private byte[] portsStatus; // 接口状态
+	private byte[] portStates; // 接口状态
 	private boolean hasItemSlots = false; // 是否有物品槽
 	private ItemStack[] itemsStacks; // 物品槽们
 
@@ -48,14 +48,15 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	private TextFieldWidget outputsField; // 输出域
 	public StretchableButtonWidget doneButton; // 完成按钮
 	public StretchableButtonWidget powerButton; // 电源按钮
-	private StretchableButtonWidget[] portsButtons; // 接口按钮们
+	private StretchableButtonWidget[] portButtons; // 接口按钮们
+	private StretchableButtonWidget[] portLockButtons; // 接口锁按钮们
 
 	public InfageDeviceScreen(ScreenHandler handler, PlayerInventory inventory, Text title) {
 		super(handler, inventory, title);
 		this.handler = (InfageDeviceScreenHandler) handler;
 		// this.getAttributesFromHandler(this.handler); // 从 handler 读取方块数据
 		this.readScreenOpeningData(this.handler.getBuf()); // 从 handler.packetByteBuf 读取方块数据
-		this.portsButtons = new StretchableButtonWidget[this.portsCount]; // 初始化接口按钮数组
+		this.portButtons = new StretchableButtonWidget[this.portsCount]; // 初始化接口按钮数组
 	}
 
 	@Override
@@ -135,15 +136,15 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 					this.isRunning ? InfageTexts.SHUT_DOWN : InfageTexts.BOOT, //
 					(buttonWidget) -> {
 						LOGGER.info("Clicked port button ");
-						for (int j = 0; j < this.portsButtons.length; j++) {
-							if (this.portsButtons[j] == buttonWidget) {
+						for (int j = 0; j < this.portButtons.length; j++) {
+							if (this.portButtons[j] == buttonWidget) {
 								this.onClickPortButton(j);
 								break;
 							}
 						}
 					}));
 			portButton.setMessage(new LiteralText("P " + i + "    "));
-			this.portsButtons[i] = portButton;
+			this.portButtons[i] = portButton;
 		}
 	}
 
@@ -200,7 +201,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		this.script_tick = buf.readString();
 		this.consoleOutputs = buf.readString();
 		this.portsCount = buf.readByte();
-		this.portsStatus = buf.readByteArray();
+		this.portStates = buf.readByteArray();
 		this.hasItemSlots = buf.readBoolean();
 		if (this.hasItemSlots) {
 			this.itemsStacks = new ItemStack[InfageSettings.DEVICE_INVENTORY_SIZE];
@@ -229,11 +230,11 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	// 按下接口按钮
 	private void onClickPortButton(int j) {
 		LOGGER.info("Port button clicked: " + j);
-		if (this.portsStatus[j] < 0) {
+		if (this.portStates[j] < 0) {
 			this.act(DeviceEntity.Action.CONNECT, j);
 		} else {
 			this.act(DeviceEntity.Action.DISCONNECT);
-			this.portsStatus[j] = -1;
+			this.portStates[j] = -1;
 		}
 		this.updatePortButton(j);
 	}

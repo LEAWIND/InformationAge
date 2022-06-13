@@ -7,7 +7,7 @@ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.leawind.infage.Infage;
 import net.leawind.infage.exception.InfageDevicePortsNotMatchException;
 import net.leawind.infage.screenhandler.InfageDeviceScreenHandler;
-import net.leawind.infage.script.CompileStatus;
+import net.leawind.infage.script.CompileState;
 import net.leawind.infage.script.ScriptHelper;
 import net.leawind.infage.script.mtt.CompileTask;
 import net.leawind.infage.script.mtt.ExecuteTask;
@@ -42,7 +42,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	public byte[] storage; // 磁盘内容
 
 	public int portsCount = 1; // 接口数量 (最多同时有多少个设备和它相连接)
-	public byte portsStatus[]; // 各接口的 目标接口的 id, 若未连接则为 -1
+	public byte portStates[]; // 各接口的状态 目标接口的 id, 若未连接则为 -128, <0 表示未锁定, >0 表示已锁定
 	protected long portsX[]; // 各接口所连接方块的坐标(不一定正确，因为对方可能被破坏)
 	protected long portsY[]; // 如果不正确，就会在 MixinWorld -> World.tickBlockEntities -> this.sendAllData 的时候被发现，然后立即断开这个连接
 	protected long portsZ[];
@@ -51,7 +51,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	public String sendCaches[]; // 各接口的发送缓存 //TODO toByte
 	public String script_tick = ";"; // tick 脚本
 	public CompiledScript compiledScript_tick = null; // 编译后的 tick 脚本
-	public CompileStatus compileStatus = CompileStatus.UNKNOWN; // 编译状态
+	public CompileState compileState = CompileState.UNKNOWN; // 编译状态
 
 	// 初始化
 	public void init() {
@@ -60,8 +60,8 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 		this.portsY = new long[this.portsCount];
 		this.portsZ = new long[this.portsCount];
 
-		this.portsStatus = new byte[this.portsCount];
-		Arrays.fill(this.portsStatus, (byte) -1);
+		this.portStates = new byte[this.portsCount];
+		Arrays.fill(this.portStates, (byte) -128);
 
 		this.sendCaches = new String[this.portsCount];
 		Arrays.fill(this.sendCaches, "");
@@ -91,7 +91,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 		tag.putString("receiveCaches", DataEncoding.encodeStringArray(this.receiveCaches));
 
 		tag.putByteArray("storage", this.storage);
-		tag.putByteArray("portsStatus", this.portsStatus);
+		tag.putByteArray("portStates", this.portStates);
 
 		tag.putLongArray("portsX", this.portsX);
 		tag.putLongArray("portsY", this.portsY);
@@ -118,7 +118,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 		this.setScirpt_tick(tag.getString("script_tick"));
 
 		this.setStorage(tag.getByteArray("storage"));
-		this.setPortsStatus(tag.getByteArray("portsStatus"));
+		this.setPortStates(tag.getByteArray("portStates"));
 
 		this.portsX = Others.arrayFrom(tag.getLongArray("portsX"), this.portsCount);
 		this.portsY = Others.arrayFrom(tag.getLongArray("portsY"), this.portsCount);
@@ -151,14 +151,14 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	}
 
 	/**
-	 * 将本设备指定接口 连接至 指定设备的指定接口
+	 * 将本设备指定接口 连接至 指定设备的指定接口（默认未锁定）
 	 * 
 	 * @param portId 接口 ID
 	 * @param selfOnly 是否只断开自己这边，而不通知被连接的另一方
 	 * @return {boolean} 是否成功断开，如果原本已经断开则返回false
 	 */
 	public synchronized boolean connect(int srcPort, BlockPos tarPos, int tarPort, boolean selfOnly) {
-		this.portsStatus[srcPort] = (byte) tarPort;
+		this.setTargetPortId(srcPort, tarPort);
 		this.portsX[srcPort] = tarPos.getX();
 		this.portsY[srcPort] = tarPos.getY();
 		this.portsZ[srcPort] = tarPos.getZ();
@@ -173,6 +173,71 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 		return false;
 	}
 
+	// 设置接口的目标接口 id
+	public synchronized void setTargetPortId(int srcPort, int tarPort) {
+		this.portStates[srcPort] = this.portStates[srcPort] >= 0 ? //
+				(byte) tarPort : // 如果已连接并锁定
+				(byte) (-1 - tarPort); // 未连接 或 已连接但没有锁定
+	}
+
+	/**
+	 * 设置端口状态
+	 * 
+	 * @param portId 本设备接口 ID
+	 * @param pstate 接口状态
+	 */
+	public synchronized void setPortState(int portId, PortState pstate) {
+		switch (pstate) {
+			case CONNECT_LOCKED:
+				if (this.portStates[portId] < 0) {
+					this.portStates[portId] = (byte) (-1 - this.portStates[portId]);
+				}
+				break;
+			case CONNECT_UNLOCKED:
+				if (this.portStates[portId] >= 0) {
+					this.portStates[portId] = (byte) (-1 - this.portStates[portId]);
+				}
+				break;
+			case DISCONNECTED:
+				this.portStates[portId] = -128;
+				break;
+		}
+	}
+
+	/**
+	 * 获取指定接口所连接的设备接口
+	 * 
+	 * @param portId 本设备接口 ID
+	 * @return 该接口所连接的目标设备接口号, -128 表示没有连接
+	 */
+	public synchronized int getTargetPortId(int portId) {
+		int x = this.portStates[portId];
+		if (x == -128) {
+			return -128;
+		} else if (x >= 0) {
+			return x;
+		} else {
+			return -1 - x;
+		}
+	}
+
+	/**
+	 * 获取指定接口状态
+	 * 
+	 * @param portId 本设备接口 ID
+	 * @return 该接口所连接的目标设备接口
+	 */
+	public synchronized PortState getPortState(int portId) {
+		int x = this.portStates[portId];
+		if (x == -128) {
+			return PortState.DISCONNECTED;
+		} else if (x > 0) {
+			return PortState.CONNECT_LOCKED;
+		} else {
+			return PortState.CONNECT_UNLOCKED;
+		}
+	}
+
 	/**
 	 * 获取指定接口所连接的设备方块实体
 	 * 
@@ -180,7 +245,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	 * @return 该接口所连接的方块实体
 	 */
 	public synchronized DeviceEntity getConnectedDevice(int portId) {
-		if (this.portsStatus == null || this.portsStatus[portId] < 0)
+		if (this.portStates == null || this.portStates[portId] < 0)
 			return null;
 		if (portId >= this.portsCount || portId < 0 || this.portsX == null || this.portsY == null || this.portsZ == null)
 			return null;
@@ -199,8 +264,8 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	 * @return {boolean} 是否成功断开，如果原本已经断开则返回false
 	 */
 	public synchronized boolean disconnect(int portId, boolean selfOnly) {
-		int tarPort = this.portsStatus[portId];
-		this.portsStatus[portId] = (byte) -1;
+		int tarPort = this.portStates[portId];
+		this.portStates[portId] = (byte) -1;
 
 		if (selfOnly) {
 			return true;
@@ -215,22 +280,19 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	// 设置脚本
 	public synchronized void setScirpt_tick(String str) {
 		if (str != this.script_tick) {
-			this.compileStatus = CompileStatus.UNKNOWN;
+			this.compileState = CompileState.UNKNOWN;
 			this.script_tick = str == null ? "" : str;
 		}
 	}
 
 	// 设置端口状态
-	public synchronized void setPortsStatus(byte[] arr) {
-		if (this.portsStatus == null || this.portsStatus.length != this.portsCount)
-			this.portsStatus = new byte[this.portsCount];
+	public synchronized void setPortStates(byte[] arr) {
+		if (this.portStates == null || this.portStates.length != this.portsCount)
+			this.portStates = new byte[this.portsCount];
 		if (arr == null || arr.length == 0) {
-			Arrays.fill(this.portsStatus, (byte) 0);
+			Arrays.fill(this.portStates, (byte) 0);
 		} else {
-			this.portsStatus = Arrays.copyOf(arr, this.portsCount);
-			// if (arr.length < this.portsCount)
-			// Arrays.fill(this.portsStatus, arr.length, this.portsCount, (byte) 0);
-			// System.arraycopy(arr, 0, this.portsStatus, 0, arr.length);
+			this.portStates = Arrays.copyOf(arr, this.portsCount);
 		}
 	}
 
@@ -314,9 +376,9 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 
 	// 设备刻
 	public synchronized void deviceTick() {
-		switch (this.compileStatus) {
+		switch (this.compileState) {
 			case UNKNOWN: // 还没编译
-				this.compileStatus = CompileStatus.DISTRIBUTED;
+				this.compileState = CompileState.DISTRIBUTED;
 				// 布置任务:编译
 				CompileTask task = new CompileTask(this);
 				ScriptHelper.MTM_COMPILE.addTask(task);
@@ -343,12 +405,12 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	public synchronized void sendAllData() {
 		// this.db_checkPortsCount();
 		for (int i = 0; i < this.portsCount; i++) {
-			if (this.portsStatus[i] >= 0 && this.sendCaches[i] != null && this.sendCaches[i] != "") {
+			if (this.portStates[i] >= 0 && this.sendCaches[i] != null && this.sendCaches[i] != "") {
 				BlockEntity targetEntity = this.getConnectedDevice(i);
 				if (targetEntity != null && targetEntity instanceof DeviceEntity) {
-					((DeviceEntity) targetEntity).receiveCaches[this.portsStatus[i]] = this.sendCaches[i]; // 写入
+					((DeviceEntity) targetEntity).receiveCaches[this.portStates[i]] = this.sendCaches[i]; // 写入
 				} else {
-					this.portsStatus[i] = -1;
+					this.portStates[i] = -1;
 				}
 			}
 		}
@@ -362,10 +424,13 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 
 	// 关机
 	public synchronized void device_shutdown() {
-		this.isRunning = false;
 		// 断开所有连接
 		for (int i = 0; i < this.portsCount; i++)
-			this.disconnect(i, true);
+			this.disconnect(i, false);
+		this.isRunning = false;
+		// 清空输入缓存和输出缓存
+		Arrays.fill(this.receiveCaches, "");
+		Arrays.fill(this.sendCaches, "");
 	}
 
 	// 切换开关机状态
@@ -388,7 +453,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	// DEBUG: 检查端口相关数组 是否为空指针 和 长度是否匹配
 	public synchronized void db_checkPortsCount() {
 		try {
-			if (this.portsStatus == null//
+			if (this.portStates == null//
 					|| this.sendCaches == null//
 					|| this.receiveCaches == null//
 					|| this.portsX == null//
@@ -396,7 +461,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 					|| this.portsZ == null//
 			)
 				throw new NullPointerException();
-			if (this.portsCount != this.portsStatus.length //
+			if (this.portsCount != this.portStates.length //
 					|| this.portsCount != this.sendCaches.length //
 					|| this.portsCount != this.receiveCaches.length//
 					|| this.portsCount != this.portsX.length//
@@ -426,13 +491,20 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 		buf.writeString(this.script_tick);// 脚本代码
 		buf.writeString(this.consoleOutputs);// 输出
 		buf.writeByte(this.portsCount);// 接口数量
-		buf.writeByteArray(this.portsStatus);// 接口状态
+		buf.writeByteArray(this.portStates);// 接口状态
 		buf.writeBoolean(this instanceof ImplementedInventory); // 是否有库存
 		if (this instanceof ImplementedInventory) { // 将库存物品们写进去
 			for (int i = 0; i < InfageSettings.DEVICE_INVENTORY_SIZE; i++)
 				buf.writeItemStack(((ImplementedInventory) this).getStack(i));
 		}
 	};
+
+	// 接口状态
+	public static enum PortState {
+		DISCONNECTED, // 未连接，相当于没有锁定, (-128)
+		CONNECT_LOCKED, // 已连接并锁定, 0-64
+		CONNECT_UNLOCKED, // 已连接但没有锁定（未锁定的连接会在世界中以粒子形式显示）
+	}
 
 	// 行为
 	public static enum Action {
