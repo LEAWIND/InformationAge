@@ -15,6 +15,7 @@ public class DeviceObj {
 	public String outputs;
 
 	public DeviceObj(DeviceEntity that) {
+		// 将属性初始化
 		this.storageSize = that.storageSize;
 		this.storage = Arrays.copyOf(that.storage, that.storageSize);
 		this.portStates = new boolean[that.portsCount];

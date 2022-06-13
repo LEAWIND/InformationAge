@@ -126,7 +126,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 
 		this.sendCaches = Others.arrayFrom(DataEncoding.decodeStringArray(tag.getString("sendCaches")), this.portsCount);
 		this.receiveCaches = Others.arrayFrom(DataEncoding.decodeStringArray(tag.getString("receiveCaches")), this.portsCount);
-		this.db_checkPortsCount();
+		this.db_checkPortsCount(); // TODO debug
 	}
 
 	// [ScreenHandlerFactory] 创建 ScreenHandler

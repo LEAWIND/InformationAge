@@ -8,6 +8,8 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 
+// 可以拉伸的按钮组件。
+// 可以将此按钮的大小设置为任意值，在屏幕上不会显示异常。 
 public class StretchableButtonWidget extends AbstractButtonWidget {
 	public StretchableButtonWidget(int x, int y, int width, int height, Text message, PressAction onPress) {
 		this(x, y, width, height, message, onPress, EMPTY);

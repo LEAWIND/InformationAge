@@ -16,9 +16,11 @@ public class PowerControllerEntity extends DeviceEntity {
 	@Override
 	public void applyObj(DeviceObj obj) {
 		super.applyObj(obj);
+		PowerControllerObj pcobj = (PowerControllerObj) obj;
+		pcobj.powerLevel = Math.max(1, Math.min(15, pcobj.powerLevel)); // 检查范围
 		// 更新比较器输出
-		boolean doUpdateComparators = this.powerLevel != ((PowerControllerObj) obj).powerLevel;
-		this.powerLevel = ((PowerControllerObj) obj).powerLevel;
+		this.powerLevel = pcobj.powerLevel;
+		boolean doUpdateComparators = this.powerLevel != pcobj.powerLevel;
 		if (doUpdateComparators)
 			this.updateComparators();
 	}
@@ -28,10 +30,8 @@ public class PowerControllerEntity extends DeviceEntity {
 		return new PowerControllerObj(this);
 	}
 
-
 	// 更新比较器输出
 	public void updateComparators() {
 		this.getWorld().updateComparators(this.getPos(), InfageBlocks.POWER_CONTROLLER);
 	}
-
 }
