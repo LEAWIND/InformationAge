@@ -33,9 +33,10 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	private static final Identifier TEXTURE_WIDGETS = new Identifier("minecraft", "textures/gui/advancements/widgets.png");
 	InfageDeviceScreenHandler handler;
 	private UUID playerUUID; // 玩家 uuid (虽然不知道有什么用)
+
 	private Text displayName; // 显示的设备名称
 	private BlockPos pos; // 设备方块位置
-	private boolean isRunning = false;
+	private boolean isRunning = false; // 电源状态
 	private String script_tick = ""; // 脚本
 	private String consoleOutputs = ""; // 输出
 	private int portsCount; // 接口数量
@@ -100,7 +101,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 				(int) (this.height * InfageStyle.done[3]), //
 				ScreenTexts.DONE, (buttonWidget) -> {
 					LOGGER.info("Clicked done button.");
-					this.done();
+					this.onClickDoneButton();
 				}));
 
 		// 电源按钮
@@ -114,18 +115,17 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 					LOGGER.info("Clicked power button.");
 					LOGGER.info("this.portsCount = " + this.portsCount);
 					LOGGER.info("this.isRunning = " + this.isRunning);
-					this.onTogglePower();
+					this.onClickPowerButton();
 				}));
 
 		// TODO 可能存在的物品槽
 		if (this.hasItemSlots) {
 			for (int i = 0; i < 2; i++) {
 				for (int j = 0; j < 2; j++) {
-
 				}
 			}
 		}
-		// TODO 端口按钮们
+		// 端口按钮们
 		for (int i = 0; i < this.portsCount; i++) {
 			StretchableButtonWidget portButton = (StretchableButtonWidget) this.addButton(new StretchableButtonWidget(//
 					this.width - (int) (this.width * InfageStyle.ports[0]), // x
@@ -210,22 +210,23 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	}
 
 	// 完成，更新数据并退出
-	private void done() {
+	private void onClickDoneButton() {
 		this.act(DeviceEntity.Action.UPDATE_DATA);
 		this.client.openScreen((Screen) null);
 	}
 
 	// 按下电源键
-	private void onTogglePower() {
+	private void onClickPowerButton() {
 		if (this.isRunning) {
 			this.act(DeviceEntity.Action.SHUT_DOWN);
 		} else {
 			this.act(DeviceEntity.Action.BOOT);
 		}
 		this.isRunning = !this.isRunning;
+		this.updatePowerButton();
 	}
 
-	// TODO 按下接口按钮
+	// 按下接口按钮
 	private void onClickPortButton(int j) {
 		LOGGER.info("Port button clicked: " + j);
 		if (this.portsStatus[j] < 0) {
@@ -234,9 +235,18 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 			this.act(DeviceEntity.Action.DISCONNECT);
 			this.portsStatus[j] = -1;
 		}
+		this.updatePortButton(j);
 	}
 
+	// 更新电源按钮
+	private void updatePowerButton() {
+		this.powerButton.setMessage(this.isRunning ? InfageTexts.SHUT_DOWN : InfageTexts.BOOT);
+	}
 
+	// 更新端口按钮
+	private void updatePortButton(int portId) {
+		// TODO
+	}
 
 	/**
 	 * 绘制一个带边框的矩形区域

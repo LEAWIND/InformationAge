@@ -27,7 +27,7 @@ public class StretchableButtonWidget extends ButtonWidget {
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
 		RenderSystem.enableDepthTest();
-		this.drawBorderRect(matrices, this.x, this.y, this.width, this.height, 3, 0, 46 + i * 20, 199, 20, 3, 256, 256, true);
+		this.drawBorderRect(matrices, this.x, this.y, this.width, this.height, 3, 0, 46 + i * 20, 200, 20, 3, 256, 256, true);
 		this.renderBg(matrices, minecraftClient, mouseX, mouseY);
 		int j = this.active ? 16777215 : 10526880;
 		drawCenteredText(matrices, textRenderer, this.getMessage(), this.x + this.width / 2, this.y + (this.height - 8) / 2, j | MathHelper.ceil(this.alpha * 255.0F) << 24);
