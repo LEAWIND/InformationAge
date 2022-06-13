@@ -161,12 +161,9 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		}
 
 		// TODO 可能存在的物品槽
-		if (this.hasItemSlots) {
-			for (int i = 0; i < 2; i++) {
-				for (int j = 0; j < 2; j++) {
-				}
-			}
-		}
+		if (this.hasItemSlots)
+			for (int i = 0; i < 2; i++)
+				for (int j = 0; j < 2; j++);
 	}
 
 	@Override
@@ -195,25 +192,42 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	// TODO TODO 发送数据包给服务器
 	private boolean act(DeviceEntity.Action action, int... args) {
 		switch (action) {
-			case GET_DATA: // 请求获取最新数据
+			case GET_ALL_DATA: // 请求获取最新数据
+				LOGGER.info("Request: get all data");
 				break;
-			case BOOT: // 启动设备
-			case SHUT_DOWN: // 关闭设备
+			case RQ_BOOT: // 启动设
+				LOGGER.info("Request: boot");
 				break;
-			case DISCONNECT: // 断开指定端口
+			case RQ_SHUT_DOWN: // 关闭设备
+				LOGGER.info("Request: shut down");
 				break;
-			case CONNECT: // 玩家希望连接指定端口
+			case RQ_DISCONNECT: // 断开指定端口
+				LOGGER.info("Request: disconnect port " + args[0]);
 				break;
-			case UPDATE_DATA: // 更新数据
+			case RQ_CONNECT: // 玩家希望连接指定端口
+				LOGGER.info("Request: connect port " + args[0]);
 				break;
-			case UPDATE_SCRIPT: // 更新脚本
+			case PUSH_ALL_DATA: // 更新数据
+				LOGGER.info("Request: push all data");
+				break;
+			case PUSH_SCRIPT: // 更新脚本
+				LOGGER.info("Request: push script");
+				break;
+			case DRINK_A_CUP_OF_TEA:
+				LOGGER.info("Request: Drink a cup of tea.");
+				break;
+			case RQ_LOCK_PORT:
+				LOGGER.info("Request: Lock port " + args[0]);
+				break;
+			case RQ_UNLOCK_PORT:
+				LOGGER.info("Request: Unlock port " + args[0]);
 				break;
 		}
 		// this.client.getNetworkHandler().sendPacket(new UpdateDeviceC2SPacket(action));
 		return true;
 	}
 
-	// 将服务端发过来的字节流，解析为本方块实体的数据
+	// 将 服务端发过来的一串字节 解析为本方块实体的数据
 	public void readScreenOpeningData(PacketByteBuf buf) {
 		this.playerUUID = buf.readUuid();
 		this.displayName = buf.readText();
@@ -233,16 +247,16 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 
 	// 完成，更新数据并退出
 	private void onClickDoneButton() {
-		this.act(DeviceEntity.Action.UPDATE_DATA);
+		this.act(DeviceEntity.Action.PUSH_ALL_DATA);
 		this.client.openScreen((Screen) null);
 	}
 
 	// 按下电源键
 	private void onClickPowerButton() {
 		if (this.isRunning) {
-			this.act(DeviceEntity.Action.SHUT_DOWN);
+			this.act(DeviceEntity.Action.RQ_SHUT_DOWN); // 请求关机
 		} else {
-			this.act(DeviceEntity.Action.BOOT);
+			this.act(DeviceEntity.Action.RQ_BOOT); // 请求开机
 		}
 		this.isRunning = !this.isRunning;
 		this.updatePowerButton();
@@ -250,15 +264,30 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 
 	// 按下接口按钮
 	private void onClickPortButton(int i) {
-		LOGGER.info("On click on Port button, portId = " + i);
+		// 如果未连接，则告诉服务器这个玩家想连接。如果已连接但没有锁定，则断开连接。如果已经连接且锁定了，那么什么都不做
+		if (this.portStates[i] == -128) { // 未连接
+			this.act(DeviceEntity.Action.RQ_CONNECT, i);
+		} else if (this.portStates[i] < 0) { // 没锁定
+			this.act(DeviceEntity.Action.RQ_DISCONNECT, i);
+		} else { // 锁定了
+			this.act(DeviceEntity.Action.DRINK_A_CUP_OF_TEA);
+		}
 		this.updatePortButton(i);
 		this.updatePortLockButton(i);
 	}
 
-	// TODO 按下接口锁按钮
+	// 按下接口锁按钮
 	private void onClickPortLockButton(int i) {
-		LOGGER.info("Port Lock button clicked: " + i);
-		LOGGER.info("Port Lock button active: " + this.portLockButtons[i].active);
+		// 如果未连接则什么也不做，如果已经连接且已锁定则解除锁定，如果已经连接但没锁定则锁定接口
+		if (this.portStates[i] == -128) { // 未连接
+			this.act(DeviceEntity.Action.DRINK_A_CUP_OF_TEA);
+		} else if (this.portStates[i] < 0) { // 没锁定
+			this.act(DeviceEntity.Action.RQ_LOCK_PORT, i);
+			this.portStates[i] = (byte) (-1 - this.portStates[i]);
+		} else { // 锁定了
+			this.act(DeviceEntity.Action.RQ_UNLOCK_PORT, i);
+			this.portStates[i] = (byte) (-1 - this.portStates[i]);
+		}
 		this.updatePortLockButton(i);
 	}
 
@@ -275,8 +304,8 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	// 更新接口锁按钮
 	private void updatePortLockButton(int i) {
 		// 根据接口状态决定激活状态
-		// 当接口连接时，按钮才激活
-		this.portLockButtons[i].active = this.portStates[i] != -128;
+		this.portLockButtons[i].active = this.portStates[i] != -128; // 当接口连接时，按钮才激活
+		this.portLockButtons[i].setLocked(this.portStates[i] >= 0); // 锁定状态
 	}
 
 	/**

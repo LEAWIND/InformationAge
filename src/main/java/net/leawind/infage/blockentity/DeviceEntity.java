@@ -159,6 +159,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	 */
 	public synchronized boolean connect(int srcPort, BlockPos tarPos, int tarPort, boolean selfOnly) {
 		this.setTargetPortId(srcPort, tarPort);
+		this.setPortState(srcPort, PortState.CONNECT_UNLOCKED);
 		this.portsX[srcPort] = tarPos.getX();
 		this.portsY[srcPort] = tarPos.getY();
 		this.portsZ[srcPort] = tarPos.getZ();
@@ -499,22 +500,25 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 		}
 	};
 
-	// 接口状态
+	// 接口的连接和锁定状态
 	public static enum PortState {
 		DISCONNECTED, // 未连接，相当于没有锁定, (-128)
-		CONNECT_LOCKED, // 已连接并锁定, 0-64
-		CONNECT_UNLOCKED, // 已连接但没有锁定（未锁定的连接会在世界中以粒子形式显示）
+		CONNECT_LOCKED, // 已连接并锁定, >=0
+		CONNECT_UNLOCKED, // 已连接但没有锁定（未锁定的连接会在世界中以粒子形式显示） <0
 	}
 
 	// 行为
 	public static enum Action {
-		GET_DATA, // 获取所有状态
-		UPDATE_DATA, // 更新所有状态
-		UPDATE_SCRIPT, // 更新脚本
-		SHUT_DOWN, // 要求关机
-		BOOT, // 要求开机
-		CONNECT, // 点击了一个未连接的接口, 连接其他设备
-		DISCONNECT, // 点击了一个已连接的接口，断开它
+		GET_ALL_DATA, // 获取所有数据
+		PUSH_ALL_DATA, // 更新所有数据
+		PUSH_SCRIPT, // 更新脚本
+		RQ_SHUT_DOWN, // 要求关机
+		RQ_BOOT, // 要求开机
+		RQ_CONNECT, // 点击了一个未连接的接口, 连接其他设备
+		RQ_LOCK_PORT, // 锁定接口
+		RQ_UNLOCK_PORT, // 解除接口锁定
+		RQ_DISCONNECT, // 点击了一个已连接的接口，断开它
+		DRINK_A_CUP_OF_TEA,
 	}
 
 }
