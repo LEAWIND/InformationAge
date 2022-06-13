@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.leawind.infage.blockentity.DeviceEntity;
+import net.leawind.infage.client.gui.widget.LockButtonWidget;
 import net.leawind.infage.client.gui.widget.MultilineTextFieldWidget;
 import net.leawind.infage.client.gui.widget.StretchableButtonWidget;
 import net.leawind.infage.screenhandler.InfageDeviceScreenHandler;
@@ -49,7 +50,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	public StretchableButtonWidget doneButton; // 完成按钮
 	public StretchableButtonWidget powerButton; // 电源按钮
 	private StretchableButtonWidget[] portButtons; // 接口按钮们
-	private StretchableButtonWidget[] portLockButtons; // 接口锁按钮们
+	private LockButtonWidget[] portLockButtons; // 接口锁按钮们
 
 	public InfageDeviceScreen(ScreenHandler handler, PlayerInventory inventory, Text title) {
 		super(handler, inventory, title);
@@ -57,6 +58,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		// this.getAttributesFromHandler(this.handler); // 从 handler 读取方块数据
 		this.readScreenOpeningData(this.handler.getBuf()); // 从 handler.packetByteBuf 读取方块数据
 		this.portButtons = new StretchableButtonWidget[this.portsCount]; // 初始化接口按钮数组
+		this.portLockButtons = new LockButtonWidget[this.portsCount]; // 初始化接口按钮数组
 	}
 
 	@Override
@@ -119,20 +121,16 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 					this.onClickPowerButton();
 				}));
 
-		// TODO 可能存在的物品槽
-		if (this.hasItemSlots) {
-			for (int i = 0; i < 2; i++) {
-				for (int j = 0; j < 2; j++) {
-				}
-			}
-		}
-		// 端口按钮们
+		// 接口按钮 和 接口锁按钮 们
 		for (int i = 0; i < this.portsCount; i++) {
+			int x, y, w, h;
+			x = this.width - (int) (this.width * InfageStyle.ports[0]);
+			y = this.height - (int) (this.height * InfageStyle.ports[1] * (i + 1));
+			w = (int) (this.width * InfageStyle.ports[0]);
+			h = (int) (this.height * InfageStyle.ports[1]);
+			// 接口按钮
 			StretchableButtonWidget portButton = (StretchableButtonWidget) this.addButton(new StretchableButtonWidget(//
-					this.width - (int) (this.width * InfageStyle.ports[0]), // x
-					this.height - (int) (this.height * InfageStyle.ports[1] * (i + 1)), // y
-					(int) (this.width * InfageStyle.ports[0]), // w
-					(int) (this.height * InfageStyle.ports[1]), // h
+					x, y, w - h, h, //
 					this.isRunning ? InfageTexts.SHUT_DOWN : InfageTexts.BOOT, //
 					(buttonWidget) -> {
 						LOGGER.info("Clicked port button ");
@@ -144,9 +142,36 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 						}
 					}));
 			portButton.setMessage(new LiteralText("P " + i + "    "));
+			this.updatePortButton(i);
 			this.portButtons[i] = portButton;
+
+			// 接口锁按钮
+			LockButtonWidget lockButton = (LockButtonWidget) this.addButton(new LockButtonWidget(//
+					x + w - h, y, h, h, //
+					new LiteralText(" "), //
+					(buttonWidget) -> {
+						LOGGER.info("Clicked port lock button ");
+						for (int j = 0; j < this.portButtons.length; j++) {
+							if (this.portButtons[j] == buttonWidget) {
+								this.onClickPortLockButton(j);
+								break;
+							}
+						}
+					}));
+			this.updatePortLockButton(i);
+			this.portLockButtons[i] = lockButton; // NullPointer
+		}
+
+		// TODO 可能存在的物品槽
+		if (this.hasItemSlots) {
+			for (int i = 0; i < 2; i++) {
+				for (int j = 0; j < 2; j++) {
+				}
+			}
 		}
 	}
+
+
 
 	@Override
 	public void resize(MinecraftClient client, int width, int height) {
@@ -171,7 +196,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		drawMouseoverTooltip(matrices, mouseX, mouseY);
 	}
 
-	// TODO 发送数据包给服务器
+	// TODO TODO 发送数据包给服务器
 	private boolean act(DeviceEntity.Action action, int... args) {
 		switch (action) {
 			case GET_DATA: // 请求获取最新数据
@@ -228,26 +253,28 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	}
 
 	// 按下接口按钮
-	private void onClickPortButton(int j) {
-		LOGGER.info("Port button clicked: " + j);
-		if (this.portStates[j] < 0) {
-			this.act(DeviceEntity.Action.CONNECT, j);
-		} else {
-			this.act(DeviceEntity.Action.DISCONNECT);
-			this.portStates[j] = -1;
-		}
-		this.updatePortButton(j);
+	private void onClickPortButton(int i) {
+		LOGGER.info("Port button clicked: " + i);
+		this.updatePortButton(i);
 	}
 
-	// 更新电源按钮
+	// TODO 按下接口锁按钮
+	private void onClickPortLockButton(int i) {
+		LOGGER.info("Port Lock button clicked: " + i);
+		this.updatePortLockButton(i);
+	}
+
+	// TODO 更新电源按钮
 	private void updatePowerButton() {
 		this.powerButton.setMessage(this.isRunning ? InfageTexts.SHUT_DOWN : InfageTexts.BOOT);
 	}
 
-	// 更新端口按钮
+	// TODO 更新接口按钮
 	private void updatePortButton(int portId) {
-		// TODO
 	}
+
+	// TODO 更新接口锁按钮
+	private void updatePortLockButton(int i) {}
 
 	/**
 	 * 绘制一个带边框的矩形区域
