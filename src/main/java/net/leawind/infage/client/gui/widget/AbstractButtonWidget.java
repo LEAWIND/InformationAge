@@ -6,7 +6,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public abstract class AbstractButtonWidget extends ButtonWidget {
-	protected Identifier TEXTURE_BUTTON = new Identifier("textures/gui/widgets.png");;
+	public static final Identifier ICONS_LOCATION = new Identifier("textures/gui/icons.png");
 
 	public AbstractButtonWidget(int x, int y, int width, int height, Text message, PressAction onPress) {
 		super(x, y, width, height, message, onPress);

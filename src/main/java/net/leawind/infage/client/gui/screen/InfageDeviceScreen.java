@@ -79,8 +79,8 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 					(int) (this.width * InfageStyle.code[2]), //
 					(int) (this.height * InfageStyle.code[3]), //
 					new TranslatableText("itemGroup.infage.devices"));
-			this.codeField.setMaxLength(64);
-			this.codeField.setText("Code Field");
+			this.codeField.setMaxLength(InfageSettings.MAX_SCRIPT_SIZE);
+			this.codeField.setText(this.script_tick);
 			this.children.add(this.codeField);
 		}
 		// 输出域
@@ -91,9 +91,9 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 					(int) (this.width * InfageStyle.outputs[2]), //
 					(int) (this.height * InfageStyle.outputs[3]), //
 					InfageTexts.INFAGE_DEVICES);
-			this.outputsField.setMaxLength(64);
-			this.outputsField.setText("outpusField");
+			this.outputsField.setMaxLength(InfageSettings.OUTPUTS_SIZE);
 			this.outputsField.setEditable(false);
+			this.outputsField.setText(this.consoleOutputs);
 			this.children.add(this.outputsField);
 		}
 		// 完成按钮
@@ -120,6 +120,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 					LOGGER.info("this.isRunning = " + this.isRunning);
 					this.onClickPowerButton();
 				}));
+		this.updatePowerButton();
 
 		// 接口按钮 和 接口锁按钮 们
 		for (int i = 0; i < this.portsCount; i++) {
@@ -131,9 +132,8 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 			// 接口按钮
 			StretchableButtonWidget portButton = (StretchableButtonWidget) this.addButton(new StretchableButtonWidget(//
 					x, y, w - h, h, //
-					this.isRunning ? InfageTexts.SHUT_DOWN : InfageTexts.BOOT, //
+					new LiteralText("NU"), //
 					(buttonWidget) -> {
-						LOGGER.info("Clicked port button ");
 						for (int j = 0; j < this.portButtons.length; j++) {
 							if (this.portButtons[j] == buttonWidget) {
 								this.onClickPortButton(j);
@@ -141,25 +141,24 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 							}
 						}
 					}));
-			portButton.setMessage(new LiteralText("P " + i + "    "));
-			this.updatePortButton(i);
 			this.portButtons[i] = portButton;
+			this.updatePortButton(i);
 
 			// 接口锁按钮
 			LockButtonWidget lockButton = (LockButtonWidget) this.addButton(new LockButtonWidget(//
 					x + w - h, y, h, h, //
-					new LiteralText(" "), //
+					new LiteralText(""), //
 					(buttonWidget) -> {
 						LOGGER.info("Clicked port lock button ");
 						for (int j = 0; j < this.portButtons.length; j++) {
-							if (this.portButtons[j] == buttonWidget) {
+							if (this.portLockButtons[j] == buttonWidget) {
 								this.onClickPortLockButton(j);
 								break;
 							}
 						}
 					}));
+			this.portLockButtons[i] = lockButton;
 			this.updatePortLockButton(i);
-			this.portLockButtons[i] = lockButton; // NullPointer
 		}
 
 		// TODO 可能存在的物品槽
@@ -254,27 +253,34 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 
 	// 按下接口按钮
 	private void onClickPortButton(int i) {
-		LOGGER.info("Port button clicked: " + i);
+		LOGGER.info("On click on Port button, portId = " + i);
 		this.updatePortButton(i);
+		this.updatePortLockButton(i);
 	}
 
 	// TODO 按下接口锁按钮
 	private void onClickPortLockButton(int i) {
 		LOGGER.info("Port Lock button clicked: " + i);
+		LOGGER.info("Port Lock button active: " + this.portLockButtons[i].active);
 		this.updatePortLockButton(i);
 	}
 
-	// TODO 更新电源按钮
+	// 更新电源按钮
 	private void updatePowerButton() {
-		this.powerButton.setMessage(this.isRunning ? InfageTexts.SHUT_DOWN : InfageTexts.BOOT);
+		this.powerButton.setMessage(this.isRunning ? InfageTexts.SHUT_DOWN : InfageTexts.BOOT); // 设置文本
 	}
 
-	// TODO 更新接口按钮
+	// 更新接口按钮
 	private void updatePortButton(int portId) {
+		this.portButtons[portId].setMessage(new LiteralText("Port " + portId));
 	}
 
-	// TODO 更新接口锁按钮
-	private void updatePortLockButton(int i) {}
+	// 更新接口锁按钮
+	private void updatePortLockButton(int i) {
+		// 根据接口状态决定激活状态
+		// 当接口连接时，按钮才激活
+		this.portLockButtons[i].active = this.portStates[i] != -128;
+	}
 
 	/**
 	 * 绘制一个带边框的矩形区域

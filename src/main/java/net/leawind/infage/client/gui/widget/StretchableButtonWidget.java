@@ -35,4 +35,5 @@ public class StretchableButtonWidget extends AbstractButtonWidget {
 			this.renderToolTip(matrices, mouseX, mouseY);
 		}
 	}
+
 }
