@@ -11,7 +11,6 @@ import net.leawind.infage.client.gui.widget.StretchableButtonWidget;
 import net.leawind.infage.screenhandler.InfageDeviceScreenHandler;
 import net.leawind.infage.settings.InfageSettings;
 import net.leawind.infage.settings.InfageStyle;
-import net.leawind.infage.settings.InfageTexts;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
@@ -64,7 +63,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	@Override
 	public void tick() {
 		this.codeField.tick();
-		// this.outputsField.tick();
+		this.outputsField.tick();
 	}
 
 	// 在初始化方法中绘制界面
@@ -169,8 +168,6 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 			}
 		}
 	}
-
-
 
 	@Override
 	public void resize(MinecraftClient client, int width, int height) {

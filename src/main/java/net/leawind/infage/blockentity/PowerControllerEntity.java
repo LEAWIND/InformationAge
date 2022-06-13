@@ -20,12 +20,18 @@ public class PowerControllerEntity extends DeviceEntity {
 		boolean doUpdateComparators = this.powerLevel != ((PowerControllerObj) obj).powerLevel;
 		this.powerLevel = ((PowerControllerObj) obj).powerLevel;
 		if (doUpdateComparators)
-			this.getWorld().updateComparators(this.getPos(), InfageBlocks.POWER_CONTROLLER);
+			this.updateComparators();
 	}
 
 	@Override
 	public DeviceObj getDeviceObj() {
 		return new PowerControllerObj(this);
+	}
+
+
+	// 更新比较器输出
+	public void updateComparators() {
+		this.getWorld().updateComparators(this.getPos(), InfageBlocks.POWER_CONTROLLER);
 	}
 
 }

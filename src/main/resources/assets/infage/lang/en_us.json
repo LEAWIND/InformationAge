@@ -7,8 +7,10 @@
 	"block.infage.power_controller": "Power Controller",
 	"block.infage.power_sensor": "Power Sensor",
 	"block.infage.switch": "Switch",
+	
 	"infage.devicegui.console": "console",
 	"infage.devicegui.port": "port",
 	"infage.devicegui.shutdown": "shutdown",
-	"infage.devicegui.boot": "boot"
+	"infage.devicegui.boot": "boot",
+	"infage.nobody.see.this": "你不应该在游戏中看到这串文字"
 }

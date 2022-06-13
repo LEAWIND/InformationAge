@@ -47,4 +47,12 @@ public class PowerController extends DeviceBlock {
 	public boolean hasComparatorOutput(BlockState state) {
 		return true;
 	}
+
+	// 当方块在服务端上被加入时
+	@Override
+	public void onBlockAdded(BlockState state, World world, BlockPos pos, BlockState oldState, boolean notify) {
+		BlockEntity blockEntity = world.getBlockEntity(pos);
+		if (blockEntity instanceof PowerControllerEntity)
+			((PowerControllerEntity) blockEntity).updateComparators();
+	}
 }

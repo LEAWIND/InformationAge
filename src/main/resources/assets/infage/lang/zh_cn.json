@@ -7,8 +7,10 @@
 	"block.infage.power_controller": "充能控制器",
 	"block.infage.power_sensor": "充能传感器",
 	"block.infage.switch": "交换机",
+
 	"infage.devicegui.console": "控制台",
 	"infage.devicegui.port": "接口",
 	"infage.devicegui.shutdown": "关机",
-	"infage.devicegui.boot": "开机"
+	"infage.devicegui.boot": "开机",
+	"infage.nobody.see.this": "你不应该在游戏中看到这串文字"
 }
