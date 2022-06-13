@@ -4,6 +4,8 @@ import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.leawind.infage.blockentity.DeviceEntity;
 import net.leawind.infage.client.gui.widget.LockButtonWidget;
 import net.leawind.infage.client.gui.widget.MultilineTextFieldWidget;
@@ -11,6 +13,7 @@ import net.leawind.infage.client.gui.widget.StretchableButtonWidget;
 import net.leawind.infage.screenhandler.InfageDeviceScreenHandler;
 import net.leawind.infage.settings.InfageSettings;
 import net.leawind.infage.settings.InfageStyle;
+import net.leawind.infage.settings.NetworkSettings;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
@@ -191,11 +194,13 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 
 	// TODO TODO 发送数据包给服务器
 	private boolean act(DeviceEntity.Action action, int... args) {
+		PacketByteBuf buf = new PacketByteBuf(PacketByteBufs.create());
+		buf.writeEnumConstant(action); // B 先写入数据包类型
 		switch (action) {
 			case GET_ALL_DATA: // 请求获取最新数据
 				LOGGER.info("Request: get all data");
 				break;
-			case RQ_BOOT: // 启动设
+			case RQ_BOOT: // 启动设备
 				LOGGER.info("Request: boot");
 				break;
 			case RQ_SHUT_DOWN: // 关闭设备
@@ -203,27 +208,32 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 				break;
 			case RQ_DISCONNECT: // 断开指定端口
 				LOGGER.info("Request: disconnect port " + args[0]);
+				buf.writeByte(args[0]); // B 端口号
 				break;
 			case RQ_CONNECT: // 玩家希望连接指定端口
 				LOGGER.info("Request: connect port " + args[0]);
+				buf.writeByte(args[0]); // B 端口号
+				break;
+			case RQ_LOCK_PORT: // 锁定端口
+				LOGGER.info("Request: Lock port " + args[0]);
+				buf.writeByte(args[0]); // B 端口号
+				break;
+			case RQ_UNLOCK_PORT: // 解锁端口
+				LOGGER.info("Request: Unlock port " + args[0]);
+				buf.writeByte(args[0]); // B 端口号
 				break;
 			case PUSH_ALL_DATA: // 更新数据
 				LOGGER.info("Request: push all data");
 				break;
 			case PUSH_SCRIPT: // 更新脚本
 				LOGGER.info("Request: push script");
+				buf.writeString(this.script_tick);
 				break;
-			case DRINK_A_CUP_OF_TEA:
+			case DRINK_A_CUP_OF_TEA: //
 				LOGGER.info("Request: Drink a cup of tea.");
 				break;
-			case RQ_LOCK_PORT:
-				LOGGER.info("Request: Lock port " + args[0]);
-				break;
-			case RQ_UNLOCK_PORT:
-				LOGGER.info("Request: Unlock port " + args[0]);
-				break;
 		}
-		// this.client.getNetworkHandler().sendPacket(new UpdateDeviceC2SPacket(action));
+		ClientPlayNetworking.send(NetworkSettings.DEVICET_GUI_UPDATE_ID, buf);
 		return true;
 	}
 

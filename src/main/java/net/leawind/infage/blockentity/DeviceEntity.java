@@ -511,13 +511,13 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	public static enum Action {
 		GET_ALL_DATA, // 获取所有数据
 		PUSH_ALL_DATA, // 更新所有数据
-		PUSH_SCRIPT, // 更新脚本
 		RQ_SHUT_DOWN, // 要求关机
 		RQ_BOOT, // 要求开机
 		RQ_CONNECT, // 点击了一个未连接的接口, 连接其他设备
+		RQ_DISCONNECT, // 点击了一个已连接的接口，断开它
 		RQ_LOCK_PORT, // 锁定接口
 		RQ_UNLOCK_PORT, // 解除接口锁定
-		RQ_DISCONNECT, // 点击了一个已连接的接口，断开它
+		PUSH_SCRIPT, // 更新脚本
 		DRINK_A_CUP_OF_TEA,
 	}
 
