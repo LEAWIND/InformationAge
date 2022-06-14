@@ -16,6 +16,8 @@ import net.leawind.infage.settings.InfageSettings;
 import net.leawind.infage.settings.InfageStyle;
 import net.leawind.infage.settings.NetworkSettings;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.MultilineText;
+import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -70,6 +72,17 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		this.script_tick = this.codeField.getText();
 		this.outputsField.tick();
 		this.outputsField.setText(this.consoleOutputs);
+	}
+
+	@Override
+	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+		Element ele = this.getFocused();
+		System.out.println("focusing ele: " + ele);
+		if (ele instanceof MultilineTextFieldWidget) {
+			return ele.keyPressed(keyCode, scanCode, modifiers);
+		} else {
+			return true;
+		}
 	}
 
 	// 在初始化方法中绘制界面
