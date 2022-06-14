@@ -16,12 +16,10 @@ import net.leawind.infage.settings.InfageSettings;
 import net.leawind.infage.settings.InfageStyle;
 import net.leawind.infage.settings.NetworkSettings;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.MultilineText;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
@@ -50,8 +48,8 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	private boolean hasItemSlots = false; // 是否有物品槽
 	private ItemStack[] itemsStacks; // 物品槽们
 
-	private TextFieldWidget codeField; // 代码域
-	private TextFieldWidget outputsField; // 输出域
+	private MultilineTextFieldWidget codeField; // 代码域
+	private MultilineTextFieldWidget outputsField; // 输出域
 	public StretchableButtonWidget doneButton; // 完成按钮
 	public StretchableButtonWidget powerButton; // 电源按钮
 	private StretchableButtonWidget[] portButtons; // 接口按钮们
@@ -69,9 +67,9 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	@Override
 	public void tick() {
 		this.codeField.tick();
-		this.script_tick = this.codeField.getText();
+		this.script_tick = this.codeField.getString();
 		this.outputsField.tick();
-		this.outputsField.setText(this.consoleOutputs);
+		this.outputsField.setString(this.consoleOutputs);
 	}
 
 	@Override
@@ -98,7 +96,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 					(int) (this.height * InfageStyle.code[3]), //
 					new TranslatableText("itemGroup.infage.devices"));
 			this.codeField.setMaxLength(InfageSettings.MAX_SCRIPT_SIZE);
-			this.codeField.setText(this.script_tick);
+			this.codeField.setString(this.script_tick);
 			this.children.add(this.codeField);
 		}
 		// 输出域
@@ -111,7 +109,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 					InfageTexts.INFAGE_DEVICES);
 			this.outputsField.setMaxLength(InfageSettings.OUTPUTS_SIZE);
 			this.outputsField.setEditable(false);
-			this.outputsField.setText(this.consoleOutputs);
+			this.outputsField.setString(this.consoleOutputs);
 			this.children.add(this.outputsField);
 		}
 		// 完成按钮
@@ -187,11 +185,11 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 
 	@Override
 	public void resize(MinecraftClient client, int width, int height) {
-		String string0 = this.codeField.getText();
-		String string1 = this.outputsField.getText();
+		String string0 = this.codeField.getString();
+		String string1 = this.outputsField.getString();
 		this.init(client, width, height);
-		this.codeField.setText(string0);
-		this.outputsField.setText(string1);
+		this.codeField.setString(string0);
+		this.outputsField.setString(string1);
 	}
 
 	// 参考 package net.minecraft.client.gui.DrawableHelper;
