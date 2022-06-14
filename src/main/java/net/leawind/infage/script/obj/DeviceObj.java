@@ -12,7 +12,7 @@ public class DeviceObj {
 	public boolean[] portStates;
 	public String[] inData;
 	public String[] dataToSend;
-	public String outputs;
+	public String outputs = "";
 
 	public DeviceObj(DeviceEntity that) {
 		// 将属性初始化
