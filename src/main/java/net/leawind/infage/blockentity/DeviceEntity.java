@@ -185,7 +185,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	 * 设置端口状态
 	 * 
 	 * @param portId 本设备接口 ID
-	 * @param pstate 接口状态
+	 * @param pstate {PortState} 接口状态
 	 */
 	public synchronized void setPortState(int portId, PortState pstate) {
 		switch (pstate) {

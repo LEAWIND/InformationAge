@@ -17,6 +17,7 @@ package net.leawind.infage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import net.fabricmc.api.ModInitializer;
+import net.leawind.infage.registry.InfageGlobalReceiver;
 import net.leawind.infage.registry.InfageBlockEntities;
 import net.leawind.infage.registry.InfageBlocks;
 import net.leawind.infage.registry.InfageItemGroups;
@@ -53,8 +54,13 @@ public class Infage implements ModInitializer {
 		// 方块有了对应的方块实体才能储存数据
 		new InfageBlockEntities();
 
-		// 注册屏幕处理器
+		// 注册网络数据包监听器
+		// 让服务端监听来自客户端的数据包。
+		InfageGlobalReceiver.registerC2SReceivers();
+
+		// 注册屏幕 handler
 		new InfageScreenHandlers();
+
 	}
 
 	@Override

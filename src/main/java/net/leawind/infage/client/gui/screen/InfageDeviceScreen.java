@@ -10,6 +10,7 @@ import net.leawind.infage.blockentity.DeviceEntity;
 import net.leawind.infage.client.gui.widget.LockButtonWidget;
 import net.leawind.infage.client.gui.widget.MultilineTextFieldWidget;
 import net.leawind.infage.client.gui.widget.StretchableButtonWidget;
+import net.leawind.infage.network.packet.c2s.DeviceUpdateC2SPacket;
 import net.leawind.infage.screenhandler.InfageDeviceScreenHandler;
 import net.leawind.infage.settings.InfageSettings;
 import net.leawind.infage.settings.InfageStyle;
@@ -66,7 +67,9 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	@Override
 	public void tick() {
 		this.codeField.tick();
+		this.script_tick = this.codeField.getText();
 		this.outputsField.tick();
+		this.outputsField.setText(this.consoleOutputs);
 	}
 
 	// 在初始化方法中绘制界面
@@ -192,52 +195,56 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		drawMouseoverTooltip(matrices, mouseX, mouseY);
 	}
 
-	// TODO TODO 发送数据包给服务器
+	/**
+	 * TODO 发送数据包给服务器
+	 */
+	@Deprecated
 	private boolean act(DeviceEntity.Action action, int... args) {
-		PacketByteBuf buf = new PacketByteBuf(PacketByteBufs.create());
-		buf.writeEnumConstant(action); // B 先写入数据包类型
+		PacketByteBuf buf = PacketByteBufs.create();
+		buf.writeBlockPos(this.pos); // B 先写入这个方块的坐标
+		buf.writeEnumConstant(action); // B 数据包类型
 		switch (action) {
 			case GET_ALL_DATA: // 请求获取最新数据
-				LOGGER.info("Request: get all data");
 				break;
 			case RQ_BOOT: // 启动设备
-				LOGGER.info("Request: boot");
 				break;
 			case RQ_SHUT_DOWN: // 关闭设备
-				LOGGER.info("Request: shut down");
 				break;
 			case RQ_DISCONNECT: // 断开指定端口
-				LOGGER.info("Request: disconnect port " + args[0]);
 				buf.writeByte(args[0]); // B 端口号
 				break;
 			case RQ_CONNECT: // 玩家希望连接指定端口
-				LOGGER.info("Request: connect port " + args[0]);
 				buf.writeByte(args[0]); // B 端口号
 				break;
 			case RQ_LOCK_PORT: // 锁定端口
-				LOGGER.info("Request: Lock port " + args[0]);
 				buf.writeByte(args[0]); // B 端口号
 				break;
 			case RQ_UNLOCK_PORT: // 解锁端口
-				LOGGER.info("Request: Unlock port " + args[0]);
 				buf.writeByte(args[0]); // B 端口号
 				break;
-			case PUSH_ALL_DATA: // 更新数据
-				LOGGER.info("Request: push all data");
+			case PUSH_ALL_DATA: // TODO 更新全部数据
 				break;
 			case PUSH_SCRIPT: // 更新脚本
-				LOGGER.info("Request: push script");
 				buf.writeString(this.script_tick);
 				break;
-			case DRINK_A_CUP_OF_TEA: //
-				LOGGER.info("Request: Drink a cup of tea.");
+			case DRINK_A_CUP_OF_TEA:
 				break;
 		}
-		ClientPlayNetworking.send(NetworkSettings.DEVICET_GUI_UPDATE_ID, buf);
+		LOGGER.info("CBuff: " + buf);
+		ClientPlayNetworking.send(NetworkSettings.DEVICE_UPDATE_ID, buf);
+		// MinecraftClient.getInstance().getNetworkHandler().sendPacket(ClientNetworkingImpl.createPlayC2SPacket(NetworkSettings.DEVICE_UPDATE_ID,
+		// buf));
+
 		return true;
 	}
 
-	// 将 服务端发过来的一串字节 解析为本方块实体的数据
+	public void writeAllDataToBuf(DeviceUpdateC2SPacket p) {
+		p.writeBoolean(this.isRunning);
+		p.writeByteArray(this.portStates);
+		p.writeString(this.script_tick);
+	}
+
+	// 将 服务端发过来的一串数据 解析为本方块实体的属性
 	public void readScreenOpeningData(PacketByteBuf buf) {
 		this.playerUUID = buf.readUuid();
 		this.displayName = buf.readText();
@@ -257,16 +264,16 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 
 	// 完成，更新数据并退出
 	private void onClickDoneButton() {
-		this.act(DeviceEntity.Action.PUSH_ALL_DATA);
+		new DeviceUpdateC2SPacket(this.pos, DeviceEntity.Action.PUSH_ALL_DATA, this).send();
 		this.client.openScreen((Screen) null);
 	}
 
 	// 按下电源键
 	private void onClickPowerButton() {
 		if (this.isRunning) {
-			this.act(DeviceEntity.Action.RQ_SHUT_DOWN); // 请求关机
+			new DeviceUpdateC2SPacket(this.pos, DeviceEntity.Action.RQ_SHUT_DOWN).send();
 		} else {
-			this.act(DeviceEntity.Action.RQ_BOOT); // 请求开机
+			new DeviceUpdateC2SPacket(this.pos, DeviceEntity.Action.RQ_BOOT).send();
 		}
 		this.isRunning = !this.isRunning;
 		this.updatePowerButton();
@@ -276,11 +283,11 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	private void onClickPortButton(int i) {
 		// 如果未连接，则告诉服务器这个玩家想连接。如果已连接但没有锁定，则断开连接。如果已经连接且锁定了，那么什么都不做
 		if (this.portStates[i] == -128) { // 未连接
-			this.act(DeviceEntity.Action.RQ_CONNECT, i);
+			new DeviceUpdateC2SPacket(this.pos, DeviceEntity.Action.RQ_CONNECT, i).send();
 		} else if (this.portStates[i] < 0) { // 没锁定
-			this.act(DeviceEntity.Action.RQ_DISCONNECT, i);
+			new DeviceUpdateC2SPacket(this.pos, DeviceEntity.Action.RQ_DISCONNECT, i).send();
 		} else { // 锁定了
-			this.act(DeviceEntity.Action.DRINK_A_CUP_OF_TEA);
+			new DeviceUpdateC2SPacket(this.pos, DeviceEntity.Action.DRINK_A_CUP_OF_TEA).send();
 		}
 		this.updatePortButton(i);
 		this.updatePortLockButton(i);
@@ -290,12 +297,12 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	private void onClickPortLockButton(int i) {
 		// 如果未连接则什么也不做，如果已经连接且已锁定则解除锁定，如果已经连接但没锁定则锁定接口
 		if (this.portStates[i] == -128) { // 未连接
-			this.act(DeviceEntity.Action.DRINK_A_CUP_OF_TEA);
+			new DeviceUpdateC2SPacket(this.pos, DeviceEntity.Action.DRINK_A_CUP_OF_TEA).send();
 		} else if (this.portStates[i] < 0) { // 没锁定
-			this.act(DeviceEntity.Action.RQ_LOCK_PORT, i);
+			new DeviceUpdateC2SPacket(this.pos, DeviceEntity.Action.RQ_LOCK_PORT, i).send();
 			this.portStates[i] = (byte) (-1 - this.portStates[i]);
 		} else { // 锁定了
-			this.act(DeviceEntity.Action.RQ_UNLOCK_PORT, i);
+			new DeviceUpdateC2SPacket(this.pos, DeviceEntity.Action.RQ_UNLOCK_PORT, i).send();
 			this.portStates[i] = (byte) (-1 - this.portStates[i]);
 		}
 		this.updatePortLockButton(i);
@@ -368,5 +375,6 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		drawTexture(matrices, x, y + b, b, h - 2 * b, u, v + rb, rb, rh - 2 * rb, tw, th); // 左
 		drawTexture(matrices, x + w - b, y + b, b, h - 2 * b, u + rw - rb, v + rb, rb, rh - 2 * rb, tw, th); // 右
 	}
+
 
 }

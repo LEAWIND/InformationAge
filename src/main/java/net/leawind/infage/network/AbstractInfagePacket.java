@@ -2,48 +2,24 @@ package net.leawind.infage.network;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 import io.netty.buffer.ByteBuf;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import io.netty.buffer.Unpooled;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 
-public abstract class AbstractC2SPacket implements Packet<ServerPlayPacketListener> {
-	protected List<Object> objs;
+public abstract class AbstractInfagePacket extends PacketByteBuf {
 
-	@Environment(EnvType.CLIENT)
-	public AbstractC2SPacket() {}
-
-	@Environment(EnvType.CLIENT)
-	public AbstractC2SPacket(Object... objs) {
-		for (Object obj : objs)
-			this.objs.add(obj);
+	public AbstractInfagePacket() {
+		super(Unpooled.buffer());
 	}
 
-	@Override
-	public void apply(ServerPlayPacketListener listener) {
-		// TODO
-	}
-
-	@Override
-	public void read(PacketByteBuf buf) throws IOException {
-
-	}
-
-	@Override
-	public void write(PacketByteBuf buf) throws IOException {
-		for (Object obj : objs)
-			writeObj(buf, obj);
-	}
+	public abstract Identifier getId();
 
 	public void writeObj(PacketByteBuf buf, Object x) throws IOException {
 		if (x == null) {
@@ -109,6 +85,5 @@ public abstract class AbstractC2SPacket implements Packet<ServerPlayPacketListen
 
 		}
 	}
-
 
 }
