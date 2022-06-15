@@ -1,10 +1,11 @@
 package net.leawind.infage.client.gui.widget;
 
-import java.awt.datatransfer.Clipboard;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import net.leawind.infage.settings.InfageSettings;
 import net.leawind.infage.util.KeyCode;
+import net.minecraft.client.Keyboard;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.AbstractButtonWidget;
@@ -14,7 +15,8 @@ import net.minecraft.util.Identifier;
 
 // 可编辑多行文本域
 public class MultilineTextFieldWidget extends AbstractButtonWidget {
-	private static Clipboard SYS_CLIPBOARD = null;
+	private static Keyboard CLIPBOARD = MinecraftClient.getInstance().keyboard;
+	private TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer; // 获取文本渲染器
 	private static final String SEPERATOR = " \n\t.`'\";:|";
 	private static final Identifier TEXTURE_BG = new Identifier(InfageSettings.NAMESPACE, "textures/gui/codefield_background.png");
 	private boolean isEditable = true;
@@ -33,10 +35,10 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 	private int selectEnd = 0;
 	private Map<KeyCombination, KeyEventHandler> keyBindings = new HashMap<>();
 
-
 	public MultilineTextFieldWidget(TextRenderer textRenderer, int x, int y, int width, int height, Text text) {
 		super(x, y, width, height, text);
-		this.registerDefaultKeyBindings();
+		this.registerDefaultKeyBindings(); // 注册按键绑定
+		// this.windowHeight = this.height / this.textRenderer.fontHeight; // 计算窗口中可以显示多少行
 	}
 
 	// 注册默认键盘事件
@@ -69,17 +71,14 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 	}
 
 	@Override
-	public void render(net.minecraft.client.util.math.MatrixStack matrices, int mouseX, int mouseY, float delta) {
-		super.render(matrices, mouseX, mouseY, delta);
-	}
-
-	@Override
 	public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
 		if (this.visible) {
 			// TODO render MLF
 			this.renderBackground(matrices, mouseX, mouseY, delta);
+			this.renderTexts(matrices, mouseX, mouseY, delta);
 		}
 	}
+
 
 	public void tick() {}
 
@@ -98,7 +97,7 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 	 */
 
 	// 绘制背景
-	public void renderBackground(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+	private void renderBackground(MatrixStack matrices, int mouseX, int mouseY, float delta) {
 		MinecraftClient minecraftClient = MinecraftClient.getInstance();
 		minecraftClient.getTextureManager().bindTexture(TEXTURE_BG);
 		drawTexture(matrices, this.x + 5, this.y + 5, 0, 0, this.width - 10, this.height - 10, 512, 512); // 中
@@ -113,6 +112,28 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 		drawTexture(matrices, this.x + this.width - 5, this.y + 5, 5, this.height - 2 * 5, 24 + 22 - 3, 23 + 3, 3, 22 - 2 * 3, 256, 256); // 右
 	}
 
+	// TODO绘制文本
+	private void renderTexts(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+		// windowX|Y
+		// 计算显示区域的字符串列表
+		String[] allLines = this.content.split("\n");
+		String[] vlines = Arrays.copyOfRange(allLines, this.windowY, this.windowY + this.windowHeight);
+		for (int i = 0; i < vlines.length; i++) {
+			String line;
+			if (this.windowX < vlines[i].length()) {
+				line = vlines[i].substring(this.windowX, this.windowX + Math.min(this.windowWidth, vlines[i].length()));
+			} else
+				line = "";
+			// TODO 绘制该行
+			int dx, dy;
+			dx = 0;
+			dy = this.textRenderer.fontHeight * i;
+
+			// drawStringWithShadow(matrices, this.textRenderer, line, 0, this.textRenderer.fontHeight * i,
+			// 0xFFFFFFFF);
+		}
+	}
+
 	/**
 	 * 功能相关函数
 	 */
@@ -120,24 +141,12 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 	// 读取剪切板
 	public static String getClipboard() {
 		// 获取剪贴板中的内容
-		// Transferable trans = SYS_CLIPBOARD.getContents(null);
-		// if (trans != null) {
-		// if (trans.isDataFlavorSupported(DataFlavor.stringFlavor)) {
-		// try {
-		// return (String) trans.getTransferData(DataFlavor.stringFlavor);
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// }
-		// }
-		// }
-		return "";
+		return CLIPBOARD.getClipboard();
 	}
 
 	// 设置剪切板
 	public static void setClipboard(String str) {
-		// Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		// Transferable trans = new StringSelection(str);
-		// clipboard.setContents(trans, null);
+		CLIPBOARD.setClipboard(str);
 	}
 
 	// 获取字符串

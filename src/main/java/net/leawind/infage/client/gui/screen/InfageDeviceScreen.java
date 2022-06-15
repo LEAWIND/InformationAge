@@ -185,6 +185,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 
 	@Override
 	public void resize(MinecraftClient client, int width, int height) {
+		super.resize(client, width, height);
 		String string0 = this.codeField.getString();
 		String string1 = this.outputsField.getString();
 		this.init(client, width, height);
