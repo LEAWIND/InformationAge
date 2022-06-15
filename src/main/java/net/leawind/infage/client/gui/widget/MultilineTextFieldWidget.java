@@ -3,16 +3,20 @@ package net.leawind.infage.client.gui.widget;
 import java.awt.datatransfer.Clipboard;
 import java.util.HashMap;
 import java.util.Map;
-import org.jetbrains.annotations.ApiStatus.OverrideOnly;
+import net.leawind.infage.settings.InfageSettings;
 import net.leawind.infage.util.KeyCode;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.AbstractButtonWidget;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 
 // 可编辑多行文本域
 public class MultilineTextFieldWidget extends AbstractButtonWidget {
-	public static Clipboard SYS_CLIPBOARD = null;
-
+	private static Clipboard SYS_CLIPBOARD = null;
+	private static final String SEPERATOR = " \n\t.`'\";:|";
+	private static final Identifier TEXTURE_BG = new Identifier(InfageSettings.NAMESPACE, "textures/gui/codefield_background.png");
 	private boolean isEditable = true;
 	private int maxLength = 16384;
 
@@ -27,7 +31,7 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 	private boolean isSelecting = false;
 	private int selectStart = 0;
 	private int selectEnd = 0;
-	public Map<KeyCombination, KeyEventHandler> keyBindings = new HashMap<>();
+	private Map<KeyCombination, KeyEventHandler> keyBindings = new HashMap<>();
 
 
 	public MultilineTextFieldWidget(TextRenderer textRenderer, int x, int y, int width, int height, Text text) {
@@ -50,12 +54,6 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-		System.out.printf("keyCode = %d, modifiers = %d %d %d\n", keyCode, modifiers & 0b100, modifiers & 0b010, modifiers & 0b001);
-
-		for (KeyCombination skb : this.keyBindings.keySet()) {
-			System.out.printf("[%d]kb %s\n", skb.hashCode(), skb);
-		}
-
 		KeyCombination kb = new KeyCombination(keyCode, modifiers);
 		System.out.printf("Clicked = [%d]kb %s\n", kb.hashCode(), kb);
 		if (this.keyBindings.containsKey(kb)) {
@@ -73,9 +71,15 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 	@Override
 	public void render(net.minecraft.client.util.math.MatrixStack matrices, int mouseX, int mouseY, float delta) {
 		super.render(matrices, mouseX, mouseY, delta);
-		// TODO
 	}
 
+	@Override
+	public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+		if (this.visible) {
+			// TODO render MLF
+			this.renderBackground(matrices, mouseX, mouseY, delta);
+		}
+	}
 
 	public void tick() {}
 
@@ -93,6 +97,21 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 	 * 渲染相关函数
 	 */
 
+	// 绘制背景
+	public void renderBackground(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+		MinecraftClient minecraftClient = MinecraftClient.getInstance();
+		minecraftClient.getTextureManager().bindTexture(TEXTURE_BG);
+		drawTexture(matrices, this.x + 5, this.y + 5, 0, 0, this.width - 10, this.height - 10, 512, 512); // 中
+		minecraftClient.getTextureManager().bindTexture(WIDGETS_LOCATION);
+		drawTexture(matrices, this.x, this.y, 5, 5, 24, 23, 3, 3, 256, 256); // 左上
+		drawTexture(matrices, this.x, this.y + this.height - 5, 5, 5, 24, 23 + 22 - 3, 3, 3, 256, 256); // 左下
+		drawTexture(matrices, this.x + this.width - 5, this.y, 5, 5, 24 + 22 - 3, 23, 3, 3, 256, 256); // 右上
+		drawTexture(matrices, this.x + this.width - 5, this.y + this.height - 5, 5, 5, 24 + 22 - 3, 23 + 22 - 3, 3, 3, 256, 256); // 右下
+		drawTexture(matrices, this.x + 5, this.y, this.width - 2 * 5, 5, 24 + 3, 23, 22 - 2 * 3, 3, 256, 256); // 上
+		drawTexture(matrices, this.x + 5, this.y + this.height - 5, this.width - 2 * 5, 5, 24 + 3, 23 + 22 - 3, 22 - 2 * 3, 3, 256, 256); // 下
+		drawTexture(matrices, this.x, this.y + 5, 5, this.height - 2 * 5, 24, 23 + 3, 3, 22 - 2 * 3, 256, 256); // 左
+		drawTexture(matrices, this.x + this.width - 5, this.y + 5, 5, this.height - 2 * 5, 24 + 22 - 3, 23 + 3, 3, 22 - 2 * 3, 256, 256); // 右
+	}
 
 	/**
 	 * 功能相关函数
@@ -129,6 +148,8 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 	// 设置字符串
 	public void setString(String str) {
 		this.content = str;
+		this.setCursorCoord(this.cursorX, this.cursorY);
+
 	}
 
 	// 在光标处插入字符串
@@ -172,6 +193,36 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 		return i;
 	}
 
+	// 设置光标索引
+	private void setCursorIndex(int i) {
+		i = Math.max(0, Math.min(this.content.length(), i));
+		this.cursorI = i;
+		int[] cc = this.getIndexCoord(i);
+		this.cursorX = cc[0];
+		this.cursorY = cc[1];
+	}
+
+	// 设置光标位置
+	public void setCursorCoord(int x, int y) {
+		int ix = 0, iy = 0, ic = 0;
+		for (; ic < this.content.length(); ic++) {
+			char c = this.content.charAt(ic);
+			if (iy == y) {
+				if (c == '\n') {
+					break;
+				} else if (ix == x) {
+					break;
+				} else {
+					ix++;
+				}
+			} else if (c == '\n') {
+				iy++;
+				ix = 0;
+			}
+		}
+		this.cursorI = ic;
+	}
+
 	// 获取光标位置
 	public int[] getIndexCoord(int ind) {
 		int x = 0, y = 0;
@@ -188,7 +239,9 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	// 获取选取的字符串
 	public String getSelected() {
-		return this.isSelecting ? this.content.substring(this.selectStart, this.selectEnd) : null;
+		int i = this.selectStart < this.selectEnd ? this.selectStart : this.selectEnd;
+		int j = this.selectStart < this.selectEnd ? this.selectEnd : this.selectStart;
+		return this.content.substring(i, j);
 	}
 
 	// 剪切选取部分
@@ -201,7 +254,10 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	// 删除选取部分
 	private void deleteSelected() {
-		this.content = this.content.substring(0, this.selectStart) + this.content.substring(this.selectEnd);
+		int i = this.selectStart < this.selectEnd ? this.selectStart : this.selectEnd;
+		int j = this.selectStart < this.selectEnd ? this.selectEnd : this.selectStart;
+		this.setCursorIndex(i);
+		this.content = this.content.substring(0, i) + this.content.substring(j);
 	}
 
 	// 复制选取部分
@@ -211,13 +267,29 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 		}
 	}
 
-	// 在光标处粘贴
+	// 粘贴
 	public void paste() {
 		String str = getClipboard();
+		if (this.isSelecting)
+			this.deleteSelected();
 		this.content = this.content.substring(0, this.cursorI) + str + this.content.substring(this.cursorI);
 		this.setCursorIndex(this.cursorI + str.length());
 	}
 
+	// 输入
+	public void write(String str) {
+		if (this.isSelecting)
+			this.deleteSelected();
+		this.content = this.content.substring(0, this.cursorI) + str + this.content.substring(this.cursorI);
+		this.setCursorIndex(this.cursorI + str.length());
+	}
+
+	// 删除
+	public void erase() {
+		if (this.isSelecting)
+			this.deleteSelected();
+		this.deleteLeft();
+	}
 
 	// 选择全部
 	public void selectAll() {
@@ -236,15 +308,6 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 		this.content = this.content.substring(0, i0) + this.content.substring(i1);
 		if (this.cursorI > this.content.length())
 			this.setCursorIndex(this.content.length());
-	}
-
-	// 设置光标索引
-	private void setCursorIndex(int i) {
-		i = Math.max(0, Math.min(this.content.length(), i));
-		this.cursorI = i;
-		int[] cc = this.getIndexCoord(i);
-		this.cursorX = cc[0];
-		this.cursorY = cc[1];
 	}
 
 	// 获取光标所在行
