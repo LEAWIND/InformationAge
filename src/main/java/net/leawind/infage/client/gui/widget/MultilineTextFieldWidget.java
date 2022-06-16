@@ -2,6 +2,7 @@ package net.leawind.infage.client.gui.widget;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import net.leawind.infage.settings.InfageSettings;
 import net.leawind.infage.util.KeyCode;
@@ -16,12 +17,15 @@ import net.minecraft.util.Identifier;
 // 可编辑多行文本域
 public class MultilineTextFieldWidget extends AbstractButtonWidget {
 	private static Keyboard CLIPBOARD = MinecraftClient.getInstance().keyboard;
-	private TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer; // 获取文本渲染器
+	private final TextRenderer textRenderer; // 文本渲染器
 	private static final String SEPERATOR = " \n\t.`'\";:|";
 	private static final Identifier TEXTURE_BG = new Identifier(InfageSettings.NAMESPACE, "textures/gui/codefield_background.png");
 	private boolean isEditable = true;
 	private int maxLength = 16384;
+	public boolean doShowLineCount = true;
 
+	public double lineHeight = 1.2;
+	private int tickCounter; // tick 计数器
 	private String content = "";
 	private int windowWidth = 30;
 	private int windowHeight = 20;
@@ -38,7 +42,8 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 	public MultilineTextFieldWidget(TextRenderer textRenderer, int x, int y, int width, int height, Text text) {
 		super(x, y, width, height, text);
 		this.registerDefaultKeyBindings(); // 注册按键绑定
-		// this.windowHeight = this.height / this.textRenderer.fontHeight; // 计算窗口中可以显示多少行
+		this.windowHeight = (int) (this.height / (textRenderer.fontHeight * this.lineHeight)); // 计算同时显示的行数上限
+		this.textRenderer = textRenderer;
 	}
 
 	// 注册默认键盘事件
@@ -65,11 +70,12 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 		return true;
 	}
 
-
+	// 注册按键绑定
 	public void registerKey(KeyCombination kb, KeyEventHandler h) {
 		this.keyBindings.put(kb, h);
 	}
 
+	// 渲染本组件
 	@Override
 	public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
 		if (this.visible) {
@@ -79,8 +85,10 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 		}
 	}
 
-
-	public void tick() {}
+	//
+	public void tick() {
+		this.tickCounter++;
+	}
 
 	// 设置长度上限
 	public void setMaxLength(int maxLength) {
@@ -112,27 +120,52 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 		drawTexture(matrices, this.x + this.width - 5, this.y + 5, 5, this.height - 2 * 5, 24 + 22 - 3, 23 + 3, 3, 22 - 2 * 3, 256, 256); // 右
 	}
 
-	// TODO绘制文本
+
+
+	// 计算行号文本
+	private String getLineIndexString(int lineIndex, int width) {
+		return String.format(Locale.CHINA, "%" + width + "d", lineIndex) + "| ";
+	}
+
+
+	// 绘制文本
 	private void renderTexts(MatrixStack matrices, int mouseX, int mouseY, float delta) {
 		// windowX|Y
 		// 计算显示区域的字符串列表
 		String[] allLines = this.content.split("\n");
 		String[] vlines = Arrays.copyOfRange(allLines, this.windowY, this.windowY + this.windowHeight);
-		for (int i = 0; i < vlines.length; i++) {
+		// 确定行号最大宽度
+		int lcw = 1 + (int) Math.max(Math.log10(this.windowY), Math.log10(this.windowY + this.windowHeight));
+		for (int i = 0; (i < vlines.length) && (vlines[i] != null); i++) {
+			int lineCount = i + this.windowY;
 			String line;
 			if (this.windowX < vlines[i].length()) {
 				line = vlines[i].substring(this.windowX, this.windowX + Math.min(this.windowWidth, vlines[i].length()));
 			} else
 				line = "";
-			// TODO 绘制该行
-			int dx, dy;
-			dx = 0;
-			dy = this.textRenderer.fontHeight * i;
-
-			// drawStringWithShadow(matrices, this.textRenderer, line, 0, this.textRenderer.fontHeight * i,
-			// 0xFFFFFFFF);
+			// 计算行号文本
+			String lineCountString = this.getLineIndexString(lineCount, lcw);
+			line = lineCountString + line;
+			// 确定该行的宽度
+			line = this.textRenderer.trimToWidth(line, this.width - 10); // TODO border width
+			// 计算坐标
+			int dx = this.x + 5;
+			int dy = (int) (this.y + (this.textRenderer.fontHeight + this.lineHeight) * i + 5);
+			this.textRenderer.draw(matrices, line, dx, dy, 0xFFFFFFFF);
+			// 绘制光标
+			if (lineCount == this.cursorY && (this.tickCounter % 10 < 5)) {
+				this.cursorX = Math.min(this.cursorX, line.length());
+				String tpString = line.substring(0, this.cursorX);
+				int cw = this.textRenderer.getWidth(tpString);
+				int cx = this.x + cw + this.textRenderer.getWidth(lineCountString) + 5;
+				int cy = dy + this.textRenderer.fontHeight - 1;
+				drawVerticalLine(matrices, cx, dy - 2, cy, 0xFFFFFF00);
+				drawVerticalLine(matrices, cx + 1, dy - 1, cy, 0xFFFFFF00);
+			}
 		}
 	}
+
+
 
 	/**
 	 * 功能相关函数

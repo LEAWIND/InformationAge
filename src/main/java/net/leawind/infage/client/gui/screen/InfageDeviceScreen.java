@@ -250,6 +250,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		return true;
 	}
 
+	// 写入所有数据
 	public void writeAllDataToBuf(DeviceUpdateC2SPacket p) {
 		p.writeBoolean(this.isRunning);
 		p.writeByteArray(this.portStates);
@@ -348,7 +349,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	 * @param scale 缩放
 	 * @param doFill 是否填充
 	 */
-	public void drawBorder(MatrixStack matrices, int x, int y, int w, int h, int scale, boolean doFill) {
+	private void drawBorder(MatrixStack matrices, int x, int y, int w, int h, int scale, boolean doFill) {
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 		client.getTextureManager().bindTexture(TEXTURE_WIDGETS);
 		int s = scale * 2;
@@ -375,7 +376,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	 * @param th 贴图分辨率
 	 * @param doFill 是否填充中心区域
 	 */
-	public void drawBorderRect(MatrixStack matrices, int x, int y, int w, int h, int b, int u, int v, int rw, int rh, int rb, int tw, int th, boolean doFill) {
+	private void drawBorderRect(MatrixStack matrices, int x, int y, int w, int h, int b, int u, int v, int rw, int rh, int rb, int tw, int th, boolean doFill) {
 		drawTexture(matrices, x, y, b, b, u, v, rb, rb, tw, th); // 左上
 		drawTexture(matrices, x, y + h - b, b, b, u, v + rh - rb, rb, rb, tw, th); // 左下
 		drawTexture(matrices, x + w - b, y, b, b, u + rw - rb, v, rb, rb, tw, th); // 右上
