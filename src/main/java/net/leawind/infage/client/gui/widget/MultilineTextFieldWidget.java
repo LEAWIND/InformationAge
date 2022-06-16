@@ -109,7 +109,7 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 		this.registerKey(null, (keyCode, scanCode, flag) -> {
 			System.out.printf("UK KEVT: kc=%d, sc=%d, f= %d, %d, %d, %d\n", keyCode, scanCode, flag & 0b1000, flag & 0b0100, flag & 0b0010, flag & 0b0001);
-			return true;
+			return false;
 		});
 	}
 
@@ -124,8 +124,9 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 			return this.keyBindings.get(kb).exec(keyCode, scanCode, flag);
 		} else if (this.keyBindings.containsKey(null)) {
 			return this.keyBindings.get(null).exec(keyCode, scanCode, flag);
+		} else {
+			return true;
 		}
-		return true;
 	}
 
 	// 输入字符
@@ -253,19 +254,6 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 				}
 			}
 		}
-
-
-		// // 绘制光标
-		// if (lineCount == this.cursorY && (this.tickCounter % 6 < 3 || !this.isEditable)) {
-		// this.cursorX = Math.min(this.cursorX, line.length()); // 计算光标位置
-		// String tpString = line.substring(0, this.cursorX);
-		// int cw = this.textRenderer.getWidth(tpString);
-		// int cx = this.x + cw + this.textRenderer.getWidth(lineCountString) + 5;
-		// int cy = dy + this.textRenderer.fontHeight - 1;
-		// drawVerticalLine(matrices, cx, dy - 3, cy, 0xFFFFFF00);
-		// drawVerticalLine(matrices, cx + 1, dy - 3, cy, 0xFFFFFF00);
-		// }
-		// }
 	}
 
 	/**
@@ -492,8 +480,6 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 		this.setCursorIndex(ind + str.length());
 	}
 
-
-
 	// 输入
 	public void write(String str) {
 		if (this.isSelecting)
@@ -563,9 +549,17 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	public void indentLine() {}
 
-	private void cursorMoveUp() {}
+	// 光标上移
+	private void cursorMoveUp() {
+		if (this.cursorY > 0)
+			this.setCursorCoord(this.cursorX, this.cursorY - 1);
+	}
 
-	private void cursorMoveDown() {}
+	// 光标下移
+	private void cursorMoveDown() {
+		if (this.cursorY < this.lines.size() - 1)
+			this.setCursorCoord(this.cursorX, this.cursorY + 1);
+	}
 
 	// 光标移动到底部
 	public void cursorMoveBottom() {}

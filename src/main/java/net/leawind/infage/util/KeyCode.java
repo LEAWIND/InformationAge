@@ -34,6 +34,7 @@ public final class KeyCode {
 		DELETE = 261;
 		RIGHT = 262;
 		LEFT = 263;
+		DOWN = 264;
 		UP = 265;
 		PAGE_UP = 266;
 		PAGE_DOWN = 267;
@@ -41,7 +42,6 @@ public final class KeyCode {
 		END = 269;
 		CAPSLOCK = 280;
 		NUMLOCK = 282;
-		DOWN = 336;
 		LSHIFT = 340;
 		LCTRL = 341;
 		LALT = 342;
