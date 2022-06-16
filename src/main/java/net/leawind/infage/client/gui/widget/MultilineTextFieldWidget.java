@@ -1,7 +1,8 @@
 package net.leawind.infage.client.gui.widget;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import net.leawind.infage.settings.InfageSettings;
@@ -18,56 +19,120 @@ import net.minecraft.util.Identifier;
 public class MultilineTextFieldWidget extends AbstractButtonWidget {
 	private static Keyboard CLIPBOARD = MinecraftClient.getInstance().keyboard;
 	private final TextRenderer textRenderer; // 文本渲染器
-	private static final String SEPERATOR = " \n\t.`'\";:|";
+	private static final String SEPERATOR_PATTERN = "[ \\t\\n.`'\";|:]";
 	private static final Identifier TEXTURE_BG = new Identifier(InfageSettings.NAMESPACE, "textures/gui/codefield_background.png");
-	private boolean isEditable = true;
+	private boolean editable = true;
 	private int maxLength = 16384;
-	public boolean doShowLineCount = true;
 
-	public double lineHeight = 1.2;
+	private int charWidth = 6; // * fontHeight
+	private int lineHeight = 10; // * fontHeight
 	private int tickCounter; // tick 计数器
-	private String content = "";
+	// private String content = "";
+	private ArrayList<String> lines = new ArrayList<>();
+
 	private int windowWidth = 30;
 	private int windowHeight = 20;
 	private int windowX = 0;
 	private int windowY = 0;
-	private int cursorI = 0;
+
 	private int cursorX = 0;
 	private int cursorY = 0;
 	private boolean isSelecting = false;
-	private int selectStart = 0;
-	private int selectEnd = 0;
+
+	private int[] selectStart = {0, 0};
+	private int[] selectEnd = {0, 0};
+
+
 	private Map<KeyCombination, KeyEventHandler> keyBindings = new HashMap<>();
 
 	public MultilineTextFieldWidget(TextRenderer textRenderer, int x, int y, int width, int height, Text text) {
 		super(x, y, width, height, text);
 		this.registerDefaultKeyBindings(); // 注册按键绑定
-		this.windowHeight = (int) (this.height / (textRenderer.fontHeight * this.lineHeight)); // 计算同时显示的行数上限
 		this.textRenderer = textRenderer;
+		this.charWidth = (int) (textRenderer.fontHeight * 0.7); // 字符宽度
+		this.lineHeight = (int) (textRenderer.fontHeight * 1.1); // 行高
+		this.windowWidth = (int) (this.width / this.charWidth); // 同时显示的列数上限
+		this.windowHeight = (int) (this.height / this.lineHeight) - 1; // 计算同时显示的行数上限
 	}
 
 	// 注册默认键盘事件
 	private void registerDefaultKeyBindings() {
-		this.registerKey(new KeyCombination('W', 0b0000), () -> {
-			System.out.println("kvt: W");
+		this.registerKey(new KeyCombination(KeyCode.RIGHT, 0b0000), (keyCode, scanCode, flag) -> {
+			this.cursorMoveRight();
+			this.makeCursorVisible();
+			return true;
 		});
-		this.registerKey(new KeyCombination(KeyCode.ESC, 0b0000), () -> {
-			System.out.println("kvt: Esc");
+		this.registerKey(new KeyCombination(KeyCode.LEFT, 0b0000), (keyCode, scanCode, flag) -> {
+			this.cursorMoveLeft();
+			this.makeCursorVisible();
+			return true;
 		});
-		this.registerKey(new KeyCombination(KeyCode.Letter('S'), 0b0001), () -> {
-			System.out.println("kvt: 0b001 + S");
+		this.registerKey(new KeyCombination(KeyCode.UP, 0b0000), (keyCode, scanCode, flag) -> {
+			this.cursorMoveUp();
+			this.makeCursorVisible();
+			return true;
+		});
+		this.registerKey(new KeyCombination(KeyCode.DOWN, 0b0000), (keyCode, scanCode, flag) -> {
+			this.cursorMoveDown();
+			this.makeCursorVisible();
+			return true;
+		});
+		this.registerKey(new KeyCombination(KeyCode.HOME, 0b0000), (keyCode, scanCode, flag) -> {
+			this.cursorHome();
+			this.makeCursorVisible();
+			return true;
+		});
+		this.registerKey(new KeyCombination(KeyCode.END, 0b0000), (keyCode, scanCode, flag) -> {
+			this.cursorEnd();
+			this.makeCursorVisible();
+			return true;
+		});
+		this.registerKey(new KeyCombination(KeyCode.BACKSPACE, 0b0000), (keyCode, scanCode, flag) -> {
+			this.deleteLeft();
+			this.makeCursorVisible();
+			return true;
+		});
+		this.registerKey(new KeyCombination(KeyCode.DELETE, 0b0000), (keyCode, scanCode, flag) -> {
+			this.deleteRight();
+			this.makeCursorVisible();
+			return true;
+		});
+
+		this.registerKey(null, (keyCode, scanCode, flag) -> {
+			System.out.printf("KeyEvt: kc=%d, sc=%d, f= %d, %d, %d, %d\n", keyCode, scanCode, flag & 0b1000, flag & 0b0100, flag & 0b0010, flag & 0b0001);
+			return true;
 		});
 	}
 
+
+	// 原生键盘事件
 	@Override
-	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-		KeyCombination kb = new KeyCombination(keyCode, modifiers);
-		System.out.printf("Clicked = [%d]kb %s\n", kb.hashCode(), kb);
+	public boolean keyPressed(int keyCode, int scanCode, int flag) {
+		System.out.printf("KeyPressed: kc=%d, sc=%d, f= %d, %d, %d, %d\n", keyCode, scanCode, flag & 0b1000, flag & 0b0100, flag & 0b0010, flag & 0b0001);
+		if (!this.isFocused())
+			return false;
+		KeyCombination kb = new KeyCombination(keyCode, flag);
 		if (this.keyBindings.containsKey(kb)) {
-			System.out.println("Key event handler found !!");
-			this.keyBindings.get(kb).exec();
+			return this.keyBindings.get(kb).exec(keyCode, scanCode, flag);
+		} else if (this.keyBindings.containsKey(null)) {
+			this.keyBindings.get(null).exec(keyCode, scanCode, flag);
 		}
 		return true;
+	}
+
+	// 输入字符
+	@Override
+	public boolean charTyped(char ch, int flag) {
+		if (!this.editable)
+			return false;
+		System.out.printf("char typed: [%c], f= %d, %d, %d, %d\n", ch, flag & 0b1000, flag & 0b0100, flag & 0b0010, flag & 0b0001);
+		if (this.isSelecting)
+			this.deleteSelected();
+		String line = this.getCursorLine();
+		line = line.substring(0, this.cursorX) + Character.toString(ch) + line.substring(this.cursorX);
+		this.lines.set(this.cursorY, line);
+		this.cursorMoveRight();
+		return false;
 	}
 
 	// 注册按键绑定
@@ -79,7 +144,6 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 	@Override
 	public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
 		if (this.visible) {
-			// TODO render MLF
 			this.renderBackground(matrices, mouseX, mouseY, delta);
 			this.renderTexts(matrices, mouseX, mouseY, delta);
 		}
@@ -95,10 +159,20 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 		this.maxLength = maxLength;
 	}
 
+	public int getMaxLength() {
+		return this.maxLength;
+	}
+
+	public boolean isEditable() {
+		return this.editable;
+	}
+
 	// 设置是否可以编辑
 	public void setEditable(boolean b) {
-		this.isEditable = b;
+		this.editable = b;
 	}
+
+
 
 	/**
 	 * 渲染相关函数
@@ -124,52 +198,73 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	// 计算行号文本
 	private String getLineIndexString(int lineIndex, int width) {
-		return String.format(Locale.CHINA, "%" + width + "d", lineIndex) + "| ";
+		return String.format(Locale.CHINA, "%" + width + "d", lineIndex) + "|";
 	}
 
+	// 绘制等宽文本
+	private void drawMonoText(MatrixStack matrices, int x, int y, String text, int charWidth, int color) {
+		for (int i = 0; i < text.length(); i++)
+			this.textRenderer.draw(matrices, text.substring(i, i + 1), x + (float) charWidth * i, y, color);
+	}
 
 	// 绘制文本
 	private void renderTexts(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-		// windowX|Y
+		// 行号字符串最大宽度
+		int lineCountWidth = (int) Math.log10(this.windowY + this.windowHeight) + 1;
 		// 计算显示区域的字符串列表
-		String[] allLines = this.content.split("\n");
-		String[] vlines = Arrays.copyOfRange(allLines, this.windowY, this.windowY + this.windowHeight);
-		// 确定行号最大宽度
-		int lcw = 1 + (int) Math.max(Math.log10(this.windowY), Math.log10(this.windowY + this.windowHeight));
-		for (int i = 0; (i < vlines.length) && (vlines[i] != null); i++) {
-			int lineCount = i + this.windowY;
-			String line;
-			if (this.windowX < vlines[i].length()) {
-				line = vlines[i].substring(this.windowX, this.windowX + Math.min(this.windowWidth, vlines[i].length()));
-			} else
-				line = "";
-			// 计算行号文本
-			String lineCountString = this.getLineIndexString(lineCount, lcw);
+
+		List<String> visiblelines = this.lines.subList(this.windowY, Math.min(this.windowY + this.windowHeight, this.lines.size()));
+		int i = 0;
+		// Iterator<String> lineIterator = visiblelines.iterator(); // 遍历每一行
+		// while (lineIterator.hasNext()) {
+		// String line = lineIterator.next();
+		for (String line : visiblelines) {
+
+			int lineCount = this.windowY + i; // 行号
+			// 行号文本
+			String lineCountString = this.getLineIndexString(lineCount, lineCountWidth);
+			// 在行文本前加上行号
 			line = lineCountString + line;
-			// 确定该行的宽度
-			line = this.textRenderer.trimToWidth(line, this.width - 10); // TODO border width
-			// 计算坐标
+			if (line.length() > this.windowWidth)
+				line = line.substring(0, this.windowWidth);
 			int dx = this.x + 5;
-			int dy = (int) (this.y + (this.textRenderer.fontHeight + this.lineHeight) * i + 5);
-			this.textRenderer.draw(matrices, line, dx, dy, 0xFFFFFFFF);
-			// 绘制光标
-			if (lineCount == this.cursorY && (this.tickCounter % 10 < 5)) {
-				this.cursorX = Math.min(this.cursorX, line.length());
-				String tpString = line.substring(0, this.cursorX);
-				int cw = this.textRenderer.getWidth(tpString);
-				int cx = this.x + cw + this.textRenderer.getWidth(lineCountString) + 5;
-				int cy = dy + this.textRenderer.fontHeight - 1;
-				drawVerticalLine(matrices, cx, dy - 2, cy, 0xFFFFFF00);
-				drawVerticalLine(matrices, cx + 1, dy - 1, cy, 0xFFFFFF00);
+			int dy = (int) (this.y + 5 + i * this.lineHeight);
+			this.drawMonoText(matrices, dx, dy, line, this.charWidth, 0xFFFFFFFF);
+			i++;
+		}
+		// 绘制光标
+		if (this.editable && (this.tickCounter % 8 < 4)) {
+			if ((this.cursorY >= this.windowY) && (this.cursorY <= this.windowY + this.windowHeight)) {
+				if (this.cursorX >= this.windowX && this.cursorX <= this.windowX + this.windowWidth) {
+					int cx = this.x + 5 + this.charWidth * (this.cursorX + lineCountWidth + 1);
+					int cy = this.y + 5 + (this.cursorY - this.windowY) * this.lineHeight;
+					int dy = cy + this.lineHeight;
+					// System.out.printf("cx=%d, cy=%d, dy=%d\n", cx, cy, dy);
+					drawVerticalLine(matrices, cx, cy - 2, dy, 0xFFFFFF00);
+					drawVerticalLine(matrices, cx + 1, cy - 2, dy, 0xFFFFFF00);
+				}
 			}
 		}
+
+
+		// // 绘制光标
+		// if (lineCount == this.cursorY && (this.tickCounter % 6 < 3 || !this.isEditable)) {
+		// this.cursorX = Math.min(this.cursorX, line.length()); // 计算光标位置
+		// String tpString = line.substring(0, this.cursorX);
+		// int cw = this.textRenderer.getWidth(tpString);
+		// int cx = this.x + cw + this.textRenderer.getWidth(lineCountString) + 5;
+		// int cy = dy + this.textRenderer.fontHeight - 1;
+		// drawVerticalLine(matrices, cx, dy - 3, cy, 0xFFFFFF00);
+		// drawVerticalLine(matrices, cx + 1, dy - 3, cy, 0xFFFFFF00);
+		// }
+		// }
 	}
-
-
 
 	/**
 	 * 功能相关函数
 	 */
+
+
 
 	// 读取剪切板
 	public static String getClipboard() {
@@ -184,106 +279,109 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	// 获取字符串
 	public String getString() {
-		return this.content;
+		if (this.lines.size() == 0)
+			return "";
+		return String.join("\n", this.lines);
 	}
 
 	// 设置字符串
 	public void setString(String str) {
-		this.content = str;
+		if (str.length() > this.maxLength)
+			str = str.substring(0, this.maxLength);
+		this.lines.clear();
+		String[] linesArr = str.split("\n", str.length());
+		for (String line : linesArr)
+			this.lines.add(line);
 		this.setCursorCoord(this.cursorX, this.cursorY);
+	}
+
+	// 滚动到指定位置
+	private void scrollTo(int x, int y) throws IndexOutOfBoundsException {
+		if (y > this.lines.size())
+			throw new IndexOutOfBoundsException("Trying to scroll to line " + y + " > " + this.lines.size());
+		this.windowY = y;
+		int maxX = 0; // 求最大 x
+		for (String line : lines)
+			maxX = Math.max(maxX, line.length());
+		this.windowX = Math.min(maxX - 1, x);
+	}
+
+	// 滚动
+	private void scrollBy(int x, int y) {
+		this.scrollTo(this.windowX + x, Math.min(this.windowY + y, this.lines.size()));
+	}
+
+
+
+	// TODO 移动窗口到能看见光标的位置
+	private void makeCursorVisible() {
 
 	}
 
-	// 在光标处插入字符串
-	public void insertString(String str) {
-		this.insertString(str, this.cursorI);
+
+
+	// 设置光标位置 (列， 行)
+	private void setCursorCoord(int x, int y) throws IndexOutOfBoundsException {
+		if (y >= this.lines.size())
+			y = this.lines.size() - 1;
+		if (x > this.lines.get(y).length())
+			x = this.lines.get(y).length();
+
+		this.cursorX = x;
+		this.cursorY = y;
 	}
 
-	// 在指定位置插入字符串
-	public void insertString(String str, int index) {
-		assert (index >= 0 && index < this.content.length());
-		this.content = this.content.substring(0, index) + str + this.content.substring(index);
-		this.setCursorIndex(index + str.length());
-	}
-
-	// 在光标处插入字符
-	public void insert(char c) {
-		this.insert(c, this.cursorI);
-	}
-
-	// 在指定位置插入字符
-	public void insert(char c, int index) {
-		this.insertString(String.valueOf(c), index);
-	}
-
-	// 获取光标索引
-	public int getCursorIndex() {
+	// 计算光标位置
+	private int[] calcCoordOfIndex(int ind) {
 		int i = 0;
-		int x = 0, y = 0;
-		while (i < this.content.length()) {
-			char c = this.content.charAt(i);
-			if (x == cursorX && y == cursorY)
-				break;
-			if (c == '\n') {
-				y++;
-				x = 0;
-			} else {
-				x++;
-			}
-			i++;
+		int y = 0;
+		int lineLen = 0;
+		for (String line : this.lines) {
+			lineLen = line.length();
+			if (i < i + lineLen)
+				return new int[] {ind - i, y};
+			y++;
 		}
-		return i;
+		return new int[] {lineLen, y};
 	}
 
-	// 设置光标索引
-	private void setCursorIndex(int i) {
-		i = Math.max(0, Math.min(this.content.length(), i));
-		this.cursorI = i;
-		int[] cc = this.getIndexCoord(i);
-		this.cursorX = cc[0];
-		this.cursorY = cc[1];
-	}
-
-	// 设置光标位置
-	public void setCursorCoord(int x, int y) {
-		int ix = 0, iy = 0, ic = 0;
-		for (; ic < this.content.length(); ic++) {
-			char c = this.content.charAt(ic);
-			if (iy == y) {
-				if (c == '\n') {
-					break;
-				} else if (ix == x) {
-					break;
-				} else {
-					ix++;
-				}
-			} else if (c == '\n') {
-				iy++;
-				ix = 0;
-			}
+	// 获取选取区域的头尾坐标
+	public int[][] getSelectCoords() {
+		int[] i0;
+		int[] i1;
+		if (this.selectStart[1] > this.selectEnd[1]) { // 按行确定先后
+			i0 = this.selectEnd;
+			i1 = this.selectStart;
+		} else if (this.selectStart[0] > this.selectEnd[0]) { // 按列确定先后
+			i0 = this.selectEnd;
+			i1 = this.selectStart;
+		} else {
+			i0 = this.selectStart;
+			i1 = this.selectEnd;
 		}
-		this.cursorI = ic;
-	}
-
-	// 获取光标位置
-	public int[] getIndexCoord(int ind) {
-		int x = 0, y = 0;
-		for (int i = 0; i < ind; i++) {
-			char c = this.content.charAt(i);
-			if (c == '\n') {
-				y++;
-				x = 0;
-			} else
-				x++;
-		}
-		return new int[] {x, y};
+		return new int[][] {i0, i1};
 	}
 
 	// 获取选取的字符串
 	public String getSelected() {
-		int i = this.selectStart < this.selectEnd ? this.selectStart : this.selectEnd;
-		int j = this.selectStart < this.selectEnd ? this.selectEnd : this.selectStart;
-		return this.content.substring(i, j);
+		int[][] sc = this.getSelectCoords();
+		int[] i0 = sc[0];
+		int[] i1 = sc[1];
+
+		if (i0[1] == i1[1]) { // 如果在同一行
+			return this.lines.get(i0[1]).substring(i0[0], i1[0]);
+		} else {
+			ArrayList<String> slines = (ArrayList<String>) this.lines.subList(i0[1], i1[1] + 1); // 包括 i0 -> i1 所在行
+			String strFirst = slines.remove(0); // i0 所在行
+			String strLast = slines.remove(slines.size() - 1); // i1 所在行
+
+			String str = strFirst.substring(i0[0]) + "\n";
+			for (String li : slines)
+				str += li + "\n";
+
+			str += strLast.substring(0, i1[0]);
+			return str;
+		}
 	}
 
 	// 剪切选取部分
@@ -296,34 +394,83 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	// 删除选取部分
 	private void deleteSelected() {
-		int i = this.selectStart < this.selectEnd ? this.selectStart : this.selectEnd;
-		int j = this.selectStart < this.selectEnd ? this.selectEnd : this.selectStart;
-		this.setCursorIndex(i);
-		this.content = this.content.substring(0, i) + this.content.substring(j);
+		int[][] sc = this.getSelectCoords();
+		int[] i0 = sc[0];
+		int[] i1 = sc[1];
+
+		if (i0[1] == i1[1]) {// 在同一行
+			String line = this.lines.get(i0[1]);
+			line = line.substring(0, i0[0]) + line.substring(i1[0]);
+			this.lines.set(i0[1], line);
+		} else {
+			String line;
+			// i0 所在行
+			line = this.lines.get(i0[1]);
+			this.lines.set(i0[1], line.substring(0, i0[0]));
+			// i1 所在行
+			line = this.lines.get(i1[1]);
+			this.lines.set(i1[1], line.substring(i1[0]));
+			// 删除中间行
+			int i = i1[1] - i0[1];
+			while (--i > 0)
+				this.lines.remove(i0[1] + 1);
+		}
+		// 设置光标
+		this.setCursorCoord(i0[0], i0[1]);
 	}
 
 	// 复制选取部分
-	public void copy() {
+	private void copy() {
 		if (this.isSelecting) {
 			setClipboard(this.getSelected());
 		}
 	}
 
 	// 粘贴
-	public void paste() {
+	private void paste() {
 		String str = getClipboard();
-		if (this.isSelecting)
+		if (this.isSelecting) {// 删除已选
 			this.deleteSelected();
-		this.content = this.content.substring(0, this.cursorI) + str + this.content.substring(this.cursorI);
-		this.setCursorIndex(this.cursorI + str.length());
+			this.isSelecting = false;
+		}
+		this.insertString(str, this.cursorX, this.cursorY);
+	}
+
+	// 插入字符串
+	private void insertString(String str, int x, int y) {
+		String[] nLines = str.split("\n", str.length());
+		if (nLines.length == 1) {
+			// 不用换行
+			String line = this.lines.get(y);
+			line = line.substring(0, x) + nLines[0] + line.substring(x);
+			this.lines.set(y, line);
+			// 移动光标位置
+			this.setCursorCoord(line.length(), y);
+		} else {
+			String line;
+			// 第一行
+			line = this.lines.get(y);
+			line += nLines[0];
+			// 中间行
+			for (int i = 1; i < nLines.length - 1; i++) {
+				line = nLines[i];
+				this.lines.add(y + i, line);
+			}
+			// 最后一行
+			int ly = y + nLines.length - 1;
+			line = this.lines.get(ly);
+			line = nLines[nLines.length - 1] + line;
+			this.lines.set(ly, line);
+			// 移动光标位置
+			this.setCursorCoord(nLines[nLines.length - 1].length(), ly);
+		}
 	}
 
 	// 输入
 	public void write(String str) {
 		if (this.isSelecting)
 			this.deleteSelected();
-		this.content = this.content.substring(0, this.cursorI) + str + this.content.substring(this.cursorI);
-		this.setCursorIndex(this.cursorI + str.length());
+		this.insertString(str, this.cursorX, this.cursorY);
 	}
 
 	// 删除
@@ -335,39 +482,30 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	// 选择全部
 	public void selectAll() {
-		this.selectStart = 0;
-		this.selectEnd = this.content.length();
+		this.selectStart[0] = 0;
+		this.selectStart[1] = 0;
+		int x = this.lines.get(this.lines.size() - 1).length();
+		int y = this.lines.size();
+		this.selectEnd[0] = x;
+		this.selectEnd[1] = y;
+		this.setCursorCoord(x, y);
 	}
 
 	// 删除光标所在行
-	public void deleteLine() {
-		int i0 = this.content.lastIndexOf("\n", this.cursorI);
-		if (i0 == -1)
-			i0 = 0;
-		int i1 = this.content.indexOf("\n", this.cursorI);
-		if (i1 == -1)
-			i1 = this.content.length();
-		this.content = this.content.substring(0, i0) + this.content.substring(i1);
-		if (this.cursorI > this.content.length())
-			this.setCursorIndex(this.content.length());
+	public void deleteCursorLine() {
+		this.lines.remove(this.cursorY);
+		this.setCursorCoord(this.cursorX, this.cursorY);
 	}
 
 	// 获取光标所在行
-	public String getLine() {
-		int i0 = this.content.lastIndexOf("\n", this.cursorI);
-		if (i0 == -1)
-			i0 = 0;
-		int i1 = this.content.indexOf("\n", this.cursorI);
-		if (i1 == -1)
-			i1 = this.content.length();
-		String line = this.content.substring(i0, i1);
-		return line;
+	public String getCursorLine() {
+		return this.lines.get(this.cursorY);
 	}
 
 	// 剪切光标所在行
 	public void cutLine() {
-		setClipboard(this.getLine());
-		this.deleteLine();
+		setClipboard(this.getCursorLine());
+		this.deleteCursorLine();
 	}
 
 
@@ -385,8 +523,8 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	// 在下方插入行
 	public void insertLineBelow() {
-		this.cursorEnd();
-		this.insert('\n');
+		this.lines.add(this.cursorY + 1, "");
+		this.setCursorCoord(this.cursorX, this.cursorY + 1);
 	}
 
 	public void insertLineAbove() {}
@@ -397,21 +535,15 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	public void indentLine() {}
 
-	public void undo() {}
+	private void cursorMoveUp() {}
+
+	private void cursorMoveDown() {}
 
 	// 光标移动到底部
-	public void cursorMoveBottom() {
-		this.setCursorIndex(this.content.length());
-	}
+	public void cursorMoveBottom() {}
 
 	// 光标移动到底部并选择
-	public void cursorMoveBottomSelect() {
-		this.selectStart = this.cursorI;
-		this.cursorMoveBottom();
-		this.selectEnd = this.cursorI;
-		if (this.selectEnd - this.selectStart > 0)
-			this.isSelecting = true;
-	}
+	public void cursorMoveBottomSelect() {}
 
 	public void cursorMoveTop() {}
 
@@ -419,14 +551,24 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	// 光标左移
 	public void cursorMoveLeft() {
-		this.setCursorIndex(this.cursorI - 1);
+		if (this.cursorX == 0) {
+			if (this.cursorY != 0)
+				this.setCursorCoord(this.lines.get(this.cursorY - 1).length(), this.cursorY - 1);
+		} else {
+			this.setCursorCoord(this.cursorX - 1, this.cursorY);
+		}
 	}
 
 	public void cursorMoveSelectLeft() {}
 
 	// 光标右移
 	public void cursorMoveRight() {
-		this.setCursorIndex(this.cursorI + 1);
+		if (this.cursorX == this.lines.get(this.cursorY).length()) {
+			if (this.cursorY < this.lines.size() - 1)
+				this.setCursorCoord(this.lines.get(this.cursorY + 1).length(), this.cursorY + 1);
+		} else {
+			this.setCursorCoord(this.cursorX + 1, this.cursorY);
+		}
 	}
 
 	public void cursorMoveSelectRight() {}
@@ -434,18 +576,14 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	// 移动光标到行首
 	public void cursorHome() {
-		this.cursorX = 0;
+		this.setCursorCoord(0, this.cursorY);
 	}
 
 	public void cursorHomeSelect() {}
 
 	// 移动光标到行末
 	public void cursorEnd() {
-		int i = this.cursorI;
-		while (this.content.charAt(i) != '\n' && i < this.content.length()) {
-			i++;
-		}
-		this.setCursorIndex(i);
+		this.setCursorCoord(this.lines.get(this.cursorY).length(), this.cursorY);
 	}
 
 	public void cursorEndSelect() {}
@@ -454,29 +592,36 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	// 删除光标左侧字符
 	public void deleteLeft() {
-		if (this.cursorI <= 0)
+		if (this.cursorX + this.cursorY == 0)
 			return;
-		this.setCursorIndex(this.cursorI - 1);
+		this.cursorMoveLeft();
 		this.deleteRight();
 	}
 
 
 	// 删除右侧字符
 	public void deleteRight() {
-		int leng = this.content.length();
-		int ind = this.cursorI;
-		if (ind == leng - 1) {
-			this.content = this.content.substring(0, ind);
+		// 判断光标是不是在这一行的末尾
+		if (this.cursorX == this.getCursorLine().length()) {
+			// 判断光标是不是在最后一行
+			if (this.cursorY < this.lines.size() - 1) {
+				String nextLine = this.lines.get(this.cursorY + 1);
+				// 将下一行拼到这一行后面
+				this.lines.set(this.cursorY, this.getCursorLine() + nextLine);
+				this.lines.remove(this.cursorY + 1);
+			}
 		} else {
-			this.content = this.content.substring(0, ind) + this.content.substring(ind + 1);
+			String line = this.getCursorLine();
+			line = line.substring(0, this.cursorX) + line.substring(this.cursorX + 1);
+			this.lines.set(this.cursorY, line);
 		}
 	}
 
-	public int findWordBorderLeft() {
+	private int findWordBorderLeft() {
 		return 0;
 	}
 
-	public int findWordBorderRight() {
+	private int findWordBorderRight() {
 		return 0;
 	}
 
@@ -507,7 +652,7 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	// 键盘事件处理函数
 	public static interface KeyEventHandler {
-		public void exec();
+		public boolean exec(int keyCode, int scanCode, int flags);
 	}
 
 

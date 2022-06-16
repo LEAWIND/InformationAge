@@ -75,7 +75,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
 		Element ele = this.getFocused();
-		System.out.println("focusing ele: " + ele);
+		// System.out.println("focusing ele: " + ele);
 		if (ele instanceof MultilineTextFieldWidget) {
 			return ele.keyPressed(keyCode, scanCode, modifiers);
 		} else {
@@ -181,6 +181,9 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		if (this.hasItemSlots)
 			for (int i = 0; i < 2; i++)
 				for (int j = 0; j < 2; j++);
+
+		// 焦点
+		this.setFocused(this.codeField);
 	}
 
 	@Override
