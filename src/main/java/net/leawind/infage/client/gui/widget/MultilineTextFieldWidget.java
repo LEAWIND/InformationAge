@@ -53,6 +53,7 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 		this.lineHeight = (int) (textRenderer.fontHeight * 1.1); // 行高
 		this.windowWidth = (int) (this.width / this.charWidth); // 同时显示的列数上限
 		this.windowHeight = (int) (this.height / this.lineHeight) - 1; // 计算同时显示的行数上限
+		this.lines.add("");
 	}
 
 	// 注册默认键盘事件
@@ -97,9 +98,17 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 			this.makeCursorVisible();
 			return true;
 		});
+		/*
+		 * Need to Test
+		 */
+		this.registerKey(new KeyCombination(KeyCode.ENTER, 0b0000), (keyCode, scanCode, flag) -> {
+			this.insertString("\n", this.cursorX, cursorY);
+			return true;
+		});
+
 
 		this.registerKey(null, (keyCode, scanCode, flag) -> {
-			System.out.printf("KeyEvt: kc=%d, sc=%d, f= %d, %d, %d, %d\n", keyCode, scanCode, flag & 0b1000, flag & 0b0100, flag & 0b0010, flag & 0b0001);
+			System.out.printf("UK KEVT: kc=%d, sc=%d, f= %d, %d, %d, %d\n", keyCode, scanCode, flag & 0b1000, flag & 0b0100, flag & 0b0010, flag & 0b0001);
 			return true;
 		});
 	}
@@ -108,14 +117,13 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 	// 原生键盘事件
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int flag) {
-		System.out.printf("KeyPressed: kc=%d, sc=%d, f= %d, %d, %d, %d\n", keyCode, scanCode, flag & 0b1000, flag & 0b0100, flag & 0b0010, flag & 0b0001);
-		if (!this.isFocused())
+		if (!this.isEditable())
 			return false;
 		KeyCombination kb = new KeyCombination(keyCode, flag);
 		if (this.keyBindings.containsKey(kb)) {
 			return this.keyBindings.get(kb).exec(keyCode, scanCode, flag);
 		} else if (this.keyBindings.containsKey(null)) {
-			this.keyBindings.get(null).exec(keyCode, scanCode, flag);
+			return this.keyBindings.get(null).exec(keyCode, scanCode, flag);
 		}
 		return true;
 	}
@@ -280,16 +288,20 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 	// 获取字符串
 	public String getString() {
 		if (this.lines.size() == 0)
+			this.lines.add("");
+		if (this.lines.size() == 0)
 			return "";
 		return String.join("\n", this.lines);
 	}
 
 	// 设置字符串
 	public void setString(String str) {
+		if (this.lines.size() == 0)
+			this.lines.add("");
 		if (str.length() > this.maxLength)
 			str = str.substring(0, this.maxLength);
 		this.lines.clear();
-		String[] linesArr = str.split("\n", str.length());
+		String[] linesArr = str.split("\n", str.length() + 2);
 		for (String line : linesArr)
 			this.lines.add(line);
 		this.setCursorCoord(this.cursorX, this.cursorY);
@@ -297,6 +309,8 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	// 滚动到指定位置
 	private void scrollTo(int x, int y) throws IndexOutOfBoundsException {
+		if (this.lines.size() == 0)
+			this.lines.add("");
 		if (y > this.lines.size())
 			throw new IndexOutOfBoundsException("Trying to scroll to line " + y + " > " + this.lines.size());
 		this.windowY = y;
@@ -321,7 +335,9 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 
 	// 设置光标位置 (列， 行)
-	private void setCursorCoord(int x, int y) throws IndexOutOfBoundsException {
+	private void setCursorCoord(int x, int y) {
+		if (this.lines.size() == 0)
+			this.lines.add("");
 		if (y >= this.lines.size())
 			y = this.lines.size() - 1;
 		if (x > this.lines.get(y).length())
@@ -331,18 +347,47 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 		this.cursorY = y;
 	}
 
-	// 计算光标位置
+	// 设置光标索引
+	private void setCursorIndex(int i) {
+		if (this.lines.size() == 0)
+			this.lines.add("");
+		int[] c = this.calcCoordOfIndex(i);
+		this.setCursorCoord(c[0], c[1]);
+	}
+
+	// TODO 由索引计算光标位置
 	private int[] calcCoordOfIndex(int ind) {
+		if (this.lines.size() == 0)
+			this.lines.add("");
 		int i = 0;
 		int y = 0;
-		int lineLen = 0;
 		for (String line : this.lines) {
-			lineLen = line.length();
-			if (i < i + lineLen)
+			// 计算行长度
+			int leng = line.length();
+
+			if (i <= ind && ind <= i + leng) {
 				return new int[] {ind - i, y};
+			}
+
+			i += leng + 1;
 			y++;
 		}
-		return new int[] {lineLen, y};
+		return new int[] {0, 0};
+	}
+
+	// 由坐标计算光标索引
+	private int calcIndexOfCoord(int x, int y) {
+		if (this.lines.size() == 0)
+			this.lines.add("");
+		int nx = 0, ny = 0;
+		int ind = 0;
+		for (String line : this.lines) {
+			if (ny == y)
+				return ind + x;
+			ny++;
+			ind += line.length() + 1;
+		}
+		return 0;
 	}
 
 	// 获取选取区域的头尾坐标
@@ -438,33 +483,16 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	// 插入字符串
 	private void insertString(String str, int x, int y) {
-		String[] nLines = str.split("\n", str.length());
-		if (nLines.length == 1) {
-			// 不用换行
-			String line = this.lines.get(y);
-			line = line.substring(0, x) + nLines[0] + line.substring(x);
-			this.lines.set(y, line);
-			// 移动光标位置
-			this.setCursorCoord(line.length(), y);
-		} else {
-			String line;
-			// 第一行
-			line = this.lines.get(y);
-			line += nLines[0];
-			// 中间行
-			for (int i = 1; i < nLines.length - 1; i++) {
-				line = nLines[i];
-				this.lines.add(y + i, line);
-			}
-			// 最后一行
-			int ly = y + nLines.length - 1;
-			line = this.lines.get(ly);
-			line = nLines[nLines.length - 1] + line;
-			this.lines.set(ly, line);
-			// 移动光标位置
-			this.setCursorCoord(nLines[nLines.length - 1].length(), ly);
-		}
+		if (this.lines.size() == 0)
+			this.lines.add("");
+		int ind = this.calcIndexOfCoord(x, y); // 计算插入点的索引
+		String s = this.getString();
+		s = s.substring(0, ind) + str + s.substring(ind);
+		this.setString(s);
+		this.setCursorIndex(ind + str.length());
 	}
+
+
 
 	// 输入
 	public void write(String str) {
@@ -563,9 +591,9 @@ public class MultilineTextFieldWidget extends AbstractButtonWidget {
 
 	// 光标右移
 	public void cursorMoveRight() {
-		if (this.cursorX == this.lines.get(this.cursorY).length()) {
-			if (this.cursorY < this.lines.size() - 1)
-				this.setCursorCoord(this.lines.get(this.cursorY + 1).length(), this.cursorY + 1);
+		if (this.cursorX == this.lines.get(this.cursorY).length()) { // 光标位于行末
+			if (this.cursorY < this.lines.size() - 1) // 光标不在列尾
+				this.setCursorCoord(0, this.cursorY + 1);
 		} else {
 			this.setCursorCoord(this.cursorX + 1, this.cursorY);
 		}
