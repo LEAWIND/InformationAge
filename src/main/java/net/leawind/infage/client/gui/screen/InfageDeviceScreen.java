@@ -4,17 +4,14 @@ import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.leawind.infage.blockentity.DeviceEntity;
 import net.leawind.infage.client.gui.widget.LockButtonWidget;
-import net.leawind.infage.client.gui.widget.MultilineTextFieldWidget;
+import net.leawind.infage.client.gui.widget.MultilineTextFieldWidget_v03;
 import net.leawind.infage.client.gui.widget.StretchableButtonWidget;
 import net.leawind.infage.network.packet.c2s.DeviceUpdateC2SPacket;
 import net.leawind.infage.screenhandler.InfageDeviceScreenHandler;
 import net.leawind.infage.settings.InfageSettings;
 import net.leawind.infage.settings.InfageStyle;
-import net.leawind.infage.settings.NetworkSettings;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
@@ -36,9 +33,8 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	public static final Logger LOGGER = LogManager.getLogger("InfageDeviceScreen");;
 	private static final Identifier TEXTURE_WIDGETS = new Identifier("minecraft", "textures/gui/advancements/widgets.png");
 	InfageDeviceScreenHandler handler;
-	private UUID playerUUID; // 玩家 uuid (虽然不知道有什么用)
-
-	private Text displayName; // 显示的设备名称
+	private UUID playerUUID; // 玩家 uuid
+	private Text displayName; // TODO 显示的设备名称
 	private BlockPos pos; // 设备方块位置
 	private boolean isRunning = false; // 电源状态
 	private String script_tick = ""; // 脚本
@@ -48,8 +44,8 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	private boolean hasItemSlots = false; // 是否有物品槽
 	private ItemStack[] itemsStacks; // 物品槽们
 
-	private MultilineTextFieldWidget codeField; // 代码域
-	private MultilineTextFieldWidget outputsField; // 输出域
+	private MultilineTextFieldWidget_v03 codeField; // 代码域
+	private MultilineTextFieldWidget_v03 outputsField; // 输出域
 	public StretchableButtonWidget doneButton; // 完成按钮
 	public StretchableButtonWidget powerButton; // 电源按钮
 	private StretchableButtonWidget[] portButtons; // 接口按钮们
@@ -76,7 +72,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
 		Element ele = this.getFocused();
 		// System.out.println("focusing ele: " + ele);
-		if (ele instanceof MultilineTextFieldWidget) {
+		if (ele instanceof MultilineTextFieldWidget_v03) {
 			return ele.keyPressed(keyCode, scanCode, modifiers);
 		} else {
 			return true;
@@ -89,7 +85,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		super.init();
 		// 代码域
 		{
-			this.codeField = new MultilineTextFieldWidget(this.textRenderer, //
+			this.codeField = new MultilineTextFieldWidget_v03(this.textRenderer, //
 					(int) (this.width * InfageStyle.code[0]), //
 					(int) (this.height * InfageStyle.code[1]), //
 					(int) (this.width * InfageStyle.code[2]), //
@@ -101,7 +97,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		}
 		// 输出域
 		{
-			this.outputsField = new MultilineTextFieldWidget(this.textRenderer, //
+			this.outputsField = new MultilineTextFieldWidget_v03(this.textRenderer, //
 					(int) (this.width * InfageStyle.outputs[0]), //
 					(int) (this.height * InfageStyle.outputs[1]), //
 					(int) (this.width * InfageStyle.outputs[2]), //
@@ -208,49 +204,6 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		this.outputsField.render(matrices, mouseX, mouseY, delta);
 		super.render(matrices, mouseX, mouseY, delta);
 		drawMouseoverTooltip(matrices, mouseX, mouseY);
-	}
-
-	/**
-	 * TODO 发送数据包给服务器
-	 */
-	@Deprecated
-	private boolean act(DeviceEntity.Action action, int... args) {
-		PacketByteBuf buf = PacketByteBufs.create();
-		buf.writeBlockPos(this.pos); // B 先写入这个方块的坐标
-		buf.writeEnumConstant(action); // B 数据包类型
-		switch (action) {
-			case GET_ALL_DATA: // 请求获取最新数据
-				break;
-			case RQ_BOOT: // 启动设备
-				break;
-			case RQ_SHUT_DOWN: // 关闭设备
-				break;
-			case RQ_DISCONNECT: // 断开指定端口
-				buf.writeByte(args[0]); // B 端口号
-				break;
-			case RQ_CONNECT: // 玩家希望连接指定端口
-				buf.writeByte(args[0]); // B 端口号
-				break;
-			case RQ_LOCK_PORT: // 锁定端口
-				buf.writeByte(args[0]); // B 端口号
-				break;
-			case RQ_UNLOCK_PORT: // 解锁端口
-				buf.writeByte(args[0]); // B 端口号
-				break;
-			case PUSH_ALL_DATA: // TODO 更新全部数据
-				break;
-			case PUSH_SCRIPT: // 更新脚本
-				buf.writeString(this.script_tick);
-				break;
-			case DRINK_A_CUP_OF_TEA:
-				break;
-		}
-		LOGGER.info("CBuff: " + buf);
-		ClientPlayNetworking.send(NetworkSettings.DEVICE_UPDATE_ID, buf);
-		// MinecraftClient.getInstance().getNetworkHandler().sendPacket(ClientNetworkingImpl.createPlayC2SPacket(NetworkSettings.DEVICE_UPDATE_ID,
-		// buf));
-
-		return true;
 	}
 
 	// 写入所有数据

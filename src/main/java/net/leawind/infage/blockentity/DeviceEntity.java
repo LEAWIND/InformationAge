@@ -282,6 +282,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	public synchronized void setScirpt_tick(String str) {
 		if (str != this.script_tick) {
 			this.compileState = CompileState.UNKNOWN;
+			this.compiledScript_tick = null;
 			this.script_tick = str == null ? "" : str;
 		}
 	}
