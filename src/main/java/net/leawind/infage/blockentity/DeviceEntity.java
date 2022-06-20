@@ -2,9 +2,11 @@ package net.leawind.infage.blockentity;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.UUID;
 import javax.script.CompiledScript;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.leawind.infage.Infage;
+import net.leawind.infage.PlayerData;
 import net.leawind.infage.exception.InfageDevicePortsNotMatchException;
 import net.leawind.infage.screenhandler.InfageDeviceScreenHandler;
 import net.leawind.infage.script.CompileState;
@@ -28,6 +30,7 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Tickable;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 /**
  * <ExtendedScreenHandlerFactory> 接口的 writeScreenOpeningData 方法可以在打开方块时向客户端发送数据。 当它请求客户端(client)打开一个
@@ -150,30 +153,49 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 			this.deviceTick(); // 执行设备刻
 	}
 
+
 	/**
-	 * 将本设备指定接口 连接至 指定设备的指定接口（默认未锁定）
+	 * TODO 将本设备指定接口 连接至 指定设备的指定接口（默认未锁定）
 	 * 
 	 * @param portId 接口 ID
-	 * @param selfOnly 是否只断开自己这边，而不通知被连接的另一方
+	 * @param recursionTimes 是否只断开自己这边，而不通知被连接的另一方
 	 * @return {boolean} 是否成功断开，如果原本已经断开则返回false
 	 */
-	public synchronized boolean connect(int srcPort, BlockPos tarPos, int tarPort, boolean selfOnly) {
+	public synchronized boolean connect(int srcPort, BlockPos tarPos, int tarPort, int recursionTimes) {
+		// DeviceEntity that = (DeviceEntity) world.getBlockEntity(this.getPos());
+
 		this.setTargetPortId(srcPort, tarPort);
 		this.setPortState(srcPort, PortState.CONNECT_UNLOCKED);
 		this.portsX[srcPort] = tarPos.getX();
 		this.portsY[srcPort] = tarPos.getY();
 		this.portsZ[srcPort] = tarPos.getZ();
 
-		if (selfOnly) {
+		if (recursionTimes <= 0) {
 			return true;
 		} else {
 			BlockEntity blockEntity = this.getWorld().getBlockEntity(tarPos);
 			if (blockEntity instanceof DeviceEntity)
-				return ((DeviceEntity) blockEntity).connect(tarPort, this.getPos(), srcPort, true);
+				return ((DeviceEntity) blockEntity).connect(tarPort, this.getPos(), srcPort, recursionTimes - 1);
 		}
 		return false;
 	}
 
+	/**
+	 * 获取指定接口所连接的设备接口
+	 * 
+	 * @param portId 本设备接口 ID
+	 * @return 该接口所连接的目标设备接口号, -128 表示没有连接
+	 */
+	public synchronized int getTargetPortId(int portId) {
+		int x = this.portStates[portId];
+		if (x == -128) {
+			return -128;
+		} else if (x >= 0) {
+			return x;
+		} else {
+			return -1 - x;
+		}
+	}
 	// 设置接口的目标接口 id
 	public synchronized void setTargetPortId(int srcPort, int tarPort) {
 		this.portStates[srcPort] = this.portStates[srcPort] >= 0 ? //
@@ -205,22 +227,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 		}
 	}
 
-	/**
-	 * 获取指定接口所连接的设备接口
-	 * 
-	 * @param portId 本设备接口 ID
-	 * @return 该接口所连接的目标设备接口号, -128 表示没有连接
-	 */
-	public synchronized int getTargetPortId(int portId) {
-		int x = this.portStates[portId];
-		if (x == -128) {
-			return -128;
-		} else if (x >= 0) {
-			return x;
-		} else {
-			return -1 - x;
-		}
-	}
+
 
 	/**
 	 * 获取指定接口状态
@@ -246,7 +253,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	 * @return 该接口所连接的方块实体
 	 */
 	public synchronized DeviceEntity getConnectedDevice(int portId) {
-		if (this.portStates == null || this.portStates[portId] < 0)
+		if (this.portStates == null || this.getPortState(portId) == PortState.DISCONNECTED)
 			return null;
 		if (portId >= this.portsCount || portId < 0 || this.portsX == null || this.portsY == null || this.portsZ == null)
 			return null;
@@ -265,9 +272,8 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	 * @return {boolean} 是否成功断开，如果原本已经断开则返回false
 	 */
 	public synchronized boolean disconnect(int portId, boolean selfOnly) {
-		int tarPort = this.portStates[portId];
-		this.portStates[portId] = (byte) -1;
-
+		int tarPort = this.getTargetPortId(portId);
+		this.setPortState(portId, PortState.DISCONNECTED);
 		if (selfOnly) {
 			return true;
 		} else {
@@ -405,14 +411,13 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 
 	// 将所有要发送的数据写到目标方块实体的接收缓存中
 	public synchronized void sendAllData() {
-		// this.db_checkPortsCount();
-		for (int i = 0; i < this.portsCount; i++) {
-			if (this.portStates[i] >= 0 && this.sendCaches[i] != null && this.sendCaches[i] != "") {
-				BlockEntity targetEntity = this.getConnectedDevice(i);
-				if (targetEntity != null && targetEntity instanceof DeviceEntity) {
-					((DeviceEntity) targetEntity).receiveCaches[this.portStates[i]] = this.sendCaches[i]; // 写入
+		for (int portId = 0; portId < this.portsCount; portId++) {
+			if (this.getPortState(portId) != PortState.DISCONNECTED && this.sendCaches[portId] != null && this.sendCaches[portId] != "") {
+				BlockEntity target = this.getConnectedDevice(portId);
+				if (target != null && target instanceof DeviceEntity) {
+					((DeviceEntity) target).receiveCaches[this.getTargetPortId(portId)] = this.sendCaches[portId]; // 写入
 				} else {
-					this.portStates[i] = -1;
+					this.setPortState(portId, PortState.DISCONNECTED);
 				}
 			}
 		}
@@ -420,19 +425,23 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 
 	// 开机
 	public synchronized void device_boot() {
-		this.isRunning = true;
-		this.tickCounter = 0;
+		if (!this.isRunning) {
+			this.isRunning = true;
+			this.tickCounter = 0;
+		}
 	}
 
 	// 关机
 	public synchronized void device_shutdown() {
-		// 断开所有连接
-		for (int i = 0; i < this.portsCount; i++)
-			this.disconnect(i, false);
-		this.isRunning = false;
-		// 清空输入缓存和输出缓存
-		Arrays.fill(this.receiveCaches, "");
-		Arrays.fill(this.sendCaches, "");
+		if (this.isRunning) {
+			// 断开所有连接
+			for (int i = 0; i < this.portsCount; i++)
+				this.disconnect(i, false);
+			this.isRunning = false;
+			// 清空输入缓存和输出缓存
+			Arrays.fill(this.receiveCaches, "");
+			Arrays.fill(this.sendCaches, "");
+		}
 	}
 
 	// 切换开关机状态
@@ -500,6 +509,45 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 				buf.writeItemStack(((ImplementedInventory) this).getStack(i));
 		}
 	};
+
+	// TODO 当玩家点击端口按钮时
+	public synchronized void onPlayerClickPort(int portId, ServerPlayerEntity player) {
+		// 检查当前该接口连接状态
+		if (this.getPortState(portId) == PortState.CONNECT_UNLOCKED) { // 接口连接了但没有锁住
+			this.disconnect(portId, false);
+		} else if (this.getPortState(portId) == PortState.DISCONNECTED) { // 接口没有连接
+			UUID playerUuid = player.getUuid();
+			DeviceEntity srcDevice = null;
+			byte srcPort = 0;
+			PlayerData playerData = null;
+			if (Infage.players.containsKey(playerUuid)) {
+				playerData = Infage.players.get(playerUuid);
+				BlockPos srcPos = playerData.getSelectedBlockPos(); // 原设备坐标
+				srcPort = playerData.getSelectedPortId(); // 原设备接口
+				if (srcPos != null) {
+					BlockEntity srcBlockEntity = world.getBlockEntity(srcPos);
+					if (srcBlockEntity instanceof DeviceEntity) {
+						srcDevice = (DeviceEntity) srcBlockEntity; // 找到了原设备
+						// 判断其接口
+						if (srcPort < 0 || srcPort >= srcDevice.portsCount || srcDevice.getPortState(srcPort) != PortState.DISCONNECTED)
+							srcDevice = null; // 原端口不存在或已经连接了
+					}
+				}
+			}
+			if (srcDevice != null) {
+				// 找到了原设备，且可以连接
+				this.connect(portId, srcDevice.getPos(), srcPort, 2);
+				playerData.setSelected(null, (byte) 0);
+			} else {
+				// 没找到原设备
+				if (playerData == null) {
+					playerData = new PlayerData(playerUuid);
+					Infage.players.put(playerUuid, playerData);
+				}
+				playerData.setSelected(this.getPos(), (byte) portId);
+			}
+		}
+	}
 
 	// 接口的连接和锁定状态
 	public static enum PortState {

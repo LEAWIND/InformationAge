@@ -34,7 +34,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	private static final Identifier TEXTURE_WIDGETS = new Identifier("minecraft", "textures/gui/advancements/widgets.png");
 	InfageDeviceScreenHandler handler;
 	private UUID playerUUID; // 玩家 uuid
-	private Text displayName; // TODO 显示的设备名称
+	private Text displayName; // 显示的设备名称
 	private BlockPos pos; // 设备方块位置
 	private boolean isRunning = false; // 电源状态
 	private String script_tick = ""; // 脚本
@@ -209,7 +209,6 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	// 写入所有数据
 	public void writeAllDataToBuf(DeviceUpdateC2SPacket p) {
 		p.writeBoolean(this.isRunning);
-		p.writeByteArray(this.portStates);
 		p.writeString(this.script_tick);
 	}
 
@@ -269,10 +268,10 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 			new DeviceUpdateC2SPacket(this.pos, DeviceEntity.Action.DRINK_A_CUP_OF_TEA).send();
 		} else if (this.portStates[i] < 0) { // 没锁定
 			new DeviceUpdateC2SPacket(this.pos, DeviceEntity.Action.RQ_LOCK_PORT, i).send();
-			this.portStates[i] = (byte) (-1 - this.portStates[i]);
+			this.portStates[i] = (byte) (-1 - this.portStates[i]); // 将它锁定
 		} else { // 锁定了
 			new DeviceUpdateC2SPacket(this.pos, DeviceEntity.Action.RQ_UNLOCK_PORT, i).send();
-			this.portStates[i] = (byte) (-1 - this.portStates[i]);
+			this.portStates[i] = (byte) (-1 - this.portStates[i]);// 将它解锁
 		}
 		this.updatePortLockButton(i);
 	}

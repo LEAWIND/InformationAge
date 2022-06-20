@@ -15,21 +15,28 @@ public class DeviceObj {
 	public String outputs = "";
 
 	public DeviceObj(DeviceEntity that) {
-		// 将属性初始化
-		this.storageSize = that.storageSize;
-		this.storage = Arrays.copyOf(that.storage, that.storageSize);
-		this.portStates = new boolean[that.portsCount];
-		this.inData = Arrays.copyOf(that.sendCaches, that.portsCount);
-
+		// 要告知脚本的信息：
+		this.storageSize = that.storageSize; // 存储空间大小
+		this.storage = Arrays.copyOf(that.storage, that.storageSize); // 存储内容（字节数组）
+		this.inData = Arrays.copyOf(that.sendCaches, that.portsCount); // 输入缓存
+		this.portStates = new boolean[that.portsCount]; // 各接口的连接状态
 		for (int i = 0; i < that.portsCount; i++)
-			this.portStates[i] = that.portStates[i] >= 0;
+			this.portStates[i] = that.portStates[i] != -128;
+
+		// 脚本可以输出的信息：
+		this.dataToSend = new String[this.portStates.length];
+		Arrays.fill(this.dataToSend, "");
 	}
 
-	// 输出信息
-	public synchronized void print(Object... objs) {
+	// 向控制台输出信息
+	public synchronized void println(Object... objs) {
 		for (Object obj : objs)
 			this.outputs += obj + " ";
 		this.outputs += "\n";
+	}
+	public synchronized void print(Object... objs) {
+		for (Object obj : objs)
+			this.outputs += obj + " ";
 	}
 
 	// 将字符串转换为字节数组

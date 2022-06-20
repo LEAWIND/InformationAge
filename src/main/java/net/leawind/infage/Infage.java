@@ -14,12 +14,14 @@
 
 package net.leawind.infage;
 
+import java.util.HashMap;
+import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import net.fabricmc.api.ModInitializer;
-import net.leawind.infage.registry.InfageGlobalReceiver;
 import net.leawind.infage.registry.InfageBlockEntities;
 import net.leawind.infage.registry.InfageBlocks;
+import net.leawind.infage.registry.InfageGlobalReceiver;
 import net.leawind.infage.registry.InfageItemGroups;
 import net.leawind.infage.registry.InfageItems;
 import net.leawind.infage.registry.InfageScreenHandlers;
@@ -28,6 +30,9 @@ import net.leawind.infage.settings.InfageSettings;
 
 public class Infage implements ModInitializer {
 	public static final Logger LOGGER;
+
+	// 全局变量
+	public static HashMap<UUID, PlayerData> players = new HashMap<>();
 
 	static {
 		LOGGER = LogManager.getLogger("Infage");

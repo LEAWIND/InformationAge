@@ -6,6 +6,7 @@ import net.leawind.infage.script.obj.DeviceObj;
 import net.leawind.infage.script.obj.PowerControllerObj;
 
 public class PowerControllerEntity extends DeviceEntity {
+	public int updateCounter = 2; // 更新计时器，大于 0 则更新比较器输出
 	public int powerLevel = 0; //
 
 	public PowerControllerEntity() {
@@ -17,11 +18,15 @@ public class PowerControllerEntity extends DeviceEntity {
 	public void applyObj(DeviceObj obj) {
 		super.applyObj(obj);
 		PowerControllerObj pcobj = (PowerControllerObj) obj;
-		pcobj.powerLevel = Math.max(1, Math.min(15, pcobj.powerLevel)); // 检查范围
-		// 更新比较器输出
-		this.powerLevel = pcobj.powerLevel;
-		boolean doUpdateComparators = this.powerLevel != pcobj.powerLevel;
-		if (doUpdateComparators)
+		pcobj.powerLevel = Math.max(1, Math.min(15, pcobj.powerLevel)); // 范围检查
+
+		if (this.powerLevel != pcobj.powerLevel)
+			this.updateCounter = 1;
+		else
+			this.updateCounter--;
+
+		this.powerLevel = pcobj.powerLevel; // 比较器输出
+		if (this.updateCounter > 0)
 			this.updateComparators();
 	}
 

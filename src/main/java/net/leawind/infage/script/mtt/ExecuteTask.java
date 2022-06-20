@@ -23,7 +23,8 @@ public class ExecuteTask extends MTTask {
 	@Override
 	public void taskBody() {
 		try {
-			this.that.compiledScript_tick.eval(this.bindings);
+			// 执行脚本
+			this.that.compiledScript_tick.eval(this.bindings); // bindings 中有一个 deviceObj 对象可供脚本访问
 			// 脚本执行成功
 			Arrays.fill(this.that.sendCaches, ""); // 清空接收缓存
 			this.that.applyObj(deviceObj); // 将脚本对 obj 做的修改 应用到 方块实体
