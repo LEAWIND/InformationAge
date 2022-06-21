@@ -12,7 +12,7 @@ public class MTManager {
 	public ArrayDeque<MTTask> tasks = new ArrayDeque<MTTask>(); // 待处理的任务
 
 	public MTManager() {
-		this(2);
+		this(4);
 	}
 
 	public MTManager(int threadCount) {
@@ -46,7 +46,7 @@ public class MTManager {
 		return this.tasks.size();
 	}
 
-	private synchronized void checkThreadCount() {
+	protected synchronized void checkThreadCount() {
 		if (this.threads.size() > this.threadCount) {
 			Iterator<MTThread> iterator = this.threads.iterator();
 			while ((this.threads.size() > this.threadCount) && iterator.hasNext()) {
@@ -134,7 +134,7 @@ public class MTManager {
 			System.out.println(obj);
 	}
 
-	private class MTThread extends Thread {
+	public class MTThread extends Thread {
 		private MTManager manager;
 		private boolean shouldPause = false;
 		public volatile MTState state = MTState.RESTING;
@@ -163,11 +163,7 @@ public class MTManager {
 					task = this.manager.popTask();
 					if (task != null) {
 						this.state = MTState.EXECING;
-						try {
-							task.execute();
-						} catch (Exception e) {
-							task.exceptionHandler(e);
-						}
+						task.execute();
 						this.state = MTState.RESTING;
 					}
 				}

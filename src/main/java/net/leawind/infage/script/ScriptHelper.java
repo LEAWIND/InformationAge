@@ -12,33 +12,33 @@ import javax.script.ScriptException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import net.leawind.infage.settings.InfageSettings;
-import net.leawind.universe.mttv1.MTManager;
+import net.leawind.universe.mttv3.MTManager;
 
 public final class ScriptHelper {
-	private static final Logger LOGGER;
+	private static final Logger LOGGER = LogManager.getLogger("InfageScriptHandler");;
+	public static final MTManager MTM_EXEC = new ExecThreadManager(InfageSettings.EXEC_THREAD_COUNT, 5); // 执行线程数是 CPU 核心数 / 2 + 1;
+	public static final MTManager MTM_COMPILE = new MTManager(InfageSettings.COMPILE_THREAD_COUNT, 2); // 编译线程们;
+	public static final String[] FORBIDDEN_VARS_IN_SCRIPT = new String[] {"java", "javax", "Java", "exit", "quit"}; // 禁止在脚本中访问的全局对象
 	public static ScriptEngine ENGINE; // 脚本引擎
-	public static final MTManager MTM_EXEC;
-	public static final MTManager MTM_COMPILE;
-	public static final String[] DELETED_VARS;
 
 	static {
-		LOGGER = LogManager.getLogger("InfageScriptHandler");
-		DELETED_VARS = new String[] {"java", "javax", "Java", "exit", "quit"}; // 禁止在脚本中访问的全局对象
-		ENGINE = new ScriptEngineManager().getEngineByName("nashorn"); // 获取 nashorn 引擎
-		MTM_EXEC = new MTManager(InfageSettings.EXEC_THREAD_COUNT); // 执行线程数是 CPU 核心数 / 2 + 1
-		MTM_COMPILE = new MTManager(InfageSettings.COMPILE_THREAD_COUNT); // 编译线程们
+		ENGINE = createScriptEngine(); // 获取 nashorn 引擎
+	}
 
+	// 创建引擎并配置好上下文
+	public static ScriptEngine createScriptEngine() {
+		ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
 		try {
 			String scr = ";";
-			for (String varn : DELETED_VARS)
+			for (String varn : FORBIDDEN_VARS_IN_SCRIPT)
 				scr += varn + "=undefined;";
-			ENGINE.eval(scr);
+			engine.eval(scr);
 		} catch (ScriptException e) {
 			System.out.println("这也能出错？？？");
-			System.out.println(e);
+			e.printStackTrace();
+			return null;
 		}
-
-		LOGGER.info("Infage ScriptHandler is loaded.");
+		return engine;
 	}
 
 	// 将脚本包装成一个 立即调用的匿名函数，使脚本运行在一个独立的作用域内
@@ -62,4 +62,5 @@ public final class ScriptHelper {
 	public synchronized static void infoLog(Object obj) {
 		LOGGER.info(obj);
 	}
+
 }

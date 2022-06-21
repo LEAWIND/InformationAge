@@ -101,10 +101,10 @@ public class DeviceUpdateC2SPacket extends AbstractC2SPacket {
 					} else { // 关机状态
 						device.device_shutdown();
 					}
-					device.setScirpt_tick(bufCopy.readString());
+					device.setScirpt(bufCopy.readString());
 					break;
 				case PUSH_SCRIPT:
-					device.setScirpt_tick(bufCopy.readString());
+					device.setScirpt(bufCopy.readString());
 					break;
 				case DRINK_A_CUP_OF_TEA:
 					break;

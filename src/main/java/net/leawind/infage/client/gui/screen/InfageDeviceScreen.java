@@ -37,7 +37,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	private Text displayName; // 显示的设备名称
 	private BlockPos pos; // 设备方块位置
 	private boolean isRunning = false; // 电源状态
-	private String script_tick = ""; // 脚本
+	private String script = ""; // 脚本
 	private String consoleOutputs = ""; // 输出
 	private int portsCount; // 接口数量
 	private byte[] portStates; // 接口状态
@@ -63,7 +63,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	@Override
 	public void tick() {
 		this.codeField.tick();
-		this.script_tick = this.codeField.getString();
+		this.script = this.codeField.getString();
 		this.outputsField.tick();
 		this.outputsField.setString(this.consoleOutputs);
 	}
@@ -92,7 +92,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 					(int) (this.height * InfageStyle.code[3]), //
 					new TranslatableText("itemGroup.infage.devices"));
 			this.codeField.setMaxLength(InfageSettings.MAX_SCRIPT_SIZE);
-			this.codeField.setString(this.script_tick);
+			this.codeField.setString(this.script);
 			this.children.add(this.codeField);
 		}
 		// 输出域
@@ -209,7 +209,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 	// 写入所有数据
 	public void writeAllDataToBuf(DeviceUpdateC2SPacket p) {
 		p.writeBoolean(this.isRunning);
-		p.writeString(this.script_tick);
+		p.writeString(this.script);
 	}
 
 	// 将 服务端发过来的一串数据 解析为本方块实体的属性
@@ -218,7 +218,7 @@ public class InfageDeviceScreen extends HandledScreen<ScreenHandler> {
 		this.displayName = buf.readText();
 		this.pos = buf.readBlockPos();
 		this.isRunning = buf.readBoolean();
-		this.script_tick = buf.readString();
+		this.script = buf.readString();
 		this.consoleOutputs = buf.readString();
 		this.portsCount = buf.readByte();
 		this.portStates = buf.readByteArray();

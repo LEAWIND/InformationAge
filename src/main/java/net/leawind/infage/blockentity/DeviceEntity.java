@@ -30,7 +30,6 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Tickable;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
 /**
  * <ExtendedScreenHandlerFactory> 接口的 writeScreenOpeningData 方法可以在打开方块时向客户端发送数据。 当它请求客户端(client)打开一个
@@ -38,23 +37,25 @@ import net.minecraft.world.World;
  */
 public abstract class DeviceEntity extends BlockEntity implements Tickable, ExtendedScreenHandlerFactory {
 	protected int tickCounter = 0; // tick 游戏刻 计数器
-	public boolean isRunning = false; // 是否已开机
-	protected String consoleOutputs = ""; // 输出缓冲区
+	public volatile boolean isRunning = false; // 是否已开机
+	protected volatile String consoleOutputs = ""; // 输出缓冲区
 
-	public int storageSize = 128; // 可以在游戏中用脚本存储的数据量最大值 ( 其实就是 storage 字符串的最大长度 )
-	public byte[] storage; // 磁盘内容
+	public int storageSize = 128; // 可以在游戏中用脚本存储的数据量最大值 (Byte)
+	public volatile byte[] storage; // 磁盘内容
 
 	public int portsCount = 1; // 接口数量 (最多同时有多少个设备和它相连接)
-	public byte portStates[]; // 各接口的状态 目标接口的 id, 若未连接则为 -128, <0 表示未锁定, >0 表示已锁定
+	public volatile byte portStates[]; // 各接口的状态 目标接口的 id, 若未连接则为 -128, <0 表示未锁定, >0 表示已锁定
 	protected long portsX[]; // 各接口所连接方块的坐标(不一定正确，因为对方可能被破坏)
 	protected long portsY[]; // 如果不正确，就会在 MixinWorld -> World.tickBlockEntities -> this.sendAllData 的时候被发现，然后立即断开这个连接
 	protected long portsZ[];
 
-	public String receiveCaches[]; // 各接口的接收缓存 //TODO toByte
-	public String sendCaches[]; // 各接口的发送缓存 //TODO toByte
-	public String script_tick = ";"; // tick 脚本
-	public CompiledScript compiledScript_tick = null; // 编译后的 tick 脚本
-	public CompileState compileState = CompileState.UNKNOWN; // 编译状态
+	public volatile String receiveCaches[]; // 各接口的接收缓存 //TODO toByte
+	public volatile String sendCaches[]; // 各接口的发送缓存 //TODO toByte
+
+	public volatile String script = ";"; // tick 脚本
+	public volatile CompiledScript compiledScript = null; // 编译后的 tick 脚本
+	public volatile CompileState compileState = CompileState.UNKNOWN; // 编译状态
+	public volatile int ScriptTimeoutCounter = 0; // 脚本超时计数器
 
 	// 初始化
 	public void init() {
@@ -88,7 +89,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 		tag.putInt("portsCount", this.portsCount);
 
 		tag.putString("consoleOutputs", this.consoleOutputs == null ? "" : this.consoleOutputs);
-		tag.putString("script_tick", this.script_tick == null ? "" : this.script_tick);
+		tag.putString("script", this.script == null ? "" : this.script);
 
 		tag.putString("sendCaches", DataEncoding.encodeStringArray(this.sendCaches));
 		tag.putString("receiveCaches", DataEncoding.encodeStringArray(this.receiveCaches));
@@ -118,7 +119,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 
 
 		this.setOutputs(tag.getString("consoleOutputs"));
-		this.setScirpt_tick(tag.getString("script_tick"));
+		this.setScirpt(tag.getString("script"));
 
 		this.setStorage(tag.getByteArray("storage"));
 		this.setPortStates(tag.getByteArray("portStates"));
@@ -149,21 +150,19 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	@Override
 	public void tick() {
 		this.tickCounter++;
-		if (this.isRunning) // 如果设备在运行
+		if (this.isRunning && Infage.isDeviceTickNow()) // 如果设备在运行
 			this.deviceTick(); // 执行设备刻
 	}
 
 
 	/**
-	 * TODO 将本设备指定接口 连接至 指定设备的指定接口（默认未锁定）
+	 * 将本设备指定接口 连接至 指定设备的指定接口 （默认未锁定）
 	 * 
 	 * @param portId 接口 ID
 	 * @param recursionTimes 是否只断开自己这边，而不通知被连接的另一方
 	 * @return {boolean} 是否成功断开，如果原本已经断开则返回false
 	 */
-	public synchronized boolean connect(int srcPort, BlockPos tarPos, int tarPort, int recursionTimes) {
-		// DeviceEntity that = (DeviceEntity) world.getBlockEntity(this.getPos());
-
+	public boolean connect(int srcPort, BlockPos tarPos, int tarPort, int recursionTimes) {
 		this.setTargetPortId(srcPort, tarPort);
 		this.setPortState(srcPort, PortState.CONNECT_UNLOCKED);
 		this.portsX[srcPort] = tarPos.getX();
@@ -186,7 +185,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	 * @param portId 本设备接口 ID
 	 * @return 该接口所连接的目标设备接口号, -128 表示没有连接
 	 */
-	public synchronized int getTargetPortId(int portId) {
+	public int getTargetPortId(int portId) {
 		int x = this.portStates[portId];
 		if (x == -128) {
 			return -128;
@@ -197,7 +196,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 		}
 	}
 	// 设置接口的目标接口 id
-	public synchronized void setTargetPortId(int srcPort, int tarPort) {
+	public void setTargetPortId(int srcPort, int tarPort) {
 		this.portStates[srcPort] = this.portStates[srcPort] >= 0 ? //
 				(byte) tarPort : // 如果已连接并锁定
 				(byte) (-1 - tarPort); // 未连接 或 已连接但没有锁定
@@ -227,15 +226,13 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 		}
 	}
 
-
-
 	/**
 	 * 获取指定接口状态
 	 * 
 	 * @param portId 本设备接口 ID
 	 * @return 该接口所连接的目标设备接口
 	 */
-	public synchronized PortState getPortState(int portId) {
+	public PortState getPortState(int portId) {
 		int x = this.portStates[portId];
 		if (x == -128) {
 			return PortState.DISCONNECTED;
@@ -252,7 +249,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	 * @param portId 接口 ID
 	 * @return 该接口所连接的方块实体
 	 */
-	public synchronized DeviceEntity getConnectedDevice(int portId) {
+	public DeviceEntity getConnectedDevice(int portId) {
 		if (this.portStates == null || this.getPortState(portId) == PortState.DISCONNECTED)
 			return null;
 		if (portId >= this.portsCount || portId < 0 || this.portsX == null || this.portsY == null || this.portsZ == null)
@@ -271,7 +268,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	 * @param selfOnly 是否只断开自己这边，而不通知被连接的另一方
 	 * @return {boolean} 是否成功断开，如果原本已经断开则返回false
 	 */
-	public synchronized boolean disconnect(int portId, boolean selfOnly) {
+	public boolean disconnect(int portId, boolean selfOnly) {
 		int tarPort = this.getTargetPortId(portId);
 		this.setPortState(portId, PortState.DISCONNECTED);
 		if (selfOnly) {
@@ -285,11 +282,11 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	}
 
 	// 设置脚本
-	public synchronized void setScirpt_tick(String str) {
-		if (str != this.script_tick) {
+	public synchronized void setScirpt(String str) {
+		if (str != this.script) {
 			this.compileState = CompileState.UNKNOWN;
-			this.compiledScript_tick = null;
-			this.script_tick = str == null ? "" : str;
+			this.compiledScript = null;
+			this.script = str == null ? "" : str;
 		}
 	}
 
@@ -441,6 +438,8 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 			// 清空输入缓存和输出缓存
 			Arrays.fill(this.receiveCaches, "");
 			Arrays.fill(this.sendCaches, "");
+			// 清空脚本输出
+			this.clearOutputs();
 		}
 	}
 
@@ -499,7 +498,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 		buf.writeText(this.getDisplayName()); // 名称
 		buf.writeBlockPos(this.getPos()); // 方块坐标
 		buf.writeBoolean(this.isRunning); // 设备是否开机
-		buf.writeString(this.script_tick);// 脚本代码
+		buf.writeString(this.script);// 脚本代码
 		buf.writeString(this.consoleOutputs);// 输出
 		buf.writeByte(this.portsCount);// 接口数量
 		buf.writeByteArray(this.portStates);// 接口状态

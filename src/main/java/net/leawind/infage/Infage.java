@@ -30,6 +30,16 @@ import net.leawind.infage.settings.InfageSettings;
 
 public class Infage implements ModInitializer {
 	public static final Logger LOGGER;
+	public volatile static int blockEntityTickCounter = 0; // 方块实体刻计数器
+	private volatile static boolean isDeviceTickNow = false;
+
+	public static void increaseBlockEntityTickCounter() {
+		isDeviceTickNow = ++Infage.blockEntityTickCounter % InfageSettings.DEVICE_TICK_INTERVAL == 0;
+	}
+
+	public static boolean isDeviceTickNow() {
+		return isDeviceTickNow;
+	}
 
 	// 全局变量
 	public static HashMap<UUID, PlayerData> players = new HashMap<>();

@@ -4,26 +4,25 @@ import javax.script.ScriptException;
 import net.leawind.infage.blockentity.DeviceEntity;
 import net.leawind.infage.script.CompileState;
 import net.leawind.infage.script.ScriptHelper;
-import net.leawind.universe.mttv1.MTTask;
+import net.leawind.universe.mttv3.MTTask;
 
 public class CompileTask extends MTTask {
-	public byte weight = 20;
-	public DeviceEntity that;
+	public DeviceEntity deviceEntity;
 
 	public CompileTask(DeviceEntity deviceEntity) {
-		this.that = deviceEntity;
+		this.deviceEntity = deviceEntity;
 	}
 
 	@Override
 	public void taskBody() {
 		// 编译
-		this.that.compileState = CompileState.DISTRIBUTED;
+		this.deviceEntity.compileState = CompileState.DISTRIBUTED;
 		try {
-			this.that.compiledScript_tick = ScriptHelper.compile(this.that.script_tick);
-			this.that.compileState = CompileState.SUCCESS;
+			this.deviceEntity.compiledScript = ScriptHelper.compile(this.deviceEntity.script);
+			this.deviceEntity.compileState = CompileState.SUCCESS;
 		} catch (ScriptException e) {
-			this.that.writeLog("CompileTask", "Exception:\n" + e);
-			this.that.compileState = CompileState.ERROR;
+			this.deviceEntity.writeLog("CompileTask", "Exception:\n" + e);
+			this.deviceEntity.compileState = CompileState.ERROR;
 		}
 	}
 }
