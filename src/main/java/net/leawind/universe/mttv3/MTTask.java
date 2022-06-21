@@ -31,7 +31,7 @@ public abstract class MTTask {
 	public abstract void taskBody();
 
 	public void exceptionHandler(Throwable t) {
-		MTManager.println(t);
+		MTManager.println("MTTask exception:\n" + t);
 	}
 
 

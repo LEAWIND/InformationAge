@@ -55,7 +55,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	public volatile String script = ";"; // tick 脚本
 	public volatile CompiledScript compiledScript = null; // 编译后的 tick 脚本
 	public volatile CompileState compileState = CompileState.UNKNOWN; // 编译状态
-	public volatile int ScriptTimeoutCounter = 0; // 脚本超时计数器
+	public volatile int scriptTimeoutCounter = 0; // 脚本超时计数器
 
 	// 初始化
 	public void init() {
@@ -391,14 +391,16 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 			case DISTRIBUTED: // 已经布置任务,暂未完成
 				break;
 			case SUCCESS: // 编译已完成
-				// 获取当前设备实体的 DeviceObj 实例，用于在脚本中提供 可调用方法 和 可读写属性
-				ExecuteTask executeTask = new ExecuteTask(this);
-				executeTask.deviceObj = this.getDeviceObj();
-				// 创建绑定，并 设置 标识符 与 DeviceObj实例 的对应关系
-				executeTask.bindings = ScriptHelper.ENGINE.createBindings();
-				executeTask.bindings.put("Device", executeTask.deviceObj); // 在脚本中可以通过 Device 访问这个对象
-				// 布置任务:执行
-				ScriptHelper.MTM_EXEC.addTask(executeTask);
+				if (this.scriptTimeoutCounter < InfageSettings.TIMEOUT_THREASHOLD) {
+					// 获取当前设备实体的 DeviceObj 实例，用于在脚本中提供 可调用方法 和 可读写属性
+					ExecuteTask executeTask = new ExecuteTask(this);
+					executeTask.deviceObj = this.getDeviceObj();
+					// 创建绑定，并 设置 标识符 与 DeviceObj实例 的对应关系
+					executeTask.bindings = ScriptHelper.ENGINE.createBindings();
+					executeTask.bindings.put("Device", executeTask.deviceObj); // 在脚本中可以通过 Device 访问这个对象
+					// 布置任务:执行
+					ScriptHelper.MTM_EXEC.addTask(executeTask);
+				}
 				break;
 			case ERROR: // 编译出错
 			default:

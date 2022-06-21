@@ -20,6 +20,7 @@ public class CompileTask extends MTTask {
 		try {
 			this.deviceEntity.compiledScript = ScriptHelper.compile(this.deviceEntity.script);
 			this.deviceEntity.compileState = CompileState.SUCCESS;
+			this.deviceEntity.scriptTimeoutCounter = 0; // 重置脚本超时计数器
 		} catch (ScriptException e) {
 			this.deviceEntity.writeLog("CompileTask", "Exception:\n" + e);
 			this.deviceEntity.compileState = CompileState.ERROR;

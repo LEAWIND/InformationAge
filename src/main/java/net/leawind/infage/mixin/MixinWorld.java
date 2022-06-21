@@ -36,7 +36,6 @@ public class MixinWorld {
 			if (Infage.isDeviceTickNow()) {
 
 				ScriptHelper.MTM_EXEC.clearTasks();
-
 				int clearedThreadsCount = ScriptHelper.MTM_EXEC.stopThreads(MTState.EXECING);
 				if (clearedThreadsCount > 0)
 					Infage.LOGGER.warn(clearedThreadsCount + " exec threads time out.\n");

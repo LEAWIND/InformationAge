@@ -89,11 +89,12 @@ public class MTManager extends Thread {
 	}
 
 	public int clearTasks() {
+		int i;
 		synchronized (this.tasks) {
-			int i = this.tasks.size();
+			i = this.tasks.size();
 			this.tasks.clear();
-			return i;
 		}
+		return i;
 	}
 
 	public void interruptAllThreads() {
@@ -107,36 +108,38 @@ public class MTManager extends Thread {
 
 	@SuppressWarnings("deprecation")
 	public int stopAllThreads() {
+		int i;
 		synchronized (this.threads) {
-			int i = this.threads.size();
-			for (MTThread thread : this.threads)
+			i = this.threads.size();
+			for (MTThread thread : this.threads) {
 				synchronized (thread) {
 					thread.stop();
 				}
+			}
 			this.threads.clear();
-			this.checkThreadCount();
-			return i;
 		}
+		this.shouldCheckThreadCount = true;
+		return i;
 	}
 
 	@SuppressWarnings("deprecation")
 	public int stopThreads(MTState state) {
+		int i = 0;
 		synchronized (this.threads) {
-			int i = 0;
 			Iterator<MTThread> iterator = this.threads.iterator();
 			while (iterator.hasNext()) {
 				MTThread thread = iterator.next();
 				synchronized (thread) {
 					if (thread.state == state) {
-						thread.stop();
 						iterator.remove();
+						thread.stop();
 						i++;
 					}
 				}
 			}
-			this.checkThreadCount();
-			return i;
 		}
+		this.shouldCheckThreadCount = true;
+		return i;
 	}
 
 	public boolean isAllTaskFinished() {
