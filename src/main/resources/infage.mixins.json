@@ -4,9 +4,11 @@
 	"package": "net.leawind.infage.mixin",
 	"compatibilityLevel": "JAVA_8",
 	"mixins": [
-		"MixinWorld"
 	],
 	"client": [
+	],
+	"server": [
+		"MixinWorld"
 	],
 	"injectors": {
 		"defaultRequire": 1

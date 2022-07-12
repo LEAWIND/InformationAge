@@ -29,23 +29,28 @@ public class DeviceObj {
 	}
 
 	// 向控制台输出信息
-	public synchronized void println(Object... objs) {
-		for (Object obj : objs)
-			this.outputs += obj + " ";
-		this.outputs += "\n";
+	public void println(Object... objs) {
+		synchronized (this.outputs) {
+			for (Object obj : objs)
+				this.outputs += obj + " ";
+			this.outputs += "\n";
+		}
 	}
-	public synchronized void print(Object... objs) {
-		for (Object obj : objs)
-			this.outputs += obj + " ";
+
+	public void print(Object... objs) {
+		synchronized (this.outputs) {
+			for (Object obj : objs)
+				this.outputs += obj;
+		}
 	}
 
 	// 将字符串转换为字节数组
-	public byte[] getBytes(String str) {
+	public static byte[] getBytes(String str) {
 		return str.getBytes();
 	}
 
 	// 将字节转数组换为字符串
-	public String getStr(byte[] bytes) {
+	public static String getStr(byte[] bytes) {
 		return new String(bytes);
 	}
 }

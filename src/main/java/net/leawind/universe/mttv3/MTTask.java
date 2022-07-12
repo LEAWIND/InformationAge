@@ -13,7 +13,6 @@ public abstract class MTTask {
 	public MTTask() {}
 
 	public final void execute() {
-		assert (!this.isPerforming);
 		this.isPerforming = true;
 		this.taskBody();
 		this.isPerforming = false;

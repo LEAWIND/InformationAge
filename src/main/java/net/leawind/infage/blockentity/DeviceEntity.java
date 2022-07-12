@@ -4,6 +4,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.UUID;
 import javax.script.CompiledScript;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.leawind.infage.Infage;
 import net.leawind.infage.PlayerData;
@@ -380,6 +382,7 @@ public abstract class DeviceEntity extends BlockEntity implements Tickable, Exte
 	}
 
 	// 设备刻
+	@Environment(EnvType.SERVER)
 	public synchronized void deviceTick() {
 		switch (this.compileState) {
 			case UNKNOWN: // 还没编译

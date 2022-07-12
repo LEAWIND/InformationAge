@@ -1,8 +1,10 @@
 package net.leawind.infage.script;
 
+import java.util.ArrayDeque;
 import net.leawind.universe.mttv3.MTManager;
 
 public class ExecThreadManager extends MTManager {
+	public volatile ArrayDeque<MTThread> threads = new ArrayDeque<MTThread>();
 	public ExecThreadManager() {
 		this(4);
 	}

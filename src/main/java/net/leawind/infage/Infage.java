@@ -25,13 +25,13 @@ import net.leawind.infage.registry.InfageGlobalReceiver;
 import net.leawind.infage.registry.InfageItemGroups;
 import net.leawind.infage.registry.InfageItems;
 import net.leawind.infage.registry.InfageScreenHandlers;
-import net.leawind.infage.script.ScriptHelper;
 import net.leawind.infage.settings.InfageSettings;
 
 public class Infage implements ModInitializer {
 	public static final Logger LOGGER;
 	public volatile static int blockEntityTickCounter = 0; // 方块实体刻计数器
 	private volatile static boolean isDeviceTickNow = false;
+	public static boolean DEBUG_MODE = true;
 
 	public static void increaseBlockEntityTickCounter() {
 		isDeviceTickNow = ++Infage.blockEntityTickCounter % InfageSettings.DEVICE_TICK_INTERVAL == 0;
@@ -47,8 +47,8 @@ public class Infage implements ModInitializer {
 	static {
 		LOGGER = LogManager.getLogger("Infage");
 
-		// 用于执行方块实体的脚本
-		new ScriptHelper();
+		// 用于执行方块实体脚本
+		// new ScriptHelper();
 
 		// 各种参数设置
 		new InfageSettings();
@@ -81,5 +81,30 @@ public class Infage implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		LOGGER.info("Infage.java: I'm here!!!");
+	}
+
+	public static void db_info(Object... objs) {
+		if (DEBUG_MODE) {
+			String msg = "\033[38;2;255;255;0m[DEBUG-info] \033[38;2;50;50;255m";
+			for (Object obj : objs)
+				msg += obj + " ";
+			msg += "\033[0m";
+			synchronized (System.out) {
+				System.out.println(msg);
+			}
+		}
+	}
+
+	public static void db_error(Object... objs) {
+		if (DEBUG_MODE) {
+			String msg = "\033[38;2;255;50;50m[DEBUG-error] \033[38;2;255;255;50m";
+			for (Object obj : objs)
+				msg += obj + " ";
+			msg += "\033[0m";
+
+			synchronized (System.out) {
+				System.out.println(msg);
+			}
+		}
 	}
 }

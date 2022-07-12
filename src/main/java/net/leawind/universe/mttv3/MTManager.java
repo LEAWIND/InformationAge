@@ -7,6 +7,7 @@ import java.util.Iterator;
 public class MTManager extends Thread {
 	protected volatile int threadCount = 4;
 	protected volatile int spareThreadCount = 2;
+	public volatile int taskCountLimit = 1000;
 	protected volatile ArrayDeque<MTThread> spareThreads = new ArrayDeque<MTThread>();
 	protected volatile ArrayDeque<MTThread> threads = new ArrayDeque<MTThread>();
 	public volatile ArrayDeque<MTTask> tasks = new ArrayDeque<MTTask>();
@@ -23,6 +24,7 @@ public class MTManager extends Thread {
 	public MTManager(int threadCount, int spareThreadCount) {
 		this.setThreadCount(threadCount);
 		this.setSpareThreadCount(spareThreadCount);
+		this.setName("MTM-Main-" + this.getId());
 		this.start();
 	}
 
@@ -63,6 +65,7 @@ public class MTManager extends Thread {
 			int targetTotalCount = this.spareThreadCount + this.threadCount;
 			while (this.spareThreads.size() + this.threads.size() < targetTotalCount) {
 				MTThread thread = new MTThread(this, true);
+				thread.setName("MTM-Thread-" + thread.getId());
 				thread.start();
 				this.spareThreads.add(thread);
 			}
@@ -77,8 +80,12 @@ public class MTManager extends Thread {
 
 	public void addTask(MTTask task) {
 		synchronized (this.tasks) {
-			task.init();
-			this.tasks.add(task);
+			if (this.tasks.size() < this.taskCountLimit) {
+				task.init();
+				this.tasks.add(task);
+			} else {
+				System.out.println("Error: task count limit exceeded: " + this.taskCountLimit);
+			}
 		}
 	}
 
@@ -100,9 +107,7 @@ public class MTManager extends Thread {
 	public void interruptAllThreads() {
 		synchronized (this.threads) {
 			for (MTThread thread : this.threads)
-				synchronized (thread) {
-					thread.interrupt();
-				}
+				thread.interrupt();
 		}
 	}
 
@@ -111,11 +116,8 @@ public class MTManager extends Thread {
 		int i;
 		synchronized (this.threads) {
 			i = this.threads.size();
-			for (MTThread thread : this.threads) {
-				synchronized (thread) {
-					thread.stop();
-				}
-			}
+			for (MTThread thread : this.threads)
+				thread.stop();
 			this.threads.clear();
 		}
 		this.shouldCheckThreadCount = true;
@@ -199,8 +201,8 @@ public class MTManager extends Thread {
 	}
 
 	public class MTThread extends Thread {
-		private MTManager manager;
-		private boolean shouldPause = false;
+		protected volatile MTManager manager;
+		protected volatile boolean shouldPause = false;
 		public volatile MTState state = MTState.RESTING;
 		public volatile MTTask task = null;
 
@@ -208,6 +210,10 @@ public class MTManager extends Thread {
 			super();
 			this.manager = mtm;
 			this.shouldPause = shouldPause;
+		}
+
+		public void pause() {
+			this.shouldPause = true;
 		}
 
 		public void goOn() {
