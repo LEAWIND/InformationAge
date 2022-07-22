@@ -11,7 +11,7 @@ public class InfageSettings {
 
 	public static final String NAMESPACE = "infage"; // 命名空间
 
-	public static final int DEVICE_TICK_INTERVAL = 4; // 设备刻间隔 (单位是 方块实体刻 == 游戏刻 == 1/20s == 50ms)
+	public static final int DEVICE_TICK_INTERVAL = 20; // 设备刻间隔 (单位是 方块实体刻 == 游戏刻 == 1/20s == 50ms)
 	public static final int MAX_SCRIPT_SIZE = 20479; // 脚本最大字节数
 	public static final int TIMEOUT_THREASHOLD = 6; // 脚本超时计数器阈值，超过后禁止再次执行
 	public static final int EXEC_THREAD_COUNT; // 执行脚本线程数

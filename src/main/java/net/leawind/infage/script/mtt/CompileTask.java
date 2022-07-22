@@ -1,14 +1,12 @@
 package net.leawind.infage.script.mtt;
 
 import javax.script.ScriptException;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.leawind.infage.blockentity.DeviceEntity;
 import net.leawind.infage.script.CompileState;
 import net.leawind.infage.script.ScriptHelper;
 import net.leawind.universe.mttv3.MTTask;
 
-@Environment(EnvType.SERVER)
+// @Environment(EnvType.SERVER)
 public class CompileTask extends MTTask {
 	public DeviceEntity deviceEntity;
 

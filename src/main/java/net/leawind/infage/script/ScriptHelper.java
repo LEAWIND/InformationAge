@@ -14,7 +14,7 @@ import net.leawind.infage.settings.InfageSettings;
 import net.leawind.universe.mttv3.MTManager;
 
 public final class ScriptHelper {
-	private static final Logger LOGGER = LogManager.getLogger("InfageScriptHandler");;
+	private static final Logger LOGGER = LogManager.getLogger("InfageScriptHandler");
 	public static final MTManager MTM_COMPILE = new MTManager(InfageSettings.COMPILE_THREAD_COUNT, 2); // 编译线程们;
 	public static final ExecThreadManager MTM_EXEC = new ExecThreadManager(InfageSettings.EXEC_THREAD_COUNT, 5); // 执行线程数是 CPU 核心数 / 2 + 1;
 	public static final String[] FORBIDDEN_VARS_IN_SCRIPT = new String[] {"java", "javax", "Java", "exit", "quit"}; // 禁止在脚本中访问的全局对象

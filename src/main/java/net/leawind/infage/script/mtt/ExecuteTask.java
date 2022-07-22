@@ -2,7 +2,6 @@ package net.leawind.infage.script.mtt;
 
 import java.util.Arrays;
 import javax.script.Bindings;
-import javax.script.ScriptEngine;
 import net.leawind.infage.blockentity.DeviceEntity;
 import net.leawind.infage.script.obj.DeviceObj;
 import net.leawind.universe.mttv3.MTTask;
@@ -11,7 +10,7 @@ public class ExecuteTask extends MTTask {
 	public volatile DeviceEntity deviceEntity;
 	public volatile Bindings bindings;
 	public volatile DeviceObj deviceObj;
-	public ScriptEngine engine; // TODO
+	// public ScriptEngine engine; // TODO
 
 	public ExecuteTask() {}
 

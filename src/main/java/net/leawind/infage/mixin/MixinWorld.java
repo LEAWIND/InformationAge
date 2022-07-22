@@ -38,8 +38,9 @@ public class MixinWorld {
 		// their counters += 2;
 		// Then force to STOP their threads.
 		// If counter is beyond the timeout_threashold, force to STOP their threads as well.
-		try {
-			if (Infage.isDeviceTickNow()) {
+		if (Infage.isDeviceTickNow()) {
+			try {
+				System.out.println("Ticking block entities...");
 				{
 					// Clear all exec tasks not distributed yet, get the count of them.
 					int clearedTasksCount = ScriptHelper.MTM_EXEC.clearTasks();
@@ -65,9 +66,9 @@ public class MixinWorld {
 						((DeviceEntity) blockEntity).sendAllData();
 					}
 				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 }
