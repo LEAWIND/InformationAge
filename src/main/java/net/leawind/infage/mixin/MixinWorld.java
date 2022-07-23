@@ -26,7 +26,6 @@ public class MixinWorld {
 	@Inject(at = @At("HEAD"), method = "tickBlockEntities()V")
 	@SuppressWarnings("deprecation")
 	private void onTickBlockEntities_head(CallbackInfo info) {
-		Infage.increaseBlockEntityTickCounter(); // increment the tick counter every tickingBlockEntities
 		// TODO exec timeout
 
 		// Clear all exec tasks not distributed yet, and get the count of them.
@@ -38,36 +37,40 @@ public class MixinWorld {
 		// their counters += 2;
 		// Then force to STOP their threads.
 		// If counter is beyond the timeout_threashold, force to STOP their threads as well.
-		if (Infage.isDeviceTickNow()) {
-			try {
-				System.out.println("Ticking block entities...");
-				{
-					// Clear all exec tasks not distributed yet, get the count of them.
-					int clearedTasksCount = ScriptHelper.MTM_EXEC.clearTasks();
-					if (clearedTasksCount > 0)
-						Infage.LOGGER.warn(clearedTasksCount + " exec tasks abandoned.\n");
-				}
-				{
-					// Find all exec tasks that timeout
-					int stoppedTasksCount = 0;
-					for (MTManager.MTThread t : ScriptHelper.MTM_EXEC.threads) {
-						if (t.state == MTState.EXECING && t.task != null) {
-							((ExecuteTask) t.task).deviceEntity.scriptTimeoutCounter += 2;
-							t.stop();
-							stoppedTasksCount++;
+
+		if (!((WorldInvoker) this).invokeIsClient()) {
+			Infage.increaseBlockEntityTickCounter(); // increment the tick counter every tickingBlockEntities
+			if (Infage.isDeviceTickNow()) {
+				try {
+					Infage.db_info("Ticking devices ...");
+					{
+						// Clear all exec tasks not distributed yet, get the count of them.
+						int clearedTasksCount = ScriptHelper.MTM_EXEC.clearTasks();
+						if (clearedTasksCount > 0)
+							Infage.LOGGER.warn(clearedTasksCount + " exec tasks abandoned.\n");
+					}
+					{
+						// Find all exec tasks that timeout
+						int stoppedTasksCount = 0;
+						for (MTManager.MTThread t : ScriptHelper.MTM_EXEC.threads) {
+							if (t.state == MTState.EXECING && t.task != null) {
+								((ExecuteTask) t.task).deviceEntity.scriptTimeoutCounter += 2;
+								t.stop();
+								stoppedTasksCount++;
+							}
+						}
+						if (stoppedTasksCount > 0)
+							Infage.LOGGER.warn(stoppedTasksCount + " exec threads still running.\n");
+					}
+					// When to clear cache should be decided by each device itself.
+					for (BlockEntity blockEntity : tickingBlockEntities) {
+						if (blockEntity instanceof DeviceEntity && !blockEntity.isRemoved() && blockEntity.hasWorld()) {
+							((DeviceEntity) blockEntity).sendAllData();
 						}
 					}
-					if (stoppedTasksCount > 0)
-						Infage.LOGGER.warn(stoppedTasksCount + " exec threads still running.\n");
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-				// When to clear cache should be decided by each device itself.
-				for (BlockEntity blockEntity : tickingBlockEntities) {
-					if (blockEntity instanceof DeviceEntity && !blockEntity.isRemoved() && blockEntity.hasWorld()) {
-						((DeviceEntity) blockEntity).sendAllData();
-					}
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
 		}
 	}

@@ -4,7 +4,8 @@
 	"package": "net.leawind.infage.mixin",
 	"compatibilityLevel": "JAVA_8",
 	"mixins": [
-		"MixinWorld"
+		"MixinWorld",
+		"WorldInvoker"
 	],
 	"client": [
 	],
